@@ -7,7 +7,7 @@ export const getTransactions: RequestHandler = async (_req, res) => {
   try {
     const transactions = await prisma.transaction.findMany({
       include: {
-        customer: true,
+        category: true,
         createdBy: true,
       },
     });
@@ -22,19 +22,33 @@ export const getTransactions: RequestHandler = async (_req, res) => {
 
 export const addTransaction: RequestHandler = async (req, res) => {
   try {
-    const { amount, type, customerId, createdById } = req.body;
+    console.log("========== ADD TRANSACTION ==========");
+    console.log("Request Body:", req.body);
+
+    const { title, description, amount, type, transactionDate, categoryId, createdById } = req.body;
 
     const transaction = await prisma.transaction.create({
       data: {
+        title,
+        ...(description !== undefined ? { description } : {}),
         amount,
         type,
-        customerId,
+        transactionDate: new Date(transactionDate),
+        categoryId,
         createdById,
       },
     });
 
-    res.status(201).json(transaction);
+    console.log("Transaction Created:", transaction);
+
+    return res.status(201).json(transaction);
   } catch (error) {
-    res.status(500).json({ message: "Failed to add transaction" });
+    console.error("========== ADD TRANSACTION ERROR ==========");
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Failed to add transaction",
+      error: error instanceof Error ? error.message : error,
+    });
   }
 };
