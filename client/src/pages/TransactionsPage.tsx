@@ -17,6 +17,7 @@ import { transactionService } from '../services/transaction.service';
 interface TransactionRecord {
   id: string;
   title: string;
+  description?: string | null;
   amount: number | string;
   type: 'INCOME' | 'EXPENSE';
   transactionDate: string;
@@ -95,6 +96,7 @@ export const TransactionsPage = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Title</TableCell>
+                    <TableCell>Description</TableCell>
                     <TableCell>Amount</TableCell>
                     <TableCell>Type</TableCell>
                     <TableCell>Category</TableCell>
@@ -105,6 +107,7 @@ export const TransactionsPage = () => {
                   {transactions.map((transaction) => (
                     <TableRow key={transaction.id} hover>
                       <TableCell>{transaction.title}</TableCell>
+                      <TableCell>{transaction.description || '—'}</TableCell>
                       <TableCell>{formatAmount(transaction.amount)}</TableCell>
                       <TableCell>{transaction.type}</TableCell>
                       <TableCell>{transaction.category?.name ?? 'Uncategorized'}</TableCell>

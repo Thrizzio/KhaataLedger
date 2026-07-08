@@ -38,19 +38,27 @@ export const addTransaction: RequestHandler = async (req, res) => {
     let resolvedCategoryId = categoryId;
 
     if (categoryId) {
-      const existingCategory = await prisma.category.findUnique({ where: { id: categoryId } });
+      const categoryLookupValue = String(categoryId).trim();
+      const existingCategory = await prisma.category.findFirst({
+        where: {
+          OR: [
+            { name: { equals: categoryLookupValue, mode: "insensitive" } },
+            { id: categoryLookupValue },
+          ],
+        },
+      });
 
-      if (!existingCategory) {
+      if (existingCategory) {
+        resolvedCategoryId = existingCategory.id;
+      } else {
         const createdCategory = await prisma.category.create({
           data: {
-            name: String(categoryId),
+            name: categoryLookupValue,
             defaultType: type,
           },
         });
 
         resolvedCategoryId = createdCategory.id;
-      } else {
-        resolvedCategoryId = existingCategory.id;
       }
     }
 
