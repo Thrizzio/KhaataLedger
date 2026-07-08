@@ -6,8 +6,10 @@ import DialogTitle from '@mui/material/DialogTitle';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import toast from 'react-hot-toast';
+import { transactionService } from '../services/transaction.service';
+import { getAuthState } from '../store/authStore';
 
 interface TransactionModalProps {
   open: boolean;
@@ -39,18 +41,39 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     if (!title || !amount || !type || !transactionDate || !category) {
       toast.error('Please fill in all required fields.');
+      return;
+    }
+
+    const currentUser = getAuthState().user;
+    if (!currentUser?.id) {
+      toast.error('Please sign in to add a transaction.');
       return;
     }
 
     setIsLoading(true);
 
     try {
+      await transactionService.createTransaction({
+        title,
+        description: description || undefined,
+        amount: Number(amount),
+        type,
+        transactionDate,
+        categoryId: category,
+        createdById: currentUser.id,
+      });
+
       toast.success('Transaction added successfully');
       resetForm();
       onClose();
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || 'Failed to add transaction.';
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +82,7 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle>Add Transaction</DialogTitle>
+      <form onSubmit={handleSave}>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
@@ -131,10 +155,11 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
         <Button onClick={handleClose} disabled={isLoading}>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" disabled={isLoading}>
+        <Button type="submit" variant="contained" disabled={isLoading}>
           {isLoading ? 'Saving...' : 'Save'}
         </Button>
       </DialogActions>
+      </form>
     </Dialog>
   );
 };

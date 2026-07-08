@@ -27,6 +27,33 @@ export const addTransaction: RequestHandler = async (req, res) => {
 
     const { title, description, amount, type, transactionDate, categoryId, createdById } = req.body;
 
+    const existingUser = createdById
+      ? await prisma.user.findUnique({ where: { id: createdById } })
+      : null;
+
+    if (!existingUser) {
+      return res.status(400).json({ message: "Invalid createdById" });
+    }
+
+    let resolvedCategoryId = categoryId;
+
+    if (categoryId) {
+      const existingCategory = await prisma.category.findUnique({ where: { id: categoryId } });
+
+      if (!existingCategory) {
+        const createdCategory = await prisma.category.create({
+          data: {
+            name: String(categoryId),
+            defaultType: type,
+          },
+        });
+
+        resolvedCategoryId = createdCategory.id;
+      } else {
+        resolvedCategoryId = existingCategory.id;
+      }
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         title,
@@ -34,8 +61,8 @@ export const addTransaction: RequestHandler = async (req, res) => {
         amount,
         type,
         transactionDate: new Date(transactionDate),
-        categoryId,
-        createdById,
+        categoryId: resolvedCategoryId,
+        createdById: existingUser.id,
       },
     });
 

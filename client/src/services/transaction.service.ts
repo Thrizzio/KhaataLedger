@@ -14,4 +14,5 @@ export interface CreateTransactionPayload {
 export const transactionService = {
   createTransaction: (payload: CreateTransactionPayload) =>
     httpClient.post<ApiResponse<unknown>>('/transactions', payload),
+  getTransactions: () => httpClient.get<ApiResponse<unknown>>('/transactions'),
 };
