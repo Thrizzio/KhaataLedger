@@ -1,11 +1,19 @@
-import { getAuthState } from '../store/authStore';
+import { useState, useEffect } from 'react';
+import { getAuthState, subscribeToAuth } from '../store/authStore';
 
 export const useAuth = () => {
-  const { token, user } = getAuthState();
+  const [authState, setAuthState] = useState(getAuthState());
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuth(() => {
+      setAuthState(getAuthState());
+    });
+    return unsubscribe;
+  }, []);
 
   return {
-    isAuthenticated: Boolean(token),
-    token,
-    user,
+    isAuthenticated: Boolean(authState.token),
+    token: authState.token,
+    user: authState.user,
   };
 };
