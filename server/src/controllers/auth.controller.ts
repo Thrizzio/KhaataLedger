@@ -25,6 +25,11 @@ export const register: RequestHandler = async (request, response, next) => {
         email: parsedBody.email.toLowerCase(),
         passwordHash: hashedPassword,
         role: 'OWNER',
+        workspace: {
+          create: {
+            name: `${parsedBody.name}'s Workspace`,
+          }
+        }
       },
     });
 
@@ -50,7 +55,7 @@ export const register: RequestHandler = async (request, response, next) => {
   }
 };
 
-export const login: RequestHandler = async (request, response, next) => {
+export const loginOwner: RequestHandler = async (request, response, next) => {
   try {
     const parsedBody = loginSchema.parse(request.body);
 
@@ -59,6 +64,52 @@ export const login: RequestHandler = async (request, response, next) => {
     });
     if (!user) {
       throw new ApiError(401, 'Invalid email or password');
+    }
+
+    if (user.role !== 'OWNER') {
+      throw new ApiError(403, 'Access denied: Owner role required');
+    }
+
+    const isPasswordValid = await verifyPassword(parsedBody.password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new ApiError(401, 'Invalid email or password');
+    }
+
+    const token = signToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    response.status(200).json(
+      createSuccessResponse('Login successful', {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const loginEmployee: RequestHandler = async (request, response, next) => {
+  try {
+    const parsedBody = loginSchema.parse(request.body);
+
+    const user = await prisma.user.findUnique({
+      where: { email: parsedBody.email.toLowerCase() },
+    });
+    if (!user) {
+      throw new ApiError(401, 'Invalid email or password');
+    }
+
+    if (user.role !== 'EMPLOYEE') {
+      throw new ApiError(403, 'Access denied: Employee role required');
     }
 
     const isPasswordValid = await verifyPassword(parsedBody.password, user.passwordHash);

@@ -59,6 +59,7 @@ console.log(prisma.user);
           data: {
             name: categoryLookupValue,
             defaultType: type,
+            workspaceId: existingUser.workspaceId,
           },
         });
 
@@ -75,6 +76,7 @@ console.log(prisma.user);
         transactionDate: new Date(transactionDate),
         categoryId: resolvedCategoryId,
         createdById: existingUser.id,
+        workspaceId: existingUser.workspaceId,
       },
     });
 
