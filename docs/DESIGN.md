@@ -1,225 +1,225 @@
-# Digital Ledger Management System
+    # Digital Ledger Management System
 
-## Design References
+    ## Design References
 
-Below are the initial UI mockups created in Figma. These were used to finalize the overall layout, navigation flow, and color palette before development.
+    Below are the initial UI mockups created in Figma. These were used to finalize the overall layout, navigation flow, and color palette before development.
 
-### Dashboard
+    ### Dashboard
 
-![Dashboard Design](ref-imgs/image.png)
+    ![Dashboard Design](ref-imgs/image.png)
 
-### Ledger View
+    ### Ledger View
 
-![Ledger View](ref-imgs/further-dash.png)
+    ![Ledger View](ref-imgs/further-dash.png)
 
-### Mobile Dashboard
+    ### Mobile Dashboard
 
-![Mobile Dashboard](ref-imgs/image-1.png)
+    ![Mobile Dashboard](ref-imgs/image-1.png)
 
-### Mobile Ledger View
+    ### Mobile Ledger View
 
-![Mobile Ledger View](ref-imgs/image-2.png)
+    ![Mobile Ledger View](ref-imgs/image-2.png)
 
-> These designs are rough prototypes and may evolve during development.
+    > These designs are rough prototypes and may evolve during development.
 
----
+    ---
 
-# Product Requirements
+    # Product Requirements
 
-## Overview
+    ## Overview
 
-The Digital Ledger Management System is a web application inspired by Khatabook that helps shopkeepers digitally manage customer credit and debit transactions.
+    The Digital Ledger Management System is a web application inspired by Khatabook that helps shopkeepers digitally manage customer credit and debit transactions.
 
-Instead of maintaining paper khata books, users can record transactions, view an automatically updated running balance, search transaction history, and keep track of every modification through an audit trail.
+    Instead of maintaining paper khata books, users can record transactions, view an automatically updated running balance, search transaction history, and keep track of every modification through an audit trail.
 
----
+    ---
 
-## Problem Statement
+    ## Problem Statement
 
-Traditional paper ledgers are difficult to maintain and often lead to:
+    Traditional paper ledgers are difficult to maintain and often lead to:
 
-- Lost or damaged records
-- Manual calculation mistakes
-- Difficulty searching previous transactions
-- No history of edits or deletions
+    - Lost or damaged records
+    - Manual calculation mistakes
+    - Difficulty searching previous transactions
+    - No history of edits or deletions
 
-This project aims to replace manual bookkeeping with a secure digital ledger.
+    This project aims to replace manual bookkeeping with a secure digital ledger.
 
----
+    ---
 
-## Objectives
+    ## Objectives
 
-The application allows users to:
+    The application allows users to:
 
-- Add new transactions
-- Edit existing transactions
-- Soft delete transactions
-- View running balances
-- Search transaction history
-- Filter transactions
-- Maintain an audit trail
-- Prevent multiple users from editing the same transaction simultaneously
+    - Add new transactions
+    - Edit existing transactions
+    - Soft delete transactions
+    - View running balances
+    - Search transaction history
+    - Filter transactions
+    - Maintain an audit trail
+    - Prevent multiple users from editing the same transaction simultaneously
 
----
+    ---
 
-## Features
+    ## Features
 
-### Transaction Management
+    ### Transaction Management
 
-- Add Transaction
-- Edit Transaction
-- Soft Delete Transaction
-- View Transaction History
+    - Add Transaction
+    - Edit Transaction
+    - Soft Delete Transaction
+    - View Transaction History
 
-Each transaction contains:
+    Each transaction contains:
 
-- Customer Name
-- Amount
-- Transaction Type (Given / Taken)
-- Date
-- Description
+    - Customer Name
+    - Amount
+    - Transaction Type (Given / Taken)
+    - Date
+    - Description
 
----
+    ---
 
-### Running Balance
+    ### Running Balance
 
-The running balance updates automatically whenever a transaction is added, edited, or deleted.
+    The running balance updates automatically whenever a transaction is added, edited, or deleted.
 
-Example:
+    Example:
 
-| Transaction | Amount | Balance |
-|-------------|--------|---------|
-| Given | ₹1000 | ₹1000 |
-| Taken | ₹300 | ₹700 |
-| Given | ₹500 | ₹1200 |
+    | Transaction | Amount | Balance |
+    |-------------|--------|---------|
+    | Given | ₹1000 | ₹1000 |
+    | Taken | ₹300 | ₹700 |
+    | Given | ₹500 | ₹1200 |
 
----
+    ---
 
-### Search & Filters
+    ### Search & Filters
 
-Users can search transactions by:
+    Users can search transactions by:
 
-- Customer Name
+    - Customer Name
 
-Filters include:
+    Filters include:
 
-- Given
-- Taken
-- Month
+    - Given
+    - Taken
+    - Month
 
----
+    ---
 
-### Pagination
+    ### Pagination
 
-Transaction history is paginated to improve performance.
+    Transaction history is paginated to improve performance.
 
-- 20 records per page
-- Previous / Next navigation
+    - 20 records per page
+    - Previous / Next navigation
 
----
+    ---
 
-### Audit Trail
+    ### Audit Trail
 
-Every transaction change is permanently recorded.
+    Every transaction change is permanently recorded.
 
-Each audit entry stores:
+    Each audit entry stores:
 
-- Transaction ID
-- Action (Create, Update, Delete)
-- Previous Value
-- New Value
-- Edited By
-- Edited Time
+    - Transaction ID
+    - Action (Create, Update, Delete)
+    - Previous Value
+    - New Value
+    - Edited By
+    - Edited Time
 
-Audit records cannot be modified.
+    Audit records cannot be modified.
 
----
+    ---
 
-### Concurrent Editing
+    ### Concurrent Editing
 
-To avoid conflicting changes, only one user can edit a transaction at a time.
+    To avoid conflicting changes, only one user can edit a transaction at a time.
 
-If another user opens the same transaction:
+    If another user opens the same transaction:
 
-- Editing is disabled
-- The page becomes read-only
-- A message informs the user that the record is currently locked
+    - Editing is disabled
+    - The page becomes read-only
+    - A message informs the user that the record is currently locked
 
----
+    ---
 
-## Data Models
+    ## Data Models
 
-### Transaction
+    ### Transaction
 
-- Transaction ID
-- Customer Name
-- Amount
-- Transaction Type
-- Description
-- Transaction Date
-- Running Balance
-- Created At
-- Updated At
-- Deleted At (Soft Delete)
+    - Transaction ID
+    - Customer Name
+    - Amount
+    - Transaction Type
+    - Description
+    - Transaction Date
+    - Running Balance
+    - Created At
+    - Updated At
+    - Deleted At (Soft Delete)
 
-### Audit Log
+    ### Audit Log
 
-- Audit ID
-- Transaction ID
-- Action
-- Previous Value
-- New Value
-- Edited By
-- Edited At
+    - Audit ID
+    - Transaction ID
+    - Action
+    - Previous Value
+    - New Value
+    - Edited By
+    - Edited At
 
----
+    ---
 
-## Business Rules
+    ## Business Rules
 
-- Running balance updates automatically.
-- Transactions are never permanently deleted.
-- Deleted transactions remain available in the audit log.
-- Only one user may edit a transaction at a time.
-- Audit logs are immutable.
+    - Running balance updates automatically.
+    - Transactions are never permanently deleted.
+    - Deleted transactions remain available in the audit log.
+    - Only one user may edit a transaction at a time.
+    - Audit logs are immutable.
 
----
+    ---
 
-## Future Improvements
+    ## Future Improvements
 
-Possible features for future versions include:
+    Possible features for future versions include:
 
-- WhatsApp/SMS reminders
-- Reports and analytics
-- Export to PDF/Excel
-- Customer statements
-- Multi-user roles
-- Offline support
-- Real-time notifications
+    - WhatsApp/SMS reminders
+    - Reports and analytics
+    - Export to PDF/Excel
+    - Customer statements
+    - Multi-user roles
+    - Offline support
+    - Real-time notifications
 
----
+    ---
 
-## Tech Stack
+    ## Tech Stack
 
-### Frontend
+    ### Frontend
 
-- React
-- Vite
-- TypeScript
-- Material UI
-- React Router
-- TanStack Query
-- Axios
+    - React
+    - Vite
+    - TypeScript
+    - Material UI
+    - React Router
+    - TanStack Query
+    - Axios
 
-### Backend
+    ### Backend
 
-- Node.js
-- Express
-- PostgreSQL
-- Prisma ORM
-- JWT Authentication
+    - Node.js
+    - Express
+    - PostgreSQL
+    - Prisma ORM
+    - JWT Authentication
 
----
+    ---
 
-## Conclusion
+    ## Conclusion
 
-The Digital Ledger Management System provides a modern alternative to traditional paper ledgers by offering secure transaction management, automatic balance calculation, audit history, and efficient search capabilities. The project is designed to be simple, scalable, and suitable for small businesses managing daily customer transactions.
+    The Digital Ledger Management System provides a modern alternative to traditional paper ledgers by offering secure transaction management, automatic balance calculation, audit history, and efficient search capabilities. The project is designed to be simple, scalable, and suitable for small businesses managing daily customer transactions.

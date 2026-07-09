@@ -17,10 +17,10 @@ const drawerWidth = 260;
 
 const navigationItems = [
   { label: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
-  { label: 'Customers', path: '/customers', icon: <GroupIcon /> },
   { label: 'Transactions', path: '/transactions', icon: <ReceiptLongIcon /> },
-  { label: 'Audit', path: '/audit', icon: <HistoryIcon /> },
-  { label: 'Reports', path: '/reports', icon: <AssessmentIcon /> },
+  { label: 'Categories', path: '/categories', icon: <GroupIcon /> },
+  { label: 'Audit Log', path: '/audit', icon: <HistoryIcon /> },
+  { label: 'Employees', path: '/employees', icon: <AssessmentIcon /> },
   { label: 'Settings', path: '/settings', icon: <SettingsIcon /> },
 ];
 
