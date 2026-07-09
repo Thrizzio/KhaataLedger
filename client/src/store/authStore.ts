@@ -5,7 +5,10 @@ interface AuthState {
   token: string | null;
 }
 
+const isClient = typeof window !== 'undefined';
+
 const getStoredUser = (): AuthUser | null => {
+  if (!isClient) return null;
   const userStr = localStorage.getItem('ledger_user');
   if (!userStr) return null;
   try {
@@ -16,17 +19,33 @@ const getStoredUser = (): AuthUser | null => {
 };
 
 const authState: AuthState = {
-  user: getStoredUser(),
-  token: localStorage.getItem('ledger_access_token'),
+  user: null,
+  token: null,
+};
+
+const initAuthState = () => {
+  if (!isClient) return;
+  authState.user = getStoredUser();
+  authState.token = localStorage.getItem('ledger_access_token');
 };
 
 const listeners = new Set<() => void>();
 
-export const getAuthState = (): AuthState => authState;
+export const getAuthState = (): AuthState => {
+  if (authState.token === null && authState.user === null) {
+    initAuthState();
+  }
+  return authState;
+};
 
 export const setAuthData = (token: string | null, user: AuthUser | null): void => {
   authState.token = token;
   authState.user = user;
+
+  if (!isClient) {
+    listeners.forEach((listener) => listener());
+    return;
+  }
 
   if (token && user) {
     localStorage.setItem('ledger_access_token', token);

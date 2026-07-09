@@ -1,3 +1,5 @@
+"use client";
+
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
@@ -52,3 +54,5 @@ export const PageShell = ({ title, description, children }: PageShellProps) => {
     </>
   );
 };
+
+export default PageShell;

@@ -1,12 +1,15 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Toolbar from "@mui/material/Toolbar";
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useState, type ReactNode } from "react";
 import { Navbar } from "../components/Navbar";
 import { Sidebar } from "../components/Sidebar";
 
-export const DashboardLayout = () => {
+interface DashboardLayoutProps {
+  children: ReactNode;
+}
+
+export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -37,7 +40,7 @@ export const DashboardLayout = () => {
               px: { xs: 2, sm: 3, md: 4 },
             }}
           >
-            <Outlet />
+            {children}
           </Container>
         </Box>
       </Box>

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
+const baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api';
 
 export const httpClient = axios.create({
   baseURL,
@@ -10,7 +10,7 @@ export const httpClient = axios.create({
 });
 
 httpClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('ledger_access_token');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('ledger_access_token') : null;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

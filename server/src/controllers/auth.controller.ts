@@ -8,13 +8,19 @@ import { createSuccessResponse } from '../utils/api-response.js';
 
 export const register: RequestHandler = async (request, response, next) => {
   try {
+    console.log('[REGISTER] Request received');
     const parsedBody = registerSchema.parse(request.body);
+    console.log('[REGISTER] Parsed body:', {
+      name: parsedBody.name,
+      email: parsedBody.email.toLowerCase(),
+    });
 
     const existingUser = await prisma.user.findUnique({
       where: { email: parsedBody.email.toLowerCase() },
     });
+    
     if (existingUser) {
-      throw new ApiError(400, 'User with this email already exists');
+      throw new ApiError(409, 'User with this email already exists');
     }
 
     const hashedPassword = await hashPassword(parsedBody.password);
@@ -25,7 +31,7 @@ export const register: RequestHandler = async (request, response, next) => {
         email: parsedBody.email.toLowerCase(),
         passwordHash: hashedPassword,
         role: 'OWNER',
-        workspace: {
+        ownedWorkspaces: {
           create: {
             name: `${parsedBody.name}'s Workspace`,
           }
@@ -51,6 +57,7 @@ export const register: RequestHandler = async (request, response, next) => {
       })
     );
   } catch (error) {
+    console.error('[REGISTER] Failed:', error);
     next(error);
   }
 };

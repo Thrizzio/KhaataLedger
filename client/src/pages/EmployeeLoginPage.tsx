@@ -1,3 +1,6 @@
+"use client";
+
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -10,26 +13,26 @@ import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from '@mui/material/Link';
 import { useAuth } from '../hooks/useAuth';
 import { authService, type LoginPayload } from '../services/auth.service';
 import { setAuthData } from '../store/authStore';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import NextLink from '../components/NextLink';
 
 export const EmployeeLoginPage = () => {
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const from = searchParams?.get('from') ?? '/dashboard';
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      router.replace(from);
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, router, from]);
 
   const { register, handleSubmit } = useForm<LoginPayload>({
     defaultValues: {
@@ -66,7 +69,7 @@ export const EmployeeLoginPage = () => {
       <Paper component="form" onSubmit={handleSubmit(onSubmit)} sx={{ p: 4, width: '100%' }}>
         <Stack alignItems="center" spacing={2}>
           <Box alignSelf="flex-start">
-            <Button component={RouterLink} to="/login" startIcon={<ArrowBackIcon />} size="small" color="inherit">
+            <Button component={NextLink} href="/login" startIcon={<ArrowBackIcon />} size="small" color="inherit">
               Back
             </Button>
           </Box>
@@ -108,7 +111,7 @@ export const EmployeeLoginPage = () => {
           </Button>
           <Typography variant="body2" color="text.secondary" mt={2}>
             Don't have an account?{' '}
-            <Link component={RouterLink} to="/register" variant="body2">
+            <Link component={NextLink} href="/register" variant="body2">
               Sign up
             </Link>
           </Typography>
@@ -117,3 +120,5 @@ export const EmployeeLoginPage = () => {
     </Container>
   );
 };
+
+export default EmployeeLoginPage;
