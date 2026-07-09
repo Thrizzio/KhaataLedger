@@ -7,6 +7,13 @@ import type { ApiResponse } from '../utils/api-response.js';
 export const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
   const isProduction = env.NODE_ENV === 'production';
 
+  if (!isProduction) {
+    console.error('[ERROR] Unhandled error:', error);
+    if (error instanceof Error && error.stack) {
+      console.error(error.stack);
+    }
+  }
+
   if (error instanceof ApiError) {
     const payload: ApiResponse = {
       success: false,

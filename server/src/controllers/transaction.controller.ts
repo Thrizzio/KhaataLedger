@@ -35,6 +35,21 @@ export const addTransaction: RequestHandler = async (req, res) => {
       return res.status(400).json({ message: "Invalid createdById" });
     }
 
+    let workspaceId: string | null = null;
+
+    if (existingUser.role === 'OWNER') {
+      const ownerWorkspace = await prisma.workspace.findFirst({
+        where: { ownerId: existingUser.id },
+      });
+      workspaceId = ownerWorkspace?.id ?? null;
+    } else {
+      workspaceId = existingUser.workspaceId;
+    }
+
+    if (!workspaceId) {
+      return res.status(400).json({ message: "User is not assigned to a workspace" });
+    }
+
     let resolvedCategoryId = categoryId;
 
     if (categoryId) {
@@ -59,7 +74,7 @@ console.log(prisma.user);
           data: {
             name: categoryLookupValue,
             defaultType: type,
-            workspaceId: existingUser.workspaceId,
+            workspaceId,
           },
         });
 
@@ -76,7 +91,7 @@ console.log(prisma.user);
         transactionDate: new Date(transactionDate),
         categoryId: resolvedCategoryId,
         createdById: existingUser.id,
-        workspaceId: existingUser.workspaceId,
+        workspaceId,
       },
     });
 

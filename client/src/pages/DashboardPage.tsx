@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Grid, Card, CardContent, Typography, Button, IconButton, Divider, List, ListItem, ListItemText, ListItemAvatar, Avatar } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import PeopleIcon from '@mui/icons-material/People';
@@ -173,3 +175,5 @@ export const DashboardPage = () => {
     </PageShell>
   );
 };
+
+export default DashboardPage;

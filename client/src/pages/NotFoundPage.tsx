@@ -2,7 +2,7 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Link as RouterLink } from 'react-router-dom';
+import NextLink from '../components/NextLink';
 
 export const NotFoundPage = () => (
   <Container maxWidth="sm" sx={{ alignItems: 'center', display: 'flex', minHeight: '100vh' }}>
@@ -16,9 +16,11 @@ export const NotFoundPage = () => (
       <Typography color="text.secondary">
         The page you are looking for does not exist or has moved.
       </Typography>
-      <Button component={RouterLink} to="/dashboard" variant="contained">
+      <Button component={NextLink} href="/dashboard" variant="contained">
         Go to dashboard
       </Button>
     </Stack>
   </Container>
 );
+
+export default NotFoundPage;

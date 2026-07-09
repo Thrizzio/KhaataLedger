@@ -1,3 +1,5 @@
+"use client";
+
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -10,22 +12,23 @@ import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { authService, type RegisterPayload } from '../services/auth.service';
 import { setAuthData } from '../store/authStore';
 import Link from '@mui/material/Link';
+import NextLink from '../components/NextLink';
 
 export const RegisterPage = () => {
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      router.replace('/dashboard');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, router]);
 
   const { register, handleSubmit } = useForm<RegisterPayload>({
     defaultValues: {
@@ -114,7 +117,7 @@ export const RegisterPage = () => {
           </Button>
           <Typography variant="body2" color="text.secondary" mt={2}>
             Already have an account?{' '}
-            <Link component={RouterLink} to="/login/owner" variant="body2">
+            <Link component={NextLink} href="/login/owner" variant="body2">
               Sign in as Owner
             </Link>
           </Typography>
@@ -123,3 +126,5 @@ export const RegisterPage = () => {
     </Container>
   );
 };
+
+export default RegisterPage;

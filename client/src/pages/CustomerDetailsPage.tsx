@@ -1,13 +1,14 @@
-import { useParams } from 'react-router-dom';
 import { PageShell } from './PageShell';
 
-export const CustomerDetailsPage = () => {
-  const { id } = useParams();
+interface CustomerDetailsPageProps {
+  id: string;
+}
 
-  return (
-    <PageShell
-      description={`Customer profile and ledger history placeholder for customer ${id ?? 'unknown'}.`}
-      title="Customer Details"
-    />
-  );
-};
+export const CustomerDetailsPage = ({ id }: CustomerDetailsPageProps) => (
+  <PageShell
+    description={`Customer profile and ledger history placeholder for customer ${id ?? 'unknown'}.`}
+    title="Customer Details"
+  />
+);
+
+export default CustomerDetailsPage;

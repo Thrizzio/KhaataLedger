@@ -1,3 +1,5 @@
+"use client";
+
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -128,3 +130,5 @@ export const TransactionsPage = () => {
     </>
   );
 };
+
+export default TransactionsPage;
