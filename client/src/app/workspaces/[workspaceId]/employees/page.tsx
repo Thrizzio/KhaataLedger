@@ -1,9 +1,13 @@
 import { EmployeesPage } from '../../../../views/EmployeesPage';
 
 interface Props {
-    params: { workspaceId: string };
+    params: Promise<{
+        workspaceId: string;
+    }>;
 }
 
-export default function EmployeesRoute({ params }: Props) {
-    return <EmployeesPage workspaceId={params.workspaceId} />;
+export default async function EmployeesRoute({ params }: Props) {
+    const { workspaceId } = await params;
+
+    return <EmployeesPage workspaceId={workspaceId} />;
 }

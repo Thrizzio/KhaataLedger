@@ -1,10 +1,14 @@
 import { PageShell } from '../../../../views/PageShell';
 
 interface Props {
-    params: { workspaceId: string };
+    params: Promise<{
+        workspaceId: string;
+    }>;
 }
 
-export default function CategoriesRoute({ params: _params }: Props) {
+export default async function CategoriesRoute({ params }: Props) {
+    const { workspaceId } = await params;
+
     return (
         <PageShell
             title="Categories"

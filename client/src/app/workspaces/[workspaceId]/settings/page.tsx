@@ -1,10 +1,14 @@
 import { PageShell } from '../../../../views/PageShell';
 
 interface Props {
-    params: { workspaceId: string };
+    params: Promise<{
+        workspaceId: string;
+    }>;
 }
 
-export default function SettingsRoute({ params: _params }: Props) {
+export default async function SettingsRoute({ params }: Props) {
+    await params;
+
     return (
         <PageShell
             title="Settings"

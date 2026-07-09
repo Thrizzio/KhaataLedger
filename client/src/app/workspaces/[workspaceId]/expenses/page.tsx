@@ -1,9 +1,13 @@
 import { TransactionsPage } from '../../../../views/TransactionsPage';
 
 interface Props {
-    params: { workspaceId: string };
+    params: Promise<{
+        workspaceId: string;
+    }>;
 }
 
-export default function ExpensesRoute({ params: _params }: Props) {
+export default async function ExpensesRoute({ params }: Props) {
+    await params;
+
     return <TransactionsPage />;
 }
