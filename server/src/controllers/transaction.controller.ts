@@ -39,6 +39,10 @@ export const addTransaction: RequestHandler = async (req, res) => {
 
     if (categoryId) {
       const categoryLookupValue = String(categoryId).trim();
+      console.log(prisma);
+console.log(prisma.category);
+console.log(prisma.transaction);
+console.log(prisma.user);
       const existingCategory = await prisma.category.findFirst({
         where: {
           OR: [
