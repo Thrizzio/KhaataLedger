@@ -52,8 +52,16 @@ export const RegisterPage = () => {
         toast.error(data.message || 'Failed to register.');
       }
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || 'Failed to register. Please try again.';
-      toast.error(errorMsg);
+      const responseData = error?.response?.data;
+      if (responseData?.error?.fieldErrors) {
+        const fieldErrors = responseData.error.fieldErrors;
+        const firstField = Object.keys(fieldErrors)[0];
+        const firstError = fieldErrors[firstField][0];
+        toast.error(`Validation error - ${firstField}: ${firstError}`);
+      } else {
+        const errorMsg = responseData?.message || 'Failed to register. Please try again.';
+        toast.error(errorMsg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -68,10 +76,10 @@ export const RegisterPage = () => {
           </Avatar>
           <Box textAlign="center">
             <Typography fontWeight={700} variant="h5">
-              Sign up
+              Owner Registration
             </Typography>
             <Typography color="text.secondary" variant="body2">
-              Create your digital ledger workspace.
+              Register your business and create your owner account.
             </Typography>
           </Box>
           <TextField
@@ -102,12 +110,12 @@ export const RegisterPage = () => {
             type="submit"
             variant="contained"
           >
-            {isLoading ? 'Signing up...' : 'Sign Up'}
+            {isLoading ? 'Registering...' : 'Register as Owner'}
           </Button>
           <Typography variant="body2" color="text.secondary" mt={2}>
             Already have an account?{' '}
-            <Link component={RouterLink} to="/login" variant="body2">
-              Sign in
+            <Link component={RouterLink} to="/login/owner" variant="body2">
+              Sign in as Owner
             </Link>
           </Typography>
         </Stack>

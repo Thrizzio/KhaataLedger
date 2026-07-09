@@ -21,6 +21,8 @@ export interface LoginResponseData {
 export const authService = {
   register: (payload: RegisterPayload) =>
     httpClient.post<ApiResponse<LoginResponseData>>('/auth/register', payload),
-  login: (payload: LoginPayload) =>
-    httpClient.post<ApiResponse<LoginResponseData>>('/auth/login', payload),
+  loginOwner: (payload: LoginPayload) =>
+    httpClient.post<ApiResponse<LoginResponseData>>('/auth/login/owner', payload),
+  loginEmployee: (payload: LoginPayload) =>
+    httpClient.post<ApiResponse<LoginResponseData>>('/auth/login/employee', payload),
 };

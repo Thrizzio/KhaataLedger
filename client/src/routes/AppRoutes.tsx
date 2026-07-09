@@ -5,6 +5,8 @@ import { CustomerDetailsPage } from '../pages/CustomerDetailsPage';
 import { CustomersPage } from '../pages/CustomersPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { LoginPage } from '../pages/LoginPage';
+import { OwnerLoginPage } from '../pages/OwnerLoginPage';
+import { EmployeeLoginPage } from '../pages/EmployeeLoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ReportsPage } from '../pages/ReportsPage';
@@ -16,6 +18,8 @@ export const AppRoutes = () => (
   <Routes>
     <Route element={<Navigate replace to="/dashboard" />} path="/" />
     <Route element={<LoginPage />} path="/login" />
+    <Route element={<OwnerLoginPage />} path="/login/owner" />
+    <Route element={<EmployeeLoginPage />} path="/login/employee" />
     <Route element={<RegisterPage />} path="/register" />
     <Route element={<ProtectedRoute />}>
       <Route element={<DashboardLayout />}>

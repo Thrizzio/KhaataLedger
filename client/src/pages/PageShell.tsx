@@ -2,15 +2,16 @@ import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 import { TransactionModal } from "../components/TransactionModal";
 
 interface PageShellProps {
   title: string;
-  description: string;
+  description?: string;
+  children?: ReactNode;
 }
 
-export const PageShell = ({ title, description }: PageShellProps) => {
+export const PageShell = ({ title, description, children }: PageShellProps) => {
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
 
   const handleOpenModal = () => setOpenTransactionModal(true);
@@ -33,11 +34,15 @@ export const PageShell = ({ title, description }: PageShellProps) => {
           </Button>
         </Stack>
 
-        <Paper sx={{ p: 3 }} variant="outlined">
-          <Typography color="text.secondary">
-            {description}
-          </Typography>
-        </Paper>
+        {description && (
+          <Paper sx={{ p: 3 }} variant="outlined">
+            <Typography color="text.secondary">
+              {description}
+            </Typography>
+          </Paper>
+        )}
+
+        {children}
       </Stack>
 
       <TransactionModal
