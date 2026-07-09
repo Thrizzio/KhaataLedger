@@ -25,3 +25,6 @@ coverage/
 
 server/src/prisma/dev.db
 server/src/prisma/dev.db-journal
+
+**/.next/
+client/.next/
