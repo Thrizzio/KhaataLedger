@@ -23,12 +23,12 @@ import NextLink from '../components/NextLink';
 export const OwnerLoginPage = () => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const [from, setFrom] = useState('/dashboard');
+  const [from, setFrom] = useState('/workspaces');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const urlSearchParams = new URLSearchParams(window.location.search);
-    const redirectFrom = urlSearchParams.get('from') ?? '/dashboard';
+    const redirectFrom = urlSearchParams.get('from') ?? '/workspaces';
     setFrom(redirectFrom);
   }, []);
 
@@ -77,7 +77,7 @@ export const OwnerLoginPage = () => {
               Back
             </Button>
           </Box>
-          
+
           <Avatar sx={{ bgcolor: 'secondary.main' }}>
             <LockOutlinedIcon />
           </Avatar>

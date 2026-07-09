@@ -18,7 +18,7 @@ export const register: RequestHandler = async (request, response, next) => {
     const existingUser = await prisma.user.findUnique({
       where: { email: parsedBody.email.toLowerCase() },
     });
-    
+
     if (existingUser) {
       throw new ApiError(409, 'User with this email already exists');
     }
@@ -138,6 +138,7 @@ export const loginEmployee: RequestHandler = async (request, response, next) => 
           name: user.name,
           email: user.email,
           role: user.role,
+          workspaceId: user.workspaceId,
         },
       })
     );

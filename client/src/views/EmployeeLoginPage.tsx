@@ -14,29 +14,26 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import Link from '@mui/material/Link';
 import { useAuth } from '../hooks/useAuth';
 import { authService, type LoginPayload } from '../services/auth.service';
 import { setAuthData } from '../store/authStore';
 import NextLink from '../components/NextLink';
 
 export const EmployeeLoginPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
-  const [from, setFrom] = useState('/dashboard');
   const [isLoading, setIsLoading] = useState(false);
 
+  // If already authenticated as employee, redirect to their workspace
   useEffect(() => {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const redirectFrom = urlSearchParams.get('from') ?? '/dashboard';
-    setFrom(redirectFrom);
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace(from);
+    if (isAuthenticated && user) {
+      if (user.role === 'EMPLOYEE' && user.workspaceId) {
+        router.replace(`/workspaces/${user.workspaceId}/dashboard`);
+      } else if (user.role === 'OWNER') {
+        router.replace('/workspaces');
+      }
     }
-  }, [isAuthenticated, router, from]);
+  }, [isAuthenticated, user, router]);
 
   const { register, handleSubmit } = useForm<LoginPayload>({
     defaultValues: {
@@ -57,6 +54,13 @@ export const EmployeeLoginPage = () => {
       if (data.success && data.data) {
         setAuthData(data.data.token, data.data.user);
         toast.success(data.message || 'Successfully signed in as Employee!');
+        // Redirect immediately using the workspaceId from the response
+        const userData = data.data.user;
+        if (userData.workspaceId) {
+          router.replace(`/workspaces/${userData.workspaceId}/dashboard`);
+        } else {
+          toast.error('No workspace assigned. Contact your owner.');
+        }
       } else {
         toast.error(data.message || 'Failed to authenticate.');
       }
@@ -77,7 +81,7 @@ export const EmployeeLoginPage = () => {
               Back
             </Button>
           </Box>
-          
+
           <Avatar sx={{ bgcolor: 'primary.main' }}>
             <LockOutlinedIcon />
           </Avatar>
@@ -113,12 +117,6 @@ export const EmployeeLoginPage = () => {
           >
             {isLoading ? 'Signing in...' : 'Login as Employee'}
           </Button>
-          <Typography variant="body2" color="text.secondary" mt={2}>
-            Don't have an account?{' '}
-            <Link component={NextLink} href="/register" variant="body2">
-              Sign up
-            </Link>
-          </Typography>
         </Stack>
       </Paper>
     </Container>
