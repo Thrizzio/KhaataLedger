@@ -1,9 +1,13 @@
 import { DashboardPage } from '../../../../views/DashboardPage';
 
 interface Props {
-    params: { workspaceId: string };
+    params: Promise<{
+        workspaceId: string;
+    }>;
 }
 
-export default function WorkspaceDashboardRoute({ params }: Props) {
-    return <DashboardPage workspaceId={params.workspaceId} />;
+export default async function WorkspaceDashboardRoute({ params }: Props) {
+    const { workspaceId } = await params;
+
+    return <DashboardPage workspaceId={workspaceId} />;
 }
