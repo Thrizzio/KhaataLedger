@@ -10,7 +10,11 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import { PageShell } from './PageShell';
 import { useAuth } from '../hooks/useAuth';
 
-export const DashboardPage = () => {
+interface DashboardPageProps {
+  workspaceId?: string;
+}
+
+export const DashboardPage = ({ workspaceId: _workspaceId }: DashboardPageProps = {}) => {
   const { user } = useAuth();
   const isOwner = user?.role === 'OWNER';
 
