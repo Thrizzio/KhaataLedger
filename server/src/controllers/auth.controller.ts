@@ -57,7 +57,7 @@ export const register: RequestHandler = async (request, response, next) => {
       })
     );
   } catch (error) {
-    console.error('[REGISTER] Failed:', error);
+    console.error('[REGISTER] Failed:');
     next(error);
   }
 };
