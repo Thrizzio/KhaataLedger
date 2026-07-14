@@ -7,12 +7,12 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import AddIcon from '@mui/icons-material/Add';
 import { useQuery } from '@tanstack/react-query';
 import { PageShell } from './PageShell';
 import { useAuth } from '../hooks/useAuth';
 import NextLink from '../components/NextLink';
 import { workspaceService } from '../services/workspace.service';
+import { transactionService, type Transaction } from '../services/transaction.service';
 import type { Workspace } from '../types/workspace';
 
 interface DashboardPageProps {
@@ -27,18 +27,17 @@ function getGreeting(): string {
   return 'Good Evening';
 }
 
-const kpiCards = [
-  { label: 'Total Balance', value: '$12,450', icon: <AccountBalanceWalletIcon />, avatarBg: 'primary.light', avatarColor: 'primary.main', valueColor: 'text.primary' },
-  { label: 'Monthly Income', value: '+$8,200', icon: <TrendingUpIcon />, avatarBg: 'success.light', avatarColor: 'success.main', valueColor: 'success.main' },
-  { label: 'Monthly Expenses', value: '-$3,150', icon: <TrendingDownIcon />, avatarBg: 'error.light', avatarColor: 'error.main', valueColor: 'error.main' },
-  { label: 'Active Employees', value: '12', icon: <PeopleIcon />, avatarBg: 'secondary.light', avatarColor: 'secondary.main', valueColor: 'text.primary' },
-];
+const formatAmount = (amount: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
-const todayActivities = [
-  { id: 1, title: 'Office Supplies', desc: 'Paid via Credit Card', time: '6:39 pm', amount: '-$150.00', isExpense: true },
-  { id: 2, title: 'Client Payment - Acme Corp', desc: 'Invoice #INV-2023', time: '5:09 pm', amount: '+$2,500.00', isExpense: false },
-  { id: 3, title: 'Software Subscriptions', desc: 'Monthly Auto-pay', time: '5:03 pm', amount: '-$89.99', isExpense: true },
-];
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+const isToday = (iso: string) => {
+  const d = new Date(iso);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+};
 
 const cardSx = {
   borderRadius: 3,
@@ -53,12 +52,34 @@ export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
   const { user } = useAuth();
   const firstName = user?.name?.split(' ')[0] ?? 'there';
 
-  // Reuses the cached query from WorkspaceDashboardLayout (same queryKey)
+  // Reuses cached entry from WorkspaceDashboardLayout (same queryKey)
   const { data: workspace } = useQuery<Workspace>({
     queryKey: ['workspace', workspaceId],
     queryFn: () => workspaceService.getWorkspaceById(workspaceId!).then((r) => r.data.data as Workspace),
     enabled: Boolean(workspaceId),
   });
+
+  // Live transactions for this workspace — newest first (sorted by backend)
+  const { data: allTransactions = [] } = useQuery<Transaction[]>({
+    queryKey: ['transactions', workspaceId],
+    queryFn: () => transactionService.getTransactions(workspaceId!).then((r) => r.data.data ?? []),
+    enabled: Boolean(workspaceId),
+  });
+
+  // Derive stats from live data
+  const totalIncome = allTransactions.filter((t) => t.type === 'INCOME').reduce((s, t) => s + Number(t.amount), 0);
+  const totalExpenses = allTransactions.filter((t) => t.type === 'EXPENSE').reduce((s, t) => s + Number(t.amount), 0);
+  const netBalance = totalIncome - totalExpenses;
+
+  const kpiCards = [
+    { label: 'Net Balance', value: formatAmount(netBalance), icon: <AccountBalanceWalletIcon />, avatarBg: 'primary.light', avatarColor: 'primary.main', valueColor: netBalance < 0 ? 'error.main' : 'text.primary' },
+    { label: 'Total Income', value: `+${formatAmount(totalIncome)}`, icon: <TrendingUpIcon />, avatarBg: 'success.light', avatarColor: 'success.main', valueColor: 'success.main' },
+    { label: 'Total Expenses', value: `-${formatAmount(totalExpenses)}`, icon: <TrendingDownIcon />, avatarBg: 'error.light', avatarColor: 'error.main', valueColor: 'error.main' },
+    { label: 'Active Employees', value: String(workspace?.employeeCount ?? 0), icon: <PeopleIcon />, avatarBg: 'secondary.light', avatarColor: 'secondary.main', valueColor: 'text.primary' },
+  ];
+
+  // Today's transactions (transactionDate == today), already sorted newest-first by backend
+  const todayActivities = allTransactions.filter((t) => isToday(t.transactionDate));
 
   const allTxHref = workspaceId ? `/workspaces/${workspaceId}/expenses` : '/expenses';
   const greeting = getGreeting();
@@ -67,7 +88,7 @@ export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
     : "Here's what's happening today.";
 
   return (
-    <PageShell title="">
+    <PageShell workspaceId={workspaceId}>
 
       {/* ── Page Header ─────────────────────────────────── */}
       <Box mb={4}>
@@ -90,7 +111,7 @@ export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
                     <Typography color="text.secondary" variant="caption" fontWeight={500} sx={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>
                       {card.label}
                     </Typography>
-                    <Typography variant="h4" fontWeight={700} color={card.valueColor} sx={{ mt: 0.5, fontSize: { xs: '1.5rem', lg: '1.8rem' } }}>
+                    <Typography variant="h5" fontWeight={700} color={card.valueColor} sx={{ mt: 0.5 }}>
                       {card.value}
                     </Typography>
                   </Box>
@@ -104,7 +125,7 @@ export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
         ))}
       </Grid>
 
-      {/* ── Today's Activity (full width — Quick Actions removed) ── */}
+      {/* ── Today's Activity ────────────────────────────── */}
       <Card elevation={0} sx={cardSx}>
         <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
 
@@ -116,40 +137,42 @@ export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
           </Stack>
           <Divider />
 
-          {todayActivities.map((item, index) => (
-            <Box key={item.id}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1.75 }}>
-                <Avatar
-                  sx={{
-                    width: 36, height: 36, flexShrink: 0,
-                    bgcolor: item.isExpense ? 'error.light' : 'success.light',
-                    color: item.isExpense ? 'error.main' : 'success.main',
-                  }}
-                >
-                  {item.isExpense
-                    ? <ArrowDownwardIcon sx={{ fontSize: 16 }} />
-                    : <ArrowUpwardIcon sx={{ fontSize: 16 }} />}
-                </Avatar>
-
-                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                  <Typography variant="body2" fontWeight={600} noWrap>{item.title}</Typography>
-                  <Typography variant="caption" color="text.secondary" noWrap>{item.desc}</Typography>
-                </Box>
-
-                <Typography variant="caption" color="text.disabled" sx={{ flexShrink: 0, display: { xs: 'none', sm: 'block' } }}>
-                  {item.time}
-                </Typography>
-
-                <Typography
-                  variant="body2" fontWeight={700}
-                  sx={{ flexShrink: 0, minWidth: 80, textAlign: 'right', color: item.isExpense ? 'error.main' : 'success.main' }}
-                >
-                  {item.amount}
-                </Typography>
-              </Box>
-              {index < todayActivities.length - 1 && <Divider />}
+          {todayActivities.length === 0 ? (
+            <Box py={4} textAlign="center">
+              <Typography color="text.secondary" variant="body2">
+                No transactions recorded today.
+              </Typography>
             </Box>
-          ))}
+          ) : (
+            todayActivities.map((item, index) => {
+              const isExpense = item.type === 'EXPENSE';
+              return (
+                <Box key={item.id}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1.75 }}>
+                    <Avatar sx={{ width: 36, height: 36, flexShrink: 0, bgcolor: isExpense ? 'error.light' : 'success.light', color: isExpense ? 'error.main' : 'success.main' }}>
+                      {isExpense ? <ArrowDownwardIcon sx={{ fontSize: 16 }} /> : <ArrowUpwardIcon sx={{ fontSize: 16 }} />}
+                    </Avatar>
+
+                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                      <Typography variant="body2" fontWeight={600} noWrap>{item.title}</Typography>
+                      <Typography variant="caption" color="text.secondary" noWrap>
+                        {item.category?.name ?? 'Uncategorized'}
+                      </Typography>
+                    </Box>
+
+                    <Typography variant="caption" color="text.disabled" sx={{ flexShrink: 0, display: { xs: 'none', sm: 'block' } }}>
+                      {formatTime(item.transactionDate)}
+                    </Typography>
+
+                    <Typography variant="body2" fontWeight={700} sx={{ flexShrink: 0, minWidth: 80, textAlign: 'right', color: isExpense ? 'error.main' : 'success.main' }}>
+                      {isExpense ? '-' : '+'}{formatAmount(Number(item.amount))}
+                    </Typography>
+                  </Box>
+                  {index < todayActivities.length - 1 && <Divider />}
+                </Box>
+              );
+            })
+          )}
 
           <Box textAlign="center" mt={1.5}>
             <Button component={NextLink} href={allTxHref} size="small" color="primary" sx={{ textTransform: 'none', fontWeight: 500 }}>

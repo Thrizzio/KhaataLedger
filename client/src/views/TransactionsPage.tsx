@@ -2,6 +2,7 @@
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
@@ -12,108 +13,89 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { TransactionModal } from '../components/TransactionModal';
-import { transactionService } from '../services/transaction.service';
+import { transactionService, type Transaction } from '../services/transaction.service';
 
-interface TransactionRecord {
-  id: string;
-  title: string;
-  description?: string | null;
-  amount: number | string;
-  type: 'INCOME' | 'EXPENSE';
-  transactionDate: string;
-  category?: {
-    name?: string;
-  } | null;
+interface TransactionsPageProps {
+  workspaceId: string;
 }
 
-export const TransactionsPage = () => {
-  const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [openTransactionModal, setOpenTransactionModal] = useState(false);
+const formatAmount = (amount: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const response = await transactionService.getTransactions();
-        const payload = response.data as unknown;
+const formatDate = (value: string) => {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
-        if (Array.isArray(payload)) {
-          setTransactions(payload as TransactionRecord[]);
-        } else if (payload && typeof payload === 'object' && 'data' in payload) {
-          const data = (payload as { data?: TransactionRecord[] }).data ?? [];
-          setTransactions(data);
-        } else {
-          setTransactions([]);
-        }
-      } catch (error) {
-        console.error('Failed to fetch transactions', error);
-        setTransactions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+export const TransactionsPage = ({ workspaceId }: TransactionsPageProps) => {
+  const [openModal, setOpenModal] = useState(false);
 
-    fetchTransactions();
-  }, []);
-
-  const formatAmount = (amount: number | string) => {
-    const numericAmount = typeof amount === 'number' ? amount : Number(amount);
-
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(Number.isNaN(numericAmount) ? 0 : numericAmount);
-  };
-
-  const formatDate = (value: string) => {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
-  };
+  const { data: transactions = [], isLoading } = useQuery<Transaction[]>({
+    queryKey: ['transactions', workspaceId],
+    queryFn: () => transactionService.getTransactions(workspaceId).then((r) => r.data.data ?? []),
+    enabled: Boolean(workspaceId),
+  });
 
   return (
     <>
       <Stack spacing={3}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="h4" fontWeight={700}>
-            Transactions
-          </Typography>
-
-          <Button variant="contained" onClick={() => setOpenTransactionModal(true)}>
+          <Typography variant="h4" fontWeight={700}>Transactions</Typography>
+          <Button variant="contained" onClick={() => setOpenModal(true)}>
             + Add Transaction
           </Button>
         </Stack>
 
-        <Paper sx={{ p: 3 }} variant="outlined">
-          {loading ? (
+        <Paper sx={{ p: 3, borderRadius: 3 }} variant="outlined">
+          {isLoading ? (
             <Box display="flex" justifyContent="center" py={4}>
               <CircularProgress />
             </Box>
           ) : transactions.length === 0 ? (
-            <Typography color="text.secondary">No transactions found</Typography>
+            <Typography color="text.secondary" textAlign="center" py={4}>
+              No transactions found for this workspace.
+            </Typography>
           ) : (
             <TableContainer>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Title</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Category</TableCell>
-                    <TableCell>Transaction Date</TableCell>
+                    <TableCell><Typography fontWeight={600} fontSize={13}>Title</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600} fontSize={13}>Category</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600} fontSize={13}>Amount</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600} fontSize={13}>Type</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600} fontSize={13}>Date</Typography></TableCell>
+                    <TableCell><Typography fontWeight={600} fontSize={13}>Added By</Typography></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {transactions.map((transaction) => (
-                    <TableRow key={transaction.id} hover>
-                      <TableCell>{transaction.title}</TableCell>
-                      <TableCell>{transaction.description || '—'}</TableCell>
-                      <TableCell>{formatAmount(transaction.amount)}</TableCell>
-                      <TableCell>{transaction.type}</TableCell>
-                      <TableCell>{transaction.category?.name ?? 'Uncategorized'}</TableCell>
-                      <TableCell>{formatDate(transaction.transactionDate)}</TableCell>
+                  {transactions.map((tx) => (
+                    <TableRow key={tx.id} hover>
+                      <TableCell>
+                        <Typography fontSize={14} fontWeight={500}>{tx.title}</Typography>
+                        {tx.description && (
+                          <Typography fontSize={12} color="text.secondary" noWrap sx={{ maxWidth: 200 }}>{tx.description}</Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>{tx.category?.name ?? '—'}</TableCell>
+                      <TableCell>
+                        <Typography fontWeight={600} color={tx.type === 'INCOME' ? 'success.main' : 'error.main'}>
+                          {tx.type === 'INCOME' ? '+' : '-'}{formatAmount(tx.amount)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={tx.type}
+                          size="small"
+                          color={tx.type === 'INCOME' ? 'success' : 'error'}
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>{formatDate(tx.transactionDate)}</TableCell>
+                      <TableCell>{tx.createdBy?.name ?? '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -124,8 +106,9 @@ export const TransactionsPage = () => {
       </Stack>
 
       <TransactionModal
-        open={openTransactionModal}
-        onClose={() => setOpenTransactionModal(false)}
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        workspaceId={workspaceId}
       />
     </>
   );

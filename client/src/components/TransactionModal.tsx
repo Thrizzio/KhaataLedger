@@ -10,15 +10,20 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { useState, type FormEvent } from 'react';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '../services/transaction.service';
 import { getAuthState } from '../store/authStore';
 
 interface TransactionModalProps {
   open: boolean;
   onClose: () => void;
+  /** The workspace this transaction belongs to */
+  workspaceId: string;
 }
 
-export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
+export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModalProps) => {
+  const queryClient = useQueryClient();
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -57,8 +62,12 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
       return;
     }
 
-    setIsLoading(true);
+    if (!workspaceId) {
+      toast.error('No workspace selected.');
+      return;
+    }
 
+    setIsLoading(true);
     try {
       await transactionService.createTransaction({
         title,
@@ -68,11 +77,18 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
         transactionDate,
         categoryId: category,
         createdById: currentUser.id,
+        workspaceId,
       });
 
       toast.success('Transaction added successfully');
       resetForm();
       onClose();
+
+      // ── Live updates: invalidate all affected queries ──────────────────
+      // Transactions list on the expenses page
+      await queryClient.invalidateQueries({ queryKey: ['transactions', workspaceId] });
+      // Dashboard data (Today's Activity + stats use the same key)
+      await queryClient.invalidateQueries({ queryKey: ['transactions-today', workspaceId] });
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || 'Failed to add transaction.';
       toast.error(errorMsg);
@@ -92,16 +108,16 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
               required
               fullWidth
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(e) => setTitle(e.target.value)}
             />
 
             <TextField
               label="Description"
               multiline
-              minRows={3}
+              minRows={2}
               fullWidth
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
             />
 
             <TextField
@@ -110,7 +126,7 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
               required
               fullWidth
               value={amount}
-              onChange={(event) => setAmount(event.target.value)}
+              onChange={(e) => setAmount(e.target.value)}
               inputProps={{ min: 0, step: '0.01' }}
             />
 
@@ -120,10 +136,10 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
               required
               fullWidth
               value={type}
-              onChange={(event) => setType(event.target.value as 'INCOME' | 'EXPENSE')}
+              onChange={(e) => setType(e.target.value as 'INCOME' | 'EXPENSE')}
             >
-              <MenuItem value="INCOME">INCOME</MenuItem>
-              <MenuItem value="EXPENSE">EXPENSE</MenuItem>
+              <MenuItem value="INCOME">Income</MenuItem>
+              <MenuItem value="EXPENSE">Expense</MenuItem>
             </TextField>
 
             <TextField
@@ -132,7 +148,7 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
               required
               fullWidth
               value={transactionDate}
-              onChange={(event) => setTransactionDate(event.target.value)}
+              onChange={(e) => setTransactionDate(e.target.value)}
               InputLabelProps={{ shrink: true }}
             />
 
@@ -142,9 +158,8 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
               required
               fullWidth
               value={category}
-              onChange={(event) => setCategory(event.target.value)}
+              onChange={(e) => setCategory(e.target.value)}
             >
-              <MenuItem value="">None</MenuItem>
               <MenuItem value="office">Office</MenuItem>
               <MenuItem value="travel">Travel</MenuItem>
               <MenuItem value="utilities">Utilities</MenuItem>
@@ -154,9 +169,7 @@ export const TransactionModal = ({ open, onClose }: TransactionModalProps) => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} disabled={isLoading}>
-            Cancel
-          </Button>
+          <Button onClick={handleClose} disabled={isLoading}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={isLoading}>
             {isLoading ? 'Saving...' : 'Save'}
           </Button>

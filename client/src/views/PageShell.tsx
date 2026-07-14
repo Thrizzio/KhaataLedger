@@ -11,9 +11,11 @@ interface PageShellProps {
   title?: string;
   description?: string;
   children?: ReactNode;
+  /** Pass the current workspace so the modal can scope new transactions correctly */
+  workspaceId?: string;
 }
 
-export const PageShell = ({ title, description, children }: PageShellProps) => {
+export const PageShell = ({ title, description, children, workspaceId = '' }: PageShellProps) => {
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
 
   const handleOpenModal = () => setOpenTransactionModal(true);
@@ -52,6 +54,7 @@ export const PageShell = ({ title, description, children }: PageShellProps) => {
       <TransactionModal
         open={openTransactionModal}
         onClose={handleCloseModal}
+        workspaceId={workspaceId}
       />
     </>
   );
