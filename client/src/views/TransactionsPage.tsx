@@ -64,7 +64,6 @@ export const TransactionsPage = ({ workspaceId }: TransactionsPageProps) => {
                 <TableHead>
                   <TableRow>
                     <TableCell><Typography fontWeight={600} fontSize={13}>Title</Typography></TableCell>
-                    <TableCell><Typography fontWeight={600} fontSize={13}>Category</Typography></TableCell>
                     <TableCell><Typography fontWeight={600} fontSize={13}>Amount</Typography></TableCell>
                     <TableCell><Typography fontWeight={600} fontSize={13}>Type</Typography></TableCell>
                     <TableCell><Typography fontWeight={600} fontSize={13}>Date</Typography></TableCell>
@@ -80,7 +79,6 @@ export const TransactionsPage = ({ workspaceId }: TransactionsPageProps) => {
                           <Typography fontSize={12} color="text.secondary" noWrap sx={{ maxWidth: 200 }}>{tx.description}</Typography>
                         )}
                       </TableCell>
-                      <TableCell>{tx.category?.name ?? '—'}</TableCell>
                       <TableCell>
                         <Typography fontWeight={600} color={tx.type === 'INCOME' ? 'success.main' : 'error.main'}>
                           {tx.type === 'INCOME' ? '+' : '-'}{formatAmount(tx.amount)}

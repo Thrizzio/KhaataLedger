@@ -29,7 +29,6 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
   const [transactionDate, setTransactionDate] = useState('');
-  const [category, setCategory] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const resetForm = () => {
@@ -38,7 +37,6 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
     setAmount('');
     setType('INCOME');
     setTransactionDate('');
-    setCategory('');
   };
 
   const handleClose = () => {
@@ -51,7 +49,7 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!title || !amount || !type || !transactionDate || !category) {
+    if (!title || !amount || !type || !transactionDate) {
       toast.error('Please fill in all required fields.');
       return;
     }
@@ -75,7 +73,6 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
         amount: Number(amount),
         type,
         transactionDate,
-        categoryId: category,
         createdById: currentUser.id,
         workspaceId,
       });
@@ -152,20 +149,7 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
               InputLabelProps={{ shrink: true }}
             />
 
-            <TextField
-              select
-              label="Category"
-              required
-              fullWidth
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <MenuItem value="office">Office</MenuItem>
-              <MenuItem value="travel">Travel</MenuItem>
-              <MenuItem value="utilities">Utilities</MenuItem>
-              <MenuItem value="sales">Sales</MenuItem>
-              <MenuItem value="misc">Miscellaneous</MenuItem>
-            </TextField>
+
           </Stack>
         </DialogContent>
         <DialogActions>

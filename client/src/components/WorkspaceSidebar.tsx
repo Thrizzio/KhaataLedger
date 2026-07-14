@@ -1,7 +1,6 @@
 "use client";
 
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import CategoryIcon from '@mui/icons-material/Category';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import GroupIcon from '@mui/icons-material/Group';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -38,7 +37,6 @@ const getNavItems = (workspaceId: string, role?: UserRole) => {
     const ownerItems = [
         { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
         { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Categories', path: `${base}/categories`, icon: <CategoryIcon sx={{ fontSize: 20 }} /> },
         { label: 'Employees', path: `${base}/employees`, icon: <GroupIcon sx={{ fontSize: 20 }} /> },
         { label: 'Reports', path: `${base}/reports`, icon: <AssessmentIcon sx={{ fontSize: 20 }} /> },
         { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> },
@@ -46,7 +44,6 @@ const getNavItems = (workspaceId: string, role?: UserRole) => {
     const employeeItems = [
         { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
         { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Categories', path: `${base}/categories`, icon: <CategoryIcon sx={{ fontSize: 20 }} /> },
     ];
     return role === 'OWNER' ? ownerItems : employeeItems;
 };

@@ -50,6 +50,7 @@ export const PageShell = ({ title, description, children }: PageShellProps) => {
       <TransactionModal
         open={openTransactionModal}
         onClose={handleCloseModal}
+        workspaceId=""
       />
     </>
   );

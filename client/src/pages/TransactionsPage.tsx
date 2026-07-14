@@ -23,9 +23,7 @@ interface TransactionRecord {
   amount: number | string;
   type: 'INCOME' | 'EXPENSE';
   transactionDate: string;
-  category?: {
-    name?: string;
-  } | null;
+
 }
 
 export const TransactionsPage = () => {
@@ -36,7 +34,7 @@ export const TransactionsPage = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await transactionService.getTransactions();
+        const response = await transactionService.getTransactions("");
         const payload = response.data as unknown;
 
         if (Array.isArray(payload)) {
@@ -101,7 +99,7 @@ export const TransactionsPage = () => {
                     <TableCell>Description</TableCell>
                     <TableCell>Amount</TableCell>
                     <TableCell>Type</TableCell>
-                    <TableCell>Category</TableCell>
+
                     <TableCell>Transaction Date</TableCell>
                   </TableRow>
                 </TableHead>
@@ -112,7 +110,7 @@ export const TransactionsPage = () => {
                       <TableCell>{transaction.description || '—'}</TableCell>
                       <TableCell>{formatAmount(transaction.amount)}</TableCell>
                       <TableCell>{transaction.type}</TableCell>
-                      <TableCell>{transaction.category?.name ?? 'Uncategorized'}</TableCell>
+
                       <TableCell>{formatDate(transaction.transactionDate)}</TableCell>
                     </TableRow>
                   ))}
@@ -126,6 +124,7 @@ export const TransactionsPage = () => {
       <TransactionModal
         open={openTransactionModal}
         onClose={() => setOpenTransactionModal(false)}
+        workspaceId=""
       />
     </>
   );

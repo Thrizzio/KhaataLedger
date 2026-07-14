@@ -156,7 +156,7 @@ export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
                     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                       <Typography variant="body2" fontWeight={600} noWrap>{item.title}</Typography>
                       <Typography variant="caption" color="text.secondary" noWrap>
-                        {item.category?.name ?? 'Uncategorized'}
+                        {isExpense ? 'Expense' : 'Income'}
                       </Typography>
                     </Box>
 
