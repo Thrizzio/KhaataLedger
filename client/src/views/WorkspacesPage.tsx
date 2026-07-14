@@ -25,6 +25,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import PeopleIcon from '@mui/icons-material/People';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import LogoutIcon from '@mui/icons-material/Logout';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
 import toast from 'react-hot-toast';
@@ -107,7 +108,7 @@ export const WorkspacesPage = () => {
                             Your Workspaces
                         </Typography>
                         <Typography color="text.secondary">
-                            Select a workspace to open or create a new one.
+                            Manage your workspaces, create new ones, or open an existing workspace.
                         </Typography>
                     </Box>
                     <Button
@@ -188,7 +189,8 @@ export const WorkspacesPage = () => {
                                                 variant="outlined"
                                             />
                                             <Chip
-                                                label="₹ — Expenses"
+                                                icon={<CalendarTodayIcon />}
+                                                label={new Date(workspace.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                 size="small"
                                                 variant="outlined"
                                                 color="default"
