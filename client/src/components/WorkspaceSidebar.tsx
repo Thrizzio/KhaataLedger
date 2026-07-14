@@ -4,18 +4,26 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import CategoryIcon from '@mui/icons-material/Category';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import GroupIcon from '@mui/icons-material/Group';
+import LogoutIcon from '@mui/icons-material/Logout';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SettingsIcon from '@mui/icons-material/Settings';
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Toolbar from '@mui/material/Toolbar';
-import { usePathname } from 'next/navigation';
+import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import { usePathname, useRouter } from 'next/navigation';
 import NextLink from './NextLink';
 import type { UserRole } from '../types/auth';
+import { useAuth } from '../hooks/useAuth';
+import { setAuthData } from '../store/authStore';
 
 interface WorkspaceSidebarProps {
     workspaceId: string;
@@ -27,26 +35,24 @@ interface WorkspaceSidebarProps {
 
 const getNavItems = (workspaceId: string, role?: UserRole) => {
     const base = `/workspaces/${workspaceId}`;
-
     const ownerItems = [
-        { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon /> },
-        { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon /> },
-        { label: 'Categories', path: `${base}/categories`, icon: <CategoryIcon /> },
-        { label: 'Employees', path: `${base}/employees`, icon: <GroupIcon /> },
-        { label: 'Reports', path: `${base}/reports`, icon: <AssessmentIcon /> },
-        { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon /> },
+        { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Categories', path: `${base}/categories`, icon: <CategoryIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Employees', path: `${base}/employees`, icon: <GroupIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Reports', path: `${base}/reports`, icon: <AssessmentIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> },
     ];
-
     const employeeItems = [
-        { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon /> },
-        { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon /> },
-        { label: 'Categories', path: `${base}/categories`, icon: <CategoryIcon /> },
+        { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Categories', path: `${base}/categories`, icon: <CategoryIcon sx={{ fontSize: 20 }} /> },
     ];
-
     return role === 'OWNER' ? ownerItems : employeeItems;
 };
 
-const NavList = ({
+// Extracted so both mobile + desktop drawers share identical content
+const DrawerContent = ({
     workspaceId,
     userRole,
     pathname,
@@ -55,53 +61,108 @@ const NavList = ({
     userRole?: UserRole;
     pathname: string | null;
 }) => {
+    const { user } = useAuth();
+    const router = useRouter();
     const items = getNavItems(workspaceId, userRole);
 
+    const handleLogout = () => {
+        setAuthData(null, null);
+        router.replace('/login');
+    };
+
     return (
-        <List sx={{ px: 1.5 }}>
-            {items.map((item) => {
-                const isActive = pathname === item.path;
-                return (
-                    <ListItemButton
-                        component={NextLink}
-                        key={item.path}
-                        href={item.path}
-                        sx={{
-                            borderRadius: 3,
-                            mb: 0.5,
-                            ...(isActive
-                                ? {
-                                    bgcolor: 'primary.main',
-                                    color: 'primary.contrastText',
-                                    '& .MuiListItemIcon-root': { color: 'primary.contrastText' },
-                                }
-                                : {}),
-                        }}
-                    >
-                        <ListItemIcon>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.label} />
-                    </ListItemButton>
-                );
-            })}
-        </List>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+            {/* ── Brand (doubles as Toolbar spacer, height matches AppBar) ── */}
+            <Box sx={{ height: 64, px: 2.5, display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+                <Avatar sx={{ width: 36, height: 36, background: 'linear-gradient(135deg,#4F46E5,#7C3AED)', fontSize: 13, fontWeight: 800 }}>
+                    KL
+                </Avatar>
+                <Box>
+                    <Typography fontSize={14} fontWeight={700} lineHeight={1.25} color="text.primary">
+                        Khaata Ledger
+                    </Typography>
+                    <Typography fontSize={11} color="text.secondary" lineHeight={1.25}>
+                        Digital Ledger
+                    </Typography>
+                </Box>
+            </Box>
+
+            <Divider />
+
+            {/* ── Nav Items ─────────────────────────────────────────────── */}
+            <List sx={{ px: 1.5, py: 1.5, flexGrow: 1 }}>
+                {items.map((item) => {
+                    const isActive = pathname === item.path;
+                    return (
+                        <ListItemButton
+                            component={NextLink}
+                            key={item.path}
+                            href={item.path}
+                            sx={{
+                                borderRadius: 2,
+                                mb: 0.5,
+                                py: 0.875,
+                                px: 1.5,
+                                minHeight: 44,
+                                color: isActive ? 'primary.contrastText' : 'text.secondary',
+                                bgcolor: isActive ? 'primary.main' : 'transparent',
+                                '&:hover': {
+                                    bgcolor: isActive ? 'primary.dark' : 'action.hover',
+                                    color: isActive ? 'primary.contrastText' : 'text.primary',
+                                    '& .MuiListItemIcon-root': { color: isActive ? 'primary.contrastText' : 'text.primary' },
+                                },
+                                '& .MuiListItemIcon-root': {
+                                    color: isActive ? 'primary.contrastText' : 'text.secondary',
+                                    minWidth: 36,
+                                    transition: 'color 0.15s',
+                                },
+                                transition: 'background-color 0.15s, color 0.15s',
+                            }}
+                        >
+                            <ListItemIcon>{item.icon}</ListItemIcon>
+                            <ListItemText
+                                primary={item.label}
+                                primaryTypographyProps={{ fontSize: 13.5, fontWeight: isActive ? 600 : 500 }}
+                            />
+                            {isActive && (
+                                <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.85)', flexShrink: 0 }} />
+                            )}
+                        </ListItemButton>
+                    );
+                })}
+            </List>
+
+            {/* ── Profile ───────────────────────────────────────────────── */}
+            <Divider />
+            <Box sx={{ px: 2, py: 1.75 }}>
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <Avatar sx={{ width: 34, height: 34, bgcolor: 'secondary.main', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                        {user?.name?.[0]?.toUpperCase() ?? 'U'}
+                    </Avatar>
+                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                        <Typography fontSize={13} fontWeight={600} lineHeight={1.3} noWrap color="text.primary">
+                            {user?.name ?? '—'}
+                        </Typography>
+                        <Typography fontSize={11} color="text.secondary" lineHeight={1.3} sx={{ textTransform: 'capitalize' }}>
+                            {user?.role?.toLowerCase() ?? 'user'}
+                        </Typography>
+                    </Box>
+                    <Tooltip title="Logout">
+                        <IconButton size="small" onClick={handleLogout} sx={{ color: 'text.secondary', flexShrink: 0 }}>
+                            <LogoutIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
+            </Box>
+
+        </Box>
     );
 };
 
-export const WorkspaceSidebar = ({
-    workspaceId,
-    mobileOpen,
-    onClose,
-    userRole,
-    drawerWidth,
-}: WorkspaceSidebarProps) => {
+export const WorkspaceSidebar = ({ workspaceId, mobileOpen, onClose, userRole, drawerWidth }: WorkspaceSidebarProps) => {
     const pathname = usePathname();
-
-    const drawerContent = (
-        <Box>
-            <Toolbar />
-            <NavList workspaceId={workspaceId} userRole={userRole} pathname={pathname} />
-        </Box>
-    );
+    const content = <DrawerContent workspaceId={workspaceId} userRole={userRole} pathname={pathname} />;
 
     return (
         <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
@@ -112,22 +173,22 @@ export const WorkspaceSidebar = ({
                 open={mobileOpen}
                 sx={{
                     display: { xs: 'block', md: 'none' },
-                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, border: 'none', boxShadow: '4px 0 20px rgba(0,0,0,0.08)' },
                 }}
                 variant="temporary"
             >
-                {drawerContent}
+                {content}
             </Drawer>
             {/* Desktop */}
             <Drawer
                 open
                 sx={{
                     display: { xs: 'none', md: 'block' },
-                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: '1px solid', borderColor: 'divider' },
                 }}
                 variant="permanent"
             >
-                {drawerContent}
+                {content}
             </Drawer>
         </Box>
     );
