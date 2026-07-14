@@ -4,7 +4,6 @@ import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import Toolbar from '@mui/material/Toolbar';
 import { WorkspaceNavbar } from '../components/WorkspaceNavbar';
 import { WorkspaceSidebar } from '../components/WorkspaceSidebar';
 import { workspaceService } from '../services/workspace.service';
@@ -35,44 +34,47 @@ export const WorkspaceDashboardLayout = ({
     });
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <WorkspaceNavbar
-                onMenuClick={() => setMobileOpen(true)}
-                workspaceName={workspace?.name ?? '…'}
-                userName={user?.name ?? ''}
+        // Outer: horizontal flex — sidebar | main column
+        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+
+            <WorkspaceSidebar
                 workspaceId={workspaceId}
+                mobileOpen={mobileOpen}
+                onClose={() => setMobileOpen(false)}
+                userRole={user?.role}
+                drawerWidth={drawerWidth}
             />
 
-            <Box sx={{ display: 'flex', flexGrow: 1, width: '100%' }}>
-                <WorkspaceSidebar
+            {/* Main column: navbar on top, then scrollable content below */}
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minWidth: 0,
+                    // Offset for permanent sidebar on md+
+                    width: { md: `calc(100% - ${drawerWidth}px)` },
+                }}
+            >
+                {/* AppBar is now INSIDE the main column → never overlapped by the sidebar */}
+                <WorkspaceNavbar
+                    onMenuClick={() => setMobileOpen(true)}
+                    workspaceName={workspace?.name ?? '…'}
                     workspaceId={workspaceId}
-                    mobileOpen={mobileOpen}
-                    onClose={() => setMobileOpen(false)}
-                    userRole={user?.role}
-                    drawerWidth={drawerWidth}
                 />
 
-                <Box
-                    component="main"
-                    sx={{
-                        flexGrow: 1,
-                        minWidth: 0,
-                        width: { md: `calc(100% - ${drawerWidth}px)` },
-                    }}
-                >
-                    <Toolbar />
+                <Box sx={{ flexGrow: 1 }}>
                     <Container
                         maxWidth={false}
                         disableGutters
-                        sx={{
-                            py: 4,
-                            px: { xs: 2, sm: 3, md: 4 },
-                        }}
+                        sx={{ py: 4, px: { xs: 2, sm: 3, md: 4 } }}
                     >
                         {children}
                     </Container>
                 </Box>
             </Box>
+
         </Box>
     );
 };

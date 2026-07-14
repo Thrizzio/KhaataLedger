@@ -8,7 +8,7 @@ import { useState, ReactNode } from "react";
 import { TransactionModal } from "../components/TransactionModal";
 
 interface PageShellProps {
-  title: string;
+  title?: string;
   description?: string;
   children?: ReactNode;
 }
@@ -27,11 +27,13 @@ export const PageShell = ({ title, description, children }: PageShellProps) => {
           justifyContent="space-between"
           alignItems="center"
         >
-          <Typography variant="h4" fontWeight={700}>
-            {title}
-          </Typography>
+          {title && (
+            <Typography variant="h4" fontWeight={700}>
+              {title}
+            </Typography>
+          )}
 
-          <Button variant="contained" onClick={handleOpenModal}>
+          <Button variant="contained" onClick={handleOpenModal} sx={{ ml: 'auto' }}>
             + Add Transaction
           </Button>
         </Stack>

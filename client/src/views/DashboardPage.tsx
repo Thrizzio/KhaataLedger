@@ -5,15 +5,26 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import PeopleIcon from '@mui/icons-material/People';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import AddIcon from '@mui/icons-material/Add';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import AddIcon from '@mui/icons-material/Add';
+import { useQuery } from '@tanstack/react-query';
 import { PageShell } from './PageShell';
 import { useAuth } from '../hooks/useAuth';
 import NextLink from '../components/NextLink';
+import { workspaceService } from '../services/workspace.service';
+import type { Workspace } from '../types/workspace';
 
 interface DashboardPageProps {
   workspaceId?: string;
+}
+
+/** Returns "Good Morning", "Good Afternoon", or "Good Evening" */
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good Morning';
+  if (h < 18) return 'Good Afternoon';
+  return 'Good Evening';
 }
 
 const kpiCards = [
@@ -30,40 +41,49 @@ const todayActivities = [
 ];
 
 const cardSx = {
-  elevation: 0,
-  sx: {
-    borderRadius: 3,
-    border: '1px solid',
-    borderColor: 'divider',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-    transition: 'box-shadow 0.2s, transform 0.2s',
-    '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.10)', transform: 'translateY(-1px)' },
-  },
+  borderRadius: 3,
+  border: '1px solid',
+  borderColor: 'divider',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+  transition: 'box-shadow 0.2s, transform 0.2s',
+  '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.10)', transform: 'translateY(-1px)' },
 };
 
 export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
   const { user } = useAuth();
-  const isOwner = user?.role === 'OWNER';
+  const firstName = user?.name?.split(' ')[0] ?? 'there';
+
+  // Reuses the cached query from WorkspaceDashboardLayout (same queryKey)
+  const { data: workspace } = useQuery<Workspace>({
+    queryKey: ['workspace', workspaceId],
+    queryFn: () => workspaceService.getWorkspaceById(workspaceId!).then((r) => r.data.data as Workspace),
+    enabled: Boolean(workspaceId),
+  });
+
   const allTxHref = workspaceId ? `/workspaces/${workspaceId}/expenses` : '/expenses';
+  const greeting = getGreeting();
+  const subtitle = workspace?.name
+    ? `Here's what's happening at ${workspace.name} today.`
+    : "Here's what's happening today.";
 
   return (
-    <PageShell title={isOwner ? 'Owner Dashboard' : 'Employee Portal'}>
+    <PageShell title="">
 
-      {/* Welcome */}
-      <Box mb={3.5}>
-        <Typography variant="h5" fontWeight={700} gutterBottom>
-          Welcome back, {user?.name || 'User'}!
+      {/* ── Page Header ─────────────────────────────────── */}
+      <Box mb={4}>
+        <Typography variant="h4" fontWeight={700} gutterBottom lineHeight={1.2}>
+          {greeting}, {firstName}
         </Typography>
-        <Typography color="text.secondary" variant="body2">
-          Here is what's happening with your business today.
+        <Typography color="text.secondary" variant="body1">
+          {subtitle}
         </Typography>
       </Box>
 
-      {/* KPI Cards */}
+      {/* ── KPI Cards ───────────────────────────────────── */}
       <Grid container spacing={2.5} mb={4}>
         {kpiCards.map((card) => (
           <Grid item xs={12} sm={6} md={3} key={card.label}>
-            <Card {...cardSx}>
+            <Card elevation={0} sx={cardSx}>
               <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                   <Box>
@@ -84,95 +104,62 @@ export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
         ))}
       </Grid>
 
-      {/* Quick Actions + Today's Activity */}
-      <Grid container spacing={3}>
+      {/* ── Today's Activity (full width — Quick Actions removed) ── */}
+      <Card elevation={0} sx={cardSx}>
+        <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
 
-        {/* Quick Actions */}
-        <Grid item xs={12} md={4}>
-          <Card {...cardSx} sx={{ ...cardSx.sx, height: '100%' }}>
-            <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
-              <Typography variant="h6" fontWeight={700} mb={2}>Quick Actions</Typography>
-              <Divider sx={{ mb: 2.5 }} />
-              <Stack spacing={1.5}>
-                <Button variant="contained" startIcon={<AddIcon />} fullWidth sx={{ borderRadius: 2, py: 1.25, textTransform: 'none', fontWeight: 600 }}>
-                  Record Income
-                </Button>
-                <Button variant="outlined" color="error" startIcon={<AddIcon />} fullWidth sx={{ borderRadius: 2, py: 1.25, textTransform: 'none', fontWeight: 600 }}>
-                  Record Expense
-                </Button>
-                {isOwner && (
-                  <Button variant="outlined" color="secondary" startIcon={<PeopleIcon />} fullWidth sx={{ borderRadius: 2, py: 1.25, textTransform: 'none', fontWeight: 600 }}>
-                    Manage Employees
-                  </Button>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
+            <Typography variant="h6" fontWeight={700}>Today's Activity</Typography>
+            <Button component={NextLink} href={allTxHref} size="small" sx={{ textTransform: 'none', fontWeight: 500, fontSize: 13 }}>
+              View all
+            </Button>
+          </Stack>
+          <Divider />
 
-        {/* Today's Activity */}
-        <Grid item xs={12} md={8}>
-          <Card {...cardSx} sx={{ ...cardSx.sx, height: '100%' }}>
-            <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+          {todayActivities.map((item, index) => (
+            <Box key={item.id}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1.75 }}>
+                <Avatar
+                  sx={{
+                    width: 36, height: 36, flexShrink: 0,
+                    bgcolor: item.isExpense ? 'error.light' : 'success.light',
+                    color: item.isExpense ? 'error.main' : 'success.main',
+                  }}
+                >
+                  {item.isExpense
+                    ? <ArrowDownwardIcon sx={{ fontSize: 16 }} />
+                    : <ArrowUpwardIcon sx={{ fontSize: 16 }} />}
+                </Avatar>
 
-              {/* Header */}
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
-                <Typography variant="h6" fontWeight={700}>Today's Activity</Typography>
-                <Button component={NextLink} href={allTxHref} size="small" sx={{ textTransform: 'none', fontWeight: 500, fontSize: 13 }}>
-                  View all
-                </Button>
-              </Stack>
-              <Divider />
-
-              {/* Rows */}
-              {todayActivities.map((item, index) => (
-                <Box key={item.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1.75 }}>
-                    <Avatar
-                      sx={{
-                        width: 36, height: 36, flexShrink: 0,
-                        bgcolor: item.isExpense ? 'error.light' : 'success.light',
-                        color: item.isExpense ? 'error.main' : 'success.main',
-                      }}
-                    >
-                      {item.isExpense
-                        ? <ArrowDownwardIcon sx={{ fontSize: 16 }} />
-                        : <ArrowUpwardIcon sx={{ fontSize: 16 }} />
-                      }
-                    </Avatar>
-
-                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                      <Typography variant="body2" fontWeight={600} noWrap>{item.title}</Typography>
-                      <Typography variant="caption" color="text.secondary" noWrap>{item.desc}</Typography>
-                    </Box>
-
-                    <Typography variant="caption" color="text.disabled" sx={{ flexShrink: 0, display: { xs: 'none', sm: 'block' } }}>
-                      {item.time}
-                    </Typography>
-
-                    <Typography
-                      variant="body2" fontWeight={700}
-                      sx={{ flexShrink: 0, minWidth: 72, textAlign: 'right', color: item.isExpense ? 'error.main' : 'success.main' }}
-                    >
-                      {item.amount}
-                    </Typography>
-                  </Box>
-                  {index < todayActivities.length - 1 && <Divider />}
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                  <Typography variant="body2" fontWeight={600} noWrap>{item.title}</Typography>
+                  <Typography variant="caption" color="text.secondary" noWrap>{item.desc}</Typography>
                 </Box>
-              ))}
 
-              {/* Footer link */}
-              <Box textAlign="center" mt={1.5}>
-                <Button component={NextLink} href={allTxHref} size="small" color="primary" sx={{ textTransform: 'none', fontWeight: 500 }}>
-                  View All Transactions
-                </Button>
+                <Typography variant="caption" color="text.disabled" sx={{ flexShrink: 0, display: { xs: 'none', sm: 'block' } }}>
+                  {item.time}
+                </Typography>
+
+                <Typography
+                  variant="body2" fontWeight={700}
+                  sx={{ flexShrink: 0, minWidth: 80, textAlign: 'right', color: item.isExpense ? 'error.main' : 'success.main' }}
+                >
+                  {item.amount}
+                </Typography>
               </Box>
+              {index < todayActivities.length - 1 && <Divider />}
+            </Box>
+          ))}
 
-            </CardContent>
-          </Card>
-        </Grid>
+          <Box textAlign="center" mt={1.5}>
+            <Button component={NextLink} href={allTxHref} size="small" color="primary" sx={{ textTransform: 'none', fontWeight: 500 }}>
+              View All Transactions
+            </Button>
+          </Box>
 
-      </Grid>
+        </CardContent>
+      </Card>
+
     </PageShell>
   );
 };
