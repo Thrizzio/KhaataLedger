@@ -1,68 +1,61 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../config/prisma.js";
 
-// get all transactions.
-
-export const getTransactions: RequestHandler = async (_req, res) => {
+// ── GET /transactions?workspaceId=xxx ─────────────────────────────────────────
+export const getTransactions: RequestHandler = async (req, res) => {
   try {
+    const { workspaceId } = req.query;
+
+    if (!workspaceId || typeof workspaceId !== "string") {
+      return res.status(400).json({ success: false, message: "workspaceId query parameter is required" });
+    }
+
     const transactions = await prisma.transaction.findMany({
-      include: {
-        category: true,
-        createdBy: true,
-      },
+      where: { workspaceId },
+      include: { category: true, createdBy: { select: { id: true, name: true, email: true } } },
+      orderBy: [{ transactionDate: "desc" }, { createdAt: "desc" }],
     });
 
-    res.status(200).json(transactions);
+    return res.status(200).json({ success: true, data: transactions });
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch transactions" });
+    return res.status(500).json({ success: false, message: "Failed to fetch transactions" });
   }
 };
 
-// add a new transaction.
-
+// ── POST /transactions ────────────────────────────────────────────────────────
 export const addTransaction: RequestHandler = async (req, res) => {
   try {
-    console.log("========== ADD TRANSACTION ==========");
-    console.log("Request Body:", req.body);
+    const { title, description, amount, type, transactionDate, categoryId, createdById, workspaceId } = req.body;
 
-    const { title, description, amount, type, transactionDate, categoryId, createdById } = req.body;
+    // Validate workspace exists
+    if (!workspaceId) {
+      return res.status(400).json({ success: false, message: "workspaceId is required" });
+    }
 
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace) {
+      return res.status(404).json({ success: false, message: "Workspace not found" });
+    }
+
+    // Validate creator
     const existingUser = createdById
       ? await prisma.user.findUnique({ where: { id: createdById } })
       : null;
 
     if (!existingUser) {
-      return res.status(400).json({ message: "Invalid createdById" });
+      return res.status(400).json({ success: false, message: "Invalid createdById" });
     }
 
-    let workspaceId: string | null = null;
-
-    if (existingUser.role === 'OWNER') {
-      const ownerWorkspace = await prisma.workspace.findFirst({
-        where: { ownerId: existingUser.id },
-      });
-      workspaceId = ownerWorkspace?.id ?? null;
-    } else {
-      workspaceId = existingUser.workspaceId;
-    }
-
-    if (!workspaceId) {
-      return res.status(400).json({ message: "User is not assigned to a workspace" });
-    }
-
-    let resolvedCategoryId = categoryId;
-
+    // Resolve or create category
+    let resolvedCategoryId: string | null = null;
     if (categoryId) {
-      const categoryLookupValue = String(categoryId).trim();
-      console.log(prisma);
-console.log(prisma.category);
-console.log(prisma.transaction);
-console.log(prisma.user);
+      const lookup = String(categoryId).trim();
       const existingCategory = await prisma.category.findFirst({
         where: {
+          workspaceId,
           OR: [
-            { name: { equals: categoryLookupValue, mode: "insensitive" } },
-            { id: categoryLookupValue },
+            { name: { equals: lookup, mode: "insensitive" } },
+            { id: lookup },
           ],
         },
       });
@@ -70,39 +63,37 @@ console.log(prisma.user);
       if (existingCategory) {
         resolvedCategoryId = existingCategory.id;
       } else {
-        const createdCategory = await prisma.category.create({
-          data: {
-            name: categoryLookupValue,
-            defaultType: type,
-            workspaceId,
-          },
+        const created = await prisma.category.create({
+          data: { name: lookup, defaultType: type, workspaceId },
         });
-
-        resolvedCategoryId = createdCategory.id;
+        resolvedCategoryId = created.id;
       }
+    }
+
+    // category is required in schema — reject if none resolved
+    if (!resolvedCategoryId) {
+      return res.status(400).json({ success: false, message: "A valid category is required" });
     }
 
     const transaction = await prisma.transaction.create({
       data: {
         title,
         ...(description !== undefined ? { description } : {}),
-        amount,
+        amount: Number(amount),
         type,
         transactionDate: new Date(transactionDate),
         categoryId: resolvedCategoryId,
         createdById: existingUser.id,
         workspaceId,
       },
+      include: { category: true, createdBy: { select: { id: true, name: true, email: true } } },
     });
 
-    console.log("Transaction Created:", transaction);
-
-    return res.status(201).json(transaction);
+    return res.status(201).json({ success: true, data: transaction });
   } catch (error) {
-    console.error("========== ADD TRANSACTION ERROR ==========");
-    console.error(error);
-
+    console.error("addTransaction error:", error instanceof Error ? error.message : error);
     return res.status(500).json({
+      success: false,
       message: "Failed to add transaction",
       error: error instanceof Error ? error.message : error,
     });

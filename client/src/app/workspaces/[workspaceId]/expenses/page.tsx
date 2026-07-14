@@ -7,7 +7,6 @@ interface Props {
 }
 
 export default async function ExpensesRoute({ params }: Props) {
-    await params;
-
-    return <TransactionsPage />;
+    const { workspaceId } = await params;
+    return <TransactionsPage workspaceId={workspaceId} />;
 }
