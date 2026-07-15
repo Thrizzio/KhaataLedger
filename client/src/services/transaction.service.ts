@@ -23,6 +23,15 @@ export interface CreateTransactionPayload {
   workspaceId: string;          // ← now required
 }
 
+/** Fields an owner may edit on a transaction */
+export interface UpdateTransactionPayload {
+  title: string;
+  description?: string | null;
+  amount: number;
+  type: 'INCOME' | 'EXPENSE';
+  transactionDate: string;
+}
+
 export const transactionService = {
   /** Fetch all transactions for a workspace, sorted newest first */
   getTransactions: (workspaceId: string) =>
@@ -31,4 +40,12 @@ export const transactionService = {
   /** Create a transaction scoped to the given workspace */
   createTransaction: (payload: CreateTransactionPayload) =>
     httpClient.post<ApiResponse<Transaction>>('/transactions', payload),
+
+  /** Update a transaction (owners only) */
+  updateTransaction: (id: string, payload: UpdateTransactionPayload) =>
+    httpClient.put<ApiResponse<Transaction>>(`/transactions/${id}`, payload),
+
+  /** Soft-delete a transaction (owners only) */
+  deleteTransaction: (id: string) =>
+    httpClient.delete<ApiResponse<Transaction>>(`/transactions/${id}`),
 };

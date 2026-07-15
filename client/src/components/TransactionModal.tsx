@@ -8,10 +8,10 @@ import DialogTitle from '@mui/material/DialogTitle';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { transactionService } from '../services/transaction.service';
+import { transactionService, type Transaction } from '../services/transaction.service';
 import { getAuthState } from '../store/authStore';
 
 interface TransactionModalProps {
@@ -19,10 +19,23 @@ interface TransactionModalProps {
   onClose: () => void;
   /** The workspace this transaction belongs to */
   workspaceId: string;
+  /** When provided, the modal opens in edit mode pre-filled with this transaction */
+  transaction?: Transaction | null;
 }
 
-export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModalProps) => {
+/** Convert an ISO timestamp into a local YYYY-MM-DD value for the date input */
+const toDateInputValue = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+export const TransactionModal = ({ open, onClose, workspaceId, transaction }: TransactionModalProps) => {
   const queryClient = useQueryClient();
+  const isEdit = Boolean(transaction);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -30,6 +43,18 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
   const [transactionDate, setTransactionDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Pre-fill the form when opening in edit mode
+  useEffect(() => {
+    if (open && transaction) {
+      setTitle(transaction.title);
+      setDescription(transaction.description ?? '');
+      setAmount(String(transaction.amount));
+      setType(transaction.type);
+      setTransactionDate(toDateInputValue(transaction.transactionDate));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, transaction]);
 
   const resetForm = () => {
     setTitle('');
@@ -67,17 +92,26 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
 
     setIsLoading(true);
     try {
-      await transactionService.createTransaction({
+      const payload = {
         title,
         description: description || undefined,
         amount: Number(amount),
         type,
         transactionDate,
-        createdById: currentUser.id,
-        workspaceId,
-      });
+      };
 
-      toast.success('Transaction added successfully');
+      if (isEdit && transaction) {
+        await transactionService.updateTransaction(transaction.id, payload);
+        toast.success('Transaction updated successfully');
+      } else {
+        await transactionService.createTransaction({
+          ...payload,
+          createdById: currentUser.id,
+          workspaceId,
+        });
+        toast.success('Transaction added successfully');
+      }
+
       resetForm();
       onClose();
 
@@ -87,7 +121,7 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
       // Dashboard data (Today's Activity + stats use the same key)
       await queryClient.invalidateQueries({ queryKey: ['transactions-today', workspaceId] });
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || 'Failed to add transaction.';
+      const errorMsg = error?.response?.data?.message || (isEdit ? 'Failed to update transaction.' : 'Failed to add transaction.');
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
@@ -96,7 +130,7 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>Add Transaction</DialogTitle>
+      <DialogTitle>{isEdit ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
       <form onSubmit={handleSave}>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -128,8 +162,8 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
             />
 
             <TextField
-              select
               label="Type"
+              select
               required
               fullWidth
               value={type}
@@ -155,7 +189,7 @@ export const TransactionModal = ({ open, onClose, workspaceId }: TransactionModa
         <DialogActions>
           <Button onClick={handleClose} disabled={isLoading}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={isLoading}>
-            {isLoading ? 'Saving...' : 'Save'}
+            {isLoading ? (isEdit ? 'Updating...' : 'Saving...') : (isEdit ? 'Update' : 'Save')}
           </Button>
         </DialogActions>
       </form>

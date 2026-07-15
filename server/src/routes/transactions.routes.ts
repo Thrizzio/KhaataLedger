@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { addTransaction, getTransactions } from "../controllers/transaction.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { authorizeRoles } from "../middleware/role.middleware.js";
+import {
+  addTransaction,
+  getTransactions,
+  updateTransaction,
+  deleteTransaction,
+} from "../controllers/transaction.controller.js";
 import { placeholderController } from "../controllers/placeholder.controller.js";
 
 export const transactionsRouter = Router();
@@ -10,7 +17,21 @@ transactionsRouter.get("/", getTransactions);
 // Add a new transaction
 transactionsRouter.post("/", addTransaction);
 
-// Keep these as placeholders for now
+// Keep this as a placeholder for now
 transactionsRouter.get("/:id", placeholderController);
-transactionsRouter.patch("/:id", placeholderController);
-transactionsRouter.delete("/:id", placeholderController);
+
+// Update a transaction (owners only)
+transactionsRouter.put(
+  "/:id",
+  authenticate,
+  authorizeRoles("OWNER"),
+  updateTransaction,
+);
+
+// Soft-delete a transaction (owners only)
+transactionsRouter.delete(
+  "/:id",
+  authenticate,
+  authorizeRoles("OWNER"),
+  deleteTransaction,
+);
