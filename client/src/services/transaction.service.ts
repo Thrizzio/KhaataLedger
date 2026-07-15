@@ -10,7 +10,6 @@ export interface Transaction {
   transactionDate: string;
   createdAt: string;
   workspaceId: string;
-  category?: { id: string; name: string } | null;
   createdBy?: { id: string; name: string; email: string } | null;
 }
 
@@ -20,7 +19,6 @@ export interface CreateTransactionPayload {
   amount: number;
   type: 'INCOME' | 'EXPENSE';
   transactionDate: string;
-  categoryId: string;
   createdById: string;
   workspaceId: string;          // ← now required
 }
