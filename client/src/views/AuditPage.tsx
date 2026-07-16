@@ -54,33 +54,69 @@ const formatRelative = (iso: string) => {
 };
 
 const ACTION_META: Record<AuditAction, { label: string; color: 'success' | 'warning' | 'error'; Icon: ReactElement['type'] }> = {
-  CREATE: { label: 'Created Transaction', color: 'success', Icon: AddCircleOutlineIcon },
-  UPDATE: { label: 'Updated Transaction', color: 'warning', Icon: EditOutlinedIcon },
-  DELETE: { label: 'Deleted Transaction', color: 'error', Icon: DeleteOutlineIcon },
+  CREATE: { label: 'Created', color: 'success', Icon: AddCircleOutlineIcon },
+  UPDATE: { label: 'Updated', color: 'warning', Icon: EditOutlinedIcon },
+  DELETE: { label: 'Deleted', color: 'error', Icon: DeleteOutlineIcon },
 };
 
-// Displayable snapshot fields, in render order.
-const FIELDS: { key: string; label: string; format: (v: unknown) => string }[] = [
-  { key: 'title', label: 'Title', format: (v) => (v ? String(v) : '—') },
-  { key: 'amount', label: 'Amount', format: (v) => formatAmount(Number(v ?? 0)) },
-  { key: 'type', label: 'Type', format: (v) => (v === 'INCOME' ? 'Income' : v === 'EXPENSE' ? 'Expense' : '—') },
-  { key: 'description', label: 'Description', format: (v) => (v ? String(v) : '—') },
-  { key: 'transactionDate', label: 'Transaction Date', format: (v) => formatFullDate(String(v)) },
-];
+// Subject of an audit log: the transaction title or khata customer/name.
+const getSubject = (log: AuditLog): string => {
+  if (log.transaction?.title) return log.transaction.title;
+  if (log.khata) return log.khata.customerName || log.khata.title;
+  return 'Record';
+};
+
+// Human-friendly labels for the snapshot fields we render.
+const FIELD_LABELS: Record<string, string> = {
+  title: 'Title',
+  customerName: 'Customer',
+  contactNumber: 'Contact',
+  initialAmount: 'Initial Amount',
+  amount: 'Amount',
+  type: 'Type',
+  description: 'Description',
+  transactionDate: 'Transaction Date',
+  entryDate: 'Entry Date',
+  entryId: 'Entry',
+  deletedAt: 'Deleted At',
+};
+
+// Internal/scalar keys we never show as a diff row.
+const HIDDEN_KEYS = new Set(['id', 'workspaceId', 'createdById']);
+
+const formatValue = (key: string, v: unknown): string => {
+  if (v === null || v === undefined || v === '') return '—';
+  const s = String(v);
+  if (key === 'amount' || key === 'initialAmount') return formatAmount(Number(v));
+  if (key === 'type') {
+    if (v === 'INCOME') return 'Income';
+    if (v === 'EXPENSE') return 'Expense';
+    if (v === 'CREDIT') return 'Credit';
+    if (v === 'PAYMENT') return 'Payment';
+    return s;
+  }
+  if (key === 'transactionDate' || key === 'entryDate' || key === 'deletedAt' || key === 'createdAt' || key === 'updatedAt') {
+    return formatFullDate(s);
+  }
+  return s;
+};
 
 type Row = { label: string; old: string | null; new: string; changed: boolean };
 
+// Generic diff builder that works for transaction, khata, and khata-entry snapshots.
 const buildRows = (log: AuditLog): Row[] => {
   const next = log.newValue ?? {};
-  const prev = log.previousValue;
+  const prev = log.previousValue ?? {};
+  const keys = Array.from(new Set([...Object.keys(next), ...Object.keys(prev)]))
+    .filter((k) => !HIDDEN_KEYS.has(k));
 
   if (log.action === 'CREATE') {
-    return FIELDS.map((f) => ({ label: f.label, old: null, new: f.format(next[f.key]), changed: false }));
+    return keys.map((k) => ({ label: FIELD_LABELS[k] ?? k, old: null, new: formatValue(k, next[k]), changed: false }));
   }
 
-  const changed = FIELDS.filter((f) => String(prev?.[f.key] ?? '') !== String(next[f.key] ?? '')).map(
-    (f) => ({ label: f.label, old: prev ? f.format(prev[f.key]) : '—', new: f.format(next[f.key]), changed: true }),
-  );
+  const changed = keys
+    .filter((k) => String(prev[k] ?? '') !== String(next[k] ?? ''))
+    .map((k) => ({ label: FIELD_LABELS[k] ?? k, old: formatValue(k, prev[k]), new: formatValue(k, next[k]), changed: true }));
 
   if (log.action === 'DELETE') {
     return [{ label: 'Status', old: 'Active', new: 'Deleted', changed: true }, ...changed];
@@ -103,7 +139,7 @@ export const AuditPage = ({ workspaceId = '' }: AuditPageProps) => {
   const filtered = query
     ? logs.filter(
         (l) =>
-          (l.transaction?.title ?? '').toLowerCase().includes(query) ||
+          getSubject(l).toLowerCase().includes(query) ||
           (l.user?.name ?? '').toLowerCase().includes(query),
       )
     : logs;
@@ -153,7 +189,7 @@ export const AuditPage = ({ workspaceId = '' }: AuditPageProps) => {
                         {meta.label}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" noWrap>
-                        {log.transaction?.title ?? 'Transaction'}
+                        {getSubject(log)}
                       </Typography>
                     </Box>
                     <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
@@ -197,7 +233,7 @@ export const AuditPage = ({ workspaceId = '' }: AuditPageProps) => {
                         {meta.label}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" noWrap>
-                        {selected.transaction?.title ?? 'Transaction'}
+                        {getSubject(selected)}
                       </Typography>
                     </Box>
                   </Stack>

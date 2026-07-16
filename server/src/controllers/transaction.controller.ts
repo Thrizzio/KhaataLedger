@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
-import { updateTransactionSchema } from "../validators/transaction.validator.js";
+import { updateTransactionSchema, createTransactionSchema } from "../validators/transaction.validator.js";
 
 // ── Snapshot helper ───────────────────────────────────────────────────────────
 // Immutable, serializable capture of a transaction's scalar fields. Stored as
@@ -80,6 +80,24 @@ export const getTransactions: RequestHandler = async (req, res) => {
 
     if (!workspaceId || typeof workspaceId !== "string") {
       return res.status(400).json({ success: false, message: "workspaceId query parameter is required" });
+    }
+
+    // Verify the caller belongs to (or owns) the requested workspace.
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace) {
+      return res.status(404).json({ success: false, message: "Workspace not found" });
+    }
+    if (req.user!.role === "OWNER" && workspace.ownerId !== req.user!.id) {
+      return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
+    }
+    if (req.user!.role === "EMPLOYEE") {
+      const employee = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+        select: { workspaceId: true },
+      });
+      if (employee?.workspaceId !== workspaceId) {
+        return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
+      }
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -205,26 +223,37 @@ export const deleteTransaction: RequestHandler = async (req, res) => {
 // ── POST /transactions ────────────────────────────────────────────────────────
 export const addTransaction: RequestHandler = async (req, res) => {
   try {
-    const { title, description, amount, type, transactionDate, createdById, workspaceId } = req.body;
-
-    // Validate workspace exists
-    if (!workspaceId) {
-      return res.status(400).json({ success: false, message: "workspaceId is required" });
+    const parsed = createTransactionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        error: parsed.error.flatten(),
+      });
     }
 
+    const { title, description, amount, type, transactionDate, workspaceId } = parsed.data;
+
+    // Verify the caller belongs to (or owns) the target workspace.
     const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
     if (!workspace) {
       return res.status(404).json({ success: false, message: "Workspace not found" });
     }
-
-    // Validate creator
-    const existingUser = createdById
-      ? await prisma.user.findUnique({ where: { id: createdById } })
-      : null;
-
-    if (!existingUser) {
-      return res.status(400).json({ success: false, message: "Invalid createdById" });
+    if (req.user!.role === "OWNER" && workspace.ownerId !== req.user!.id) {
+      return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
     }
+    if (req.user!.role === "EMPLOYEE") {
+      const employee = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+        select: { workspaceId: true },
+      });
+      if (employee?.workspaceId !== workspaceId) {
+        return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
+      }
+    }
+
+    // Creator is always the authenticated user — never trusted from the body.
+    const createdById = req.user!.id;
 
     const transaction = await prisma.$transaction(async (tx) => {
       const created = await tx.transaction.create({
@@ -234,7 +263,7 @@ export const addTransaction: RequestHandler = async (req, res) => {
           amount: Number(amount),
           type,
           transactionDate: new Date(transactionDate),
-          createdById: existingUser.id,
+          createdById,
           workspaceId,
         },
         include: { createdBy: { select: { id: true, name: true, email: true } } },
@@ -244,7 +273,7 @@ export const addTransaction: RequestHandler = async (req, res) => {
         workspaceId: created.workspaceId,
         action: "CREATE",
         transactionId: created.id,
-        userId: existingUser.id,
+        userId: createdById,
         previousValue: null,
         newValue: toSnapshot(created),
       });

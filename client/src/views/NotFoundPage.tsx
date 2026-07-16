@@ -16,8 +16,8 @@ export const NotFoundPage = () => (
       <Typography color="text.secondary">
         The page you are looking for does not exist or has moved.
       </Typography>
-      <Button component={NextLink} href="/dashboard" variant="contained">
-        Go to dashboard
+      <Button component={NextLink} href="/workspaces" variant="contained">
+        Go to workspaces
       </Button>
     </Stack>
   </Container>

@@ -15,11 +15,13 @@ export interface AuditLog {
   id: string;
   action: AuditAction;
   transactionId: string | null;
+  khataId: string | null;
   workspaceId: string;
   workspace?: AuditWorkspace | null;
   userId: string;
   user?: AuditUser | null;
   transaction?: { title: string | null } | null;
+  khata?: { id: string; customerName: string; title: string } | null;
   previousValue: Record<string, unknown> | null;
   newValue: Record<string, unknown> | null;
   createdAt: string;

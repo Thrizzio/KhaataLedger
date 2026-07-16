@@ -19,8 +19,7 @@ export interface CreateTransactionPayload {
   amount: number;
   type: 'INCOME' | 'EXPENSE';
   transactionDate: string;
-  createdById: string;
-  workspaceId: string;          // ← now required
+  workspaceId: string;
 }
 
 /** Fields an owner may edit on a transaction */

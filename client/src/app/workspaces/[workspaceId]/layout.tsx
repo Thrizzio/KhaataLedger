@@ -2,8 +2,10 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../../hooks/useAuth";
 import { WorkspaceDashboardLayout } from "../../../layouts/WorkspaceDashboardLayout";
+import { workspaceService } from "../../../services/workspace.service";
 
 interface WorkspaceLayoutProps {
   children: ReactNode;
@@ -12,27 +14,52 @@ interface WorkspaceLayoutProps {
 export default function WorkspaceLayout({
   children,
 }: WorkspaceLayoutProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
-
   const params = useParams<{ workspaceId: string }>();
+  const workspaceId = params?.workspaceId ?? "";
+
+  // Reuses the cache populated by WorkspaceDashboardLayout; errors (403/404) mean
+  // the caller does not own / is not a member of this workspace.
+  const { isError } = useQuery({
+    queryKey: ["workspace", workspaceId],
+    queryFn: () => workspaceService.getWorkspaceById(workspaceId).then((r) => r.data.data),
+    enabled: isAuthenticated && Boolean(workspaceId),
+    retry: false,
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/login");
+      return;
     }
-  }, [isAuthenticated, router]);
+    if (!workspaceId) return;
 
-  if (!isAuthenticated) {
+    // Employees may only view the single workspace they belong to.
+    if (
+      user?.role === "EMPLOYEE" &&
+      user.workspaceId &&
+      user.workspaceId !== workspaceId
+    ) {
+      router.replace(`/workspaces/${user.workspaceId}/dashboard`);
+      return;
+    }
+
+    // Owners may only view workspaces they own (server enforces; mirror here).
+    if (user?.role === "OWNER" && isError) {
+      router.replace("/workspaces");
+    }
+  }, [isAuthenticated, user, workspaceId, isError, router]);
+
+  if (!isAuthenticated || !params || !workspaceId) {
     return null;
   }
-
-  if (!params) {
+  if (user?.role === "OWNER" && isError) {
     return null;
   }
 
   return (
-    <WorkspaceDashboardLayout workspaceId={params.workspaceId}>
+    <WorkspaceDashboardLayout workspaceId={workspaceId}>
       {children}
     </WorkspaceDashboardLayout>
   );
