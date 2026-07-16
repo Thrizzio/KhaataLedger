@@ -69,7 +69,6 @@ export const TransactionsPage = ({ workspaceId }: TransactionsPageProps) => {
     mutationFn: (id: string) => transactionService.deleteTransaction(id).then((r) => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ['transactions-today', workspaceId] });
       queryClient.invalidateQueries({ queryKey: ['audit', workspaceId] });
       toast.success('Transaction deleted');
       setDeleteTarget(null);

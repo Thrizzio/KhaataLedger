@@ -12,10 +12,10 @@ import { placeholderController } from "../controllers/placeholder.controller.js"
 export const transactionsRouter = Router();
 
 // Get all transactions
-transactionsRouter.get("/", getTransactions);
+transactionsRouter.get("/", authenticate, getTransactions);
 
 // Add a new transaction
-transactionsRouter.post("/", addTransaction);
+transactionsRouter.post("/", authenticate, addTransaction);
 
 // Keep this as a placeholder for now
 transactionsRouter.get("/:id", placeholderController);

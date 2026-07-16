@@ -26,7 +26,7 @@ export const RegisterPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/dashboard');
+      router.replace('/workspaces');
     }
   }, [isAuthenticated, router]);
 

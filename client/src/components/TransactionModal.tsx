@@ -106,7 +106,6 @@ export const TransactionModal = ({ open, onClose, workspaceId, transaction }: Tr
       } else {
         await transactionService.createTransaction({
           ...payload,
-          createdById: currentUser.id,
           workspaceId,
         });
         toast.success('Transaction added successfully');
@@ -116,10 +115,8 @@ export const TransactionModal = ({ open, onClose, workspaceId, transaction }: Tr
       onClose();
 
       // ── Live updates: invalidate all affected queries ──────────────────
-      // Transactions list on the expenses page
+      // Transactions list + Today's Activity + dashboard stats all use this key
       await queryClient.invalidateQueries({ queryKey: ['transactions', workspaceId] });
-      // Dashboard data (Today's Activity + stats use the same key)
-      await queryClient.invalidateQueries({ queryKey: ['transactions-today', workspaceId] });
       // Audit log entries for this workspace
       await queryClient.invalidateQueries({ queryKey: ['audit', workspaceId] });
     } catch (error: any) {

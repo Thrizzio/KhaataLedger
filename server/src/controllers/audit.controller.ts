@@ -34,6 +34,7 @@ export const getAuditLogs: RequestHandler = async (req, res) => {
       include: {
         user: { select: { id: true, name: true, email: true } },
         transaction: { select: { title: true } },
+        khata: { select: { id: true, customerName: true, title: true } },
         workspace: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -56,6 +57,7 @@ export const getAuditLogById: RequestHandler = async (req, res) => {
       include: {
         user: { select: { id: true, name: true, email: true } },
         transaction: { select: { title: true } },
+        khata: { select: { id: true, customerName: true, title: true } },
         workspace: { select: { id: true, name: true } },
       },
     });

@@ -54,6 +54,7 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
         onSuccess: (response) => {
             toast.success(response.data.message || 'Employee created!');
             queryClient.invalidateQueries({ queryKey: ['employees', workspaceId] });
+            queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
             queryClient.invalidateQueries({ queryKey: ['workspaces'] });
             setDialogOpen(false);
             reset();
