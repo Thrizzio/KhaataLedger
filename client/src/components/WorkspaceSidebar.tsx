@@ -3,6 +3,7 @@
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import GroupIcon from '@mui/icons-material/Group';
+import HistoryIcon from '@mui/icons-material/History';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -41,12 +42,14 @@ const getNavItems = (workspaceId: string, role?: UserRole) => {
         { label: 'Khata', path: `${base}/khata`, icon: <AccountBalanceWalletIcon sx={{ fontSize: 20 }} /> },
         { label: 'Employees', path: `${base}/employees`, icon: <GroupIcon sx={{ fontSize: 20 }} /> },
         { label: 'Reports', path: `${base}/reports`, icon: <AssessmentIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Audit Log', path: `${base}/audit`, icon: <HistoryIcon sx={{ fontSize: 20 }} /> },
         { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> },
     ];
     const employeeItems = [
         { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
         { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon sx={{ fontSize: 20 }} /> },
         { label: 'Khata', path: `${base}/khata`, icon: <AccountBalanceWalletIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Audit Log', path: `${base}/audit`, icon: <HistoryIcon sx={{ fontSize: 20 }} /> },
     ];
     return role === 'OWNER' ? ownerItems : employeeItems;
 };

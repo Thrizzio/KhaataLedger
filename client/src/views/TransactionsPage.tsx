@@ -70,6 +70,7 @@ export const TransactionsPage = ({ workspaceId }: TransactionsPageProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', workspaceId] });
       queryClient.invalidateQueries({ queryKey: ['transactions-today', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['audit', workspaceId] });
       toast.success('Transaction deleted');
       setDeleteTarget(null);
     },
