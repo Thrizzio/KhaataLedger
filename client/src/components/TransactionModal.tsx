@@ -120,6 +120,8 @@ export const TransactionModal = ({ open, onClose, workspaceId, transaction }: Tr
       await queryClient.invalidateQueries({ queryKey: ['transactions', workspaceId] });
       // Dashboard data (Today's Activity + stats use the same key)
       await queryClient.invalidateQueries({ queryKey: ['transactions-today', workspaceId] });
+      // Audit log entries for this workspace
+      await queryClient.invalidateQueries({ queryKey: ['audit', workspaceId] });
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || (isEdit ? 'Failed to update transaction.' : 'Failed to add transaction.');
       toast.error(errorMsg);

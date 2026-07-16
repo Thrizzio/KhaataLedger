@@ -1,6 +1,11 @@
 import { Router } from 'express';
-import { placeholderController } from '../controllers/placeholder.controller.js';
+import { authenticate } from '../middleware/auth.middleware.js';
+import { getAuditLogs, getAuditLogById } from '../controllers/audit.controller.js';
 
 export const auditRouter = Router();
 
-auditRouter.get('/', placeholderController);
+// List audit logs for a workspace (newest first)
+auditRouter.get('/', authenticate, getAuditLogs);
+
+// Fetch a single audit entry
+auditRouter.get('/:id', authenticate, getAuditLogById);
