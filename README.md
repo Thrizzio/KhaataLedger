@@ -1,156 +1,455 @@
-# Khaata Ledger
+<div align="center">
 
-A clean PERN scaffold for a Digital Ledger System inspired by Khatabook. This repository contains only the production-ready foundation: React client, Express API, Prisma schema, authentication scaffolding, routing, layouts, placeholders, and project conventions. Ledger business logic is intentionally not implemented yet.
+# 📒 KhaataLedger
 
-## Tech Stack
+### Modern Multi-Workspace Ledger Management System
 
-Frontend: React, Vite, TypeScript, Material UI, React Router DOM, TanStack Query, Axios, React Hook Form, Zod, React Hot Toast.
+A production-inspired full-stack financial ledger application for small businesses featuring workspace isolation, role-based authentication, audit trails, and digital khata management.
 
-Backend: Node.js, Express, TypeScript, PostgreSQL, Prisma ORM, JWT, bcrypt, CORS, dotenv.
+---
 
-## Folder Structure
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![Express](https://img.shields.io/badge/Express-4-black?logo=express)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-blue?logo=postgresql)
+![Material UI](https://img.shields.io/badge/MUI-6-007FFF?logo=mui)
+![Render](https://img.shields.io/badge/Backend-Render-46E3B7)
+![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel)
 
-```text
-.
-|-- client/
-|   |-- src/
-|   |   |-- assets/
-|   |   |-- components/
-|   |   |-- layouts/
-|   |   |-- pages/
-|   |   |-- hooks/
-|   |   |-- services/
-|   |   |-- api/
-|   |   |-- routes/
-|   |   |-- store/
-|   |   |-- types/
-|   |   |-- utils/
-|   |   `-- theme/
-|   `-- package.json
-|-- server/
-|   |-- src/
-|   |   |-- config/
-|   |   |-- controllers/
-|   |   |-- middleware/
-|   |   |-- routes/
-|   |   |-- prisma/
-|   |   |-- validators/
-|   |   `-- utils/
-|   `-- package.json
-`-- README.md
-```
+</div>
 
-## Installation
+---
 
-Install dependencies separately for the client and server:
+# Overview
 
-```bash
-cd client
-npm install
+KhaataLedger is a modern alternative to traditional handwritten **khata books** used by small businesses.
 
-cd ../server
-npm install
-```
+Instead of maintaining paper ledgers, businesses can securely manage:
 
-## Environment Setup
+- Income
+- Expenses
+- Credit / Lending
+- Employee access
+- Multiple businesses
+- Audit history
 
-Copy the example environment files and replace placeholder values:
+The system was designed with real-world business workflows in mind while maintaining a clean, scalable architecture.
 
-```bash
-cp client/.env.example client/.env
-cp server/.env.example server/.env
-```
+---
 
-Client variables:
+# Features
 
-```text
-VITE_API_URL=http://localhost:5000/api
-```
+## Workspace Management
 
-Server variables:
+- Multiple businesses per owner
+- Workspace switching
+- Workspace-specific dashboards
+- Complete data isolation
 
-```text
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ledger_app?schema=public
-JWT_SECRET=replace-with-a-strong-secret
-PORT=5000
-NODE_ENV=development
-```
+---
 
-## Database
+## Authentication
 
-The Prisma schema is located at `server/src/prisma/schema.prisma`.
+- JWT Authentication
+- Owner Login
+- Employee Login
+- Secure password hashing using bcrypt
+- Role-based authorization
 
-Models included:
+---
+
+## Transactions
+
+- Income tracking
+- Expense tracking
+- Credit lending (Khata)
+- Soft Delete
+- Edit Transactions
+- Live updates
+- Optimistic versioning (planned)
+
+---
+
+## Employee Management
+
+Owners can
+
+- Create employees
+- Assign employees to businesses
+- Manage employee access
+
+Employees
+
+- Login directly into their assigned workspace
+- Cannot create businesses
+- Cannot switch workspaces
+
+---
+
+## Audit Logs
+
+Every modification is permanently recorded.
+
+Supports
+
+- Transaction Creation
+- Transaction Updates
+- Transaction Deletion
+
+Each audit record stores
 
 - User
-- Customer
+- Timestamp
+- Previous Values
+- New Values
+
+creating a complete audit trail.
+
+---
+
+## Dashboard
+
+Workspace-specific dashboard containing
+
+- Income Summary
+- Expense Summary
+- Current Balance
+- Today's Activity
+- Recent Transactions
+
+---
+
+## Workspace Isolation
+
+Every business has completely isolated data.
+
+Transactions
+
+Employees
+
+Audit Logs
+
+Dashboard
+
+Reports
+
+are all scoped to the selected workspace.
+
+---
+
+# Tech Stack
+
+## Frontend
+
+- Next.js 15 (App Router)
+- React
+- TypeScript
+- Material UI
+- TanStack Query
+- React Hook Form
+- Zod
+- Axios
+
+---
+
+## Backend
+
+- Express
+- Node.js
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+
+---
+
+## Infrastructure
+
+Frontend
+
+- Vercel
+
+Backend
+
+- Render
+
+Database
+
+- Neon PostgreSQL
+
+---
+
+# Architecture
+
+```
+                Next.js Frontend
+                        │
+                        │
+                 TanStack Query
+                        │
+                        ▼
+               Express REST API
+                        │
+                        ▼
+                Prisma ORM
+                        │
+                        ▼
+               PostgreSQL (Neon)
+```
+
+---
+
+# User Roles
+
+## Owner
+
+✔ Create Workspaces
+
+✔ Manage Employees
+
+✔ Add Transactions
+
+✔ Edit Transactions
+
+✔ Delete Transactions
+
+✔ View Audit Logs
+
+✔ Switch Workspaces
+
+---
+
+## Employee
+
+✔ Login
+
+✔ View Dashboard
+
+✔ Create Transactions
+
+✔ View Audit Logs
+
+❌ Cannot Create Workspaces
+
+❌ Cannot Switch Workspaces
+
+❌ Cannot Delete Transactions
+
+---
+
+# Project Structure
+
+```
+client/
+
+├── src/
+│   ├── app/
+│   ├── components/
+│   ├── layouts/
+│   ├── hooks/
+│   ├── services/
+│   ├── types/
+│   └── views/
+
+server/
+
+├── src/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── prisma/
+│   ├── routes/
+│   ├── utils/
+│   └── validators/
+```
+
+---
+
+# Database Design
+
+Core Models
+
+- User
+- Workspace
 - Transaction
 - AuditLog
 
-Run the initial migration after configuring `DATABASE_URL`:
+Relationships
+
+```
+Owner
+ │
+ ├───────────────┐
+ │               │
+Workspace     Workspace
+ │               │
+ ├── Employees   ├── Employees
+ │               │
+ ├── Transactions
+ │
+ └── Audit Logs
+```
+
+---
+
+# Security
+
+- JWT Authentication
+- Password Hashing
+- Role-Based Authorization
+- Workspace Isolation
+- Soft Deletes
+- Backend Permission Validation
+
+The backend never trusts the client when determining workspace access.
+
+Every request is validated against the authenticated user's permissions.
+
+---
+
+# Current Features
+
+- Multi-workspace architecture
+- Owner & Employee roles
+- Workspace switcher
+- Transaction CRUD
+- Audit logging
+- Employee management
+- Workspace isolation
+- Live updates with TanStack Query
+- Responsive dashboard
+
+---
+
+# Planned Features
+
+- Reports
+- Analytics
+- Charts
+- Export CSV
+- Export PDF
+- Search
+- Filters
+- Notifications
+- Customer Statements
+- Recurring Transactions
+
+---
+
+# Getting Started
+
+## Clone
+
+```bash
+git clone https://github.com/<username>/KhaataLedger.git
+```
+
+---
+
+## Backend
 
 ```bash
 cd server
+
+npm install
+
 npm run prisma:generate
+
 npm run prisma:migrate
+
+npm run dev
 ```
 
-## Available Scripts
+---
 
-Client:
+## Frontend
 
 ```bash
+cd client
+
+npm install
+
 npm run dev
-npm run build
 ```
 
-Server:
+---
 
-```bash
-npm run dev
-npm run build
-npm run start
-npm run prisma:generate
-npm run prisma:migrate
+# Environment Variables
+
+Backend
+
+```
+DATABASE_URL=
+
+JWT_SECRET=
+
+PORT=
 ```
 
-## API Scaffold
+Frontend
 
-All current API endpoints return:
-
-```json
-{
-  "success": true,
-  "message": "Not implemented"
-}
+```
+NEXT_PUBLIC_API_URL=
 ```
 
-Routes included:
+---
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `/api/customers`
-- `/api/transactions`
-- `/api/audit`
-- `/api/reports`
+# Design Principles
 
-## Frontend Routes
+The project intentionally avoids unnecessary complexity.
 
-- `/`
-- `/dashboard`
-- `/customers`
-- `/customers/:id`
-- `/transactions`
-- `/audit`
-- `/reports`
-- `/settings`
-- `/login`
-- `404`
+Instead of using
 
-## Next Steps
+- Microservices
+- Repository Pattern
+- CQRS
+- Dependency Injection
 
-- Implement register and login services with Prisma, bcrypt, and JWT.
-- Add protected API route groups once authentication is connected.
-- Build customer and transaction CRUD workflows.
-- Add reporting and audit log persistence.
-- Add tests, linting, Docker, and CI as the project matures.
+the project focuses on
+
+- Readability
+- Maintainability
+- Simplicity
+- Production-inspired architecture
+
+---
+
+# Future Roadmap
+
+- Customer Management
+- Inventory Support
+- Business Analytics
+- Invoice Generation
+- Mobile Responsive Improvements
+- Docker Support
+- CI/CD Improvements
+
+---
+
+# Screenshots
+
+> Screenshots will be added as development progresses.
+
+---
+
+# Contributing
+
+Contributions, feature suggestions and improvements are welcome.
+
+Feel free to open an Issue or Pull Request.
+
+---
+
+# License
+
+MIT License
+
+---
+
+<div align="center">
+
+Built with ❤️ using
+
+Next.js • Express • Prisma • PostgreSQL • Material UI
+
+</div>
