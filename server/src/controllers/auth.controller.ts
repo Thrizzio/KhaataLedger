@@ -57,10 +57,32 @@ export const register: RequestHandler = async (request, response, next) => {
       })
     );
   } catch (error) {
-    console.error('[REGISTER] Failed:');
+    console.error('[REGISTER] Failed:', error);
     next(error);
   }
 };
+
+async function handleFailedLogin(email: string, user: any, ip: string | undefined) {
+  await prisma.loginAuditLog.create({
+    data: { email, ipAddress: ip },
+  });
+
+  if (user) {
+    const newAttempts = user.failedLoginAttempts + 1;
+    if (newAttempts >= 5) {
+      const lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: newAttempts, lockedUntil },
+      });
+    } else {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: newAttempts },
+      });
+    }
+  }
+}
 
 export const loginOwner: RequestHandler = async (request, response, next) => {
   try {
@@ -70,17 +92,30 @@ export const loginOwner: RequestHandler = async (request, response, next) => {
       where: { email: parsedBody.email.toLowerCase() },
     });
     if (!user) {
+      await handleFailedLogin(parsedBody.email, null, request.ip);
+      throw new ApiError(401, 'Invalid email or password');
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
       throw new ApiError(401, 'Invalid email or password');
     }
 
     if (user.role !== 'OWNER') {
-      throw new ApiError(403, 'Access denied: Owner role required');
+      await handleFailedLogin(parsedBody.email, user, request.ip);
+      throw new ApiError(401, 'Invalid email or password'); // Use 401 instead of 403 to not expose email existence
     }
 
     const isPasswordValid = await verifyPassword(parsedBody.password, user.passwordHash);
     if (!isPasswordValid) {
+      await handleFailedLogin(parsedBody.email, user, request.ip);
       throw new ApiError(401, 'Invalid email or password');
     }
+
+    // Reset failed attempts on success
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
 
     const token = signToken({
       id: user.id,
@@ -112,17 +147,30 @@ export const loginEmployee: RequestHandler = async (request, response, next) => 
       where: { email: parsedBody.email.toLowerCase() },
     });
     if (!user) {
+      await handleFailedLogin(parsedBody.email, null, request.ip);
+      throw new ApiError(401, 'Invalid email or password');
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
       throw new ApiError(401, 'Invalid email or password');
     }
 
     if (user.role !== 'EMPLOYEE') {
-      throw new ApiError(403, 'Access denied: Employee role required');
+      await handleFailedLogin(parsedBody.email, user, request.ip);
+      throw new ApiError(401, 'Invalid email or password');
     }
 
     const isPasswordValid = await verifyPassword(parsedBody.password, user.passwordHash);
     if (!isPasswordValid) {
+      await handleFailedLogin(parsedBody.email, user, request.ip);
       throw new ApiError(401, 'Invalid email or password');
     }
+
+    // Reset failed attempts on success
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
 
     const token = signToken({
       id: user.id,
