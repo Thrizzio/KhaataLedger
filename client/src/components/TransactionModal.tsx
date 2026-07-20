@@ -46,14 +46,18 @@ export const TransactionModal = ({ open, onClose, workspaceId, transaction }: Tr
   const [transactionDate, setTransactionDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Pre-fill the form when opening in edit mode
+  // Pre-fill the form when opening
   useEffect(() => {
-    if (open && transaction) {
-      setTitle(transaction.title);
-      setDescription(transaction.description ?? '');
-      setAmount(String(transaction.amount));
-      setType(transaction.type);
-      setTransactionDate(toDateInputValue(transaction.transactionDate));
+    if (open) {
+      if (transaction) {
+        setTitle(transaction.title);
+        setDescription(transaction.description ?? '');
+        setAmount(String(transaction.amount));
+        setType(transaction.type);
+        setTransactionDate(toDateInputValue(transaction.transactionDate));
+      } else {
+        setTransactionDate(toDateInputValue(new Date().toISOString()));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, transaction]);
