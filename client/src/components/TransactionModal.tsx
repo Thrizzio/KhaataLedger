@@ -117,6 +117,8 @@ export const TransactionModal = ({ open, onClose, workspaceId, transaction }: Tr
       // ── Live updates: invalidate all affected queries ──────────────────
       // Transactions list + Today's Activity + dashboard stats all use this key
       await queryClient.invalidateQueries({ queryKey: ['transactions', workspaceId] });
+      // Reports (any range) for this workspace
+      await queryClient.invalidateQueries({ queryKey: ['reports', workspaceId] });
       // Audit log entries for this workspace
       await queryClient.invalidateQueries({ queryKey: ['audit', workspaceId] });
     } catch (error: any) {
