@@ -2,27 +2,90 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
+import { useAuth } from '../hooks/useAuth';
+import { useWorkspace } from '../hooks/useWorkspace';
+import { workspaceService } from '../services/workspace.service';
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
+  const { workspaceId, setWorkspaceId, clearWorkspaceId } = useWorkspace();
+
+  const { data: workspaces, isLoading: isWorkspacesLoading, isError } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: () => workspaceService.getWorkspaces().then((r) => r.data.data ?? []),
+    enabled: isAuthenticated && user?.role === 'OWNER',
+    retry: false, // Don't retry if it fails (e.g., auth error)
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/login');
       return;
     }
-    if (user?.role === 'OWNER') {
-      router.replace('/workspaces');
-    } else if (user?.role === 'EMPLOYEE' && user.workspaceId) {
-      router.replace(`/workspaces/${user.workspaceId}/dashboard`);
-    } else {
-      router.replace('/login');
+
+    if (user?.role === 'EMPLOYEE') {
+      if (user.workspaceId) {
+        router.replace(`/workspaces/${user.workspaceId}/dashboard`);
+      } else {
+        router.replace('/login');
+      }
+      return;
     }
-  }, [isAuthenticated, user, router]);
+
+    // From here on, user is OWNER
+    if (isWorkspacesLoading) return;
+
+    if (isError || !workspaces) {
+      router.replace('/workspaces');
+      return;
+    }
+
+    if (workspaces.length === 0) {
+      clearWorkspaceId();
+      router.replace('/workspaces');
+      return;
+    }
+
+    if (workspaces.length === 1) {
+      const singleWorkspace = workspaces[0].id;
+      if (workspaceId !== singleWorkspace) {
+        setWorkspaceId(singleWorkspace);
+      }
+      router.replace(`/workspaces/${singleWorkspace}/dashboard`);
+      return;
+    }
+
+    if (workspaces.length > 1) {
+      if (workspaceId) {
+        const isValid = workspaces.some((ws) => ws.id === workspaceId);
+        if (isValid) {
+          router.replace(`/workspaces/${workspaceId}/dashboard`);
+          return;
+        } else {
+          // Stale or deleted workspace ID in store
+          clearWorkspaceId();
+        }
+      }
+      // Multiple workspaces exist and no valid selection found, let user pick
+      router.replace('/workspaces');
+      return;
+    }
+
+  }, [
+    isAuthenticated,
+    user,
+    workspaces,
+    isWorkspacesLoading,
+    isError,
+    workspaceId,
+    setWorkspaceId,
+    clearWorkspaceId,
+    router,
+  ]);
 
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
