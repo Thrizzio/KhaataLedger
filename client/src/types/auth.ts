@@ -6,4 +6,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   workspaceId?: string | null;
+  employeeId?: string | null;
+  avatarUrl?: string | null;
+  preferences?: any;
 }
