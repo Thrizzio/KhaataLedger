@@ -37,6 +37,10 @@ model User {
 
   role         Role
 
+  // Settings & Profile
+  avatarUrl    String?
+  preferences  Json?
+
   // Employee credentials
   employeeId   String?  @unique
 
