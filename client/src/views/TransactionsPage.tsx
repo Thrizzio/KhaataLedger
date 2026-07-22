@@ -41,7 +41,7 @@ const formatAmount = (amount: number) =>
 
 const formatDate = (value: string) => {
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
 export const TransactionsPage = ({ workspaceId }: TransactionsPageProps) => {

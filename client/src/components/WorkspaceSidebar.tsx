@@ -25,6 +25,7 @@ import NextLink from './NextLink';
 import type { UserRole } from '../types/auth';
 import { useAuth } from '../hooks/useAuth';
 import { setAuthData } from '../store/authStore';
+import { useWorkspace } from '../hooks/useWorkspace';
 
 interface WorkspaceSidebarProps {
     workspaceId: string;
@@ -66,10 +67,12 @@ const DrawerContent = ({
 }) => {
     const { user } = useAuth();
     const router = useRouter();
+    const { clearWorkspaceId } = useWorkspace();
     const items = getNavItems(workspaceId, userRole);
 
     const handleLogout = () => {
         setAuthData(null, null);
+        clearWorkspaceId();
         router.replace('/login');
     };
 

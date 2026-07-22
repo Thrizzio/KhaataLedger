@@ -4,6 +4,8 @@ import { apiRouter } from './routes/index.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { notFoundHandler } from './middleware/not-found.middleware.js';
 import { createSuccessResponse } from './utils/api-response.js';
+import helmet from 'helmet';
+import { env } from './config/env.js';
 
 export const app = express();
 
@@ -17,7 +19,10 @@ app.use((request, response, next) => {
   next();
 });
 
-app.use(cors());
+app.use(helmet());
+app.disable('x-powered-by');
+
+app.use(cors({ origin: env.FRONTEND_URL }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

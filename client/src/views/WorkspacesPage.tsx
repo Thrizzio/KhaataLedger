@@ -32,10 +32,12 @@ import toast from 'react-hot-toast';
 import { workspaceService } from '../services/workspace.service';
 import { setAuthData } from '../store/authStore';
 import { useAuth } from '../hooks/useAuth';
+import { useWorkspace } from '../hooks/useWorkspace';
 
 export const WorkspacesPage = () => {
     const router = useRouter();
     const { user } = useAuth();
+    const { setWorkspaceId, clearWorkspaceId } = useWorkspace();
     const queryClient = useQueryClient();
 
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -70,10 +72,12 @@ export const WorkspacesPage = () => {
 
     const handleLogout = () => {
         setAuthData(null, null);
+        clearWorkspaceId();
         router.replace('/login');
     };
 
     const handleOpenWorkspace = (workspaceId: string) => {
+        setWorkspaceId(workspaceId);
         router.push(`/workspaces/${workspaceId}/dashboard`);
     };
 

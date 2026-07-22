@@ -37,6 +37,203 @@ model User {
 
   role         Role
 
+  // Employee credentials
+  employeeId   String?  @unique
+
+  // Businesses owned by this user
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+
+  // Business where this user works
+  workspaceId  String?
+  workspace    Workspace? @relation("WorkspaceEmployees", fields: [workspaceId], references: [id])
+
+  transactions Transaction[] @relation("CreatedTransactions")
+  auditLogs    AuditLog[]
+
+  createdKhatas       Khata[]       @relation("CreatedKhatas")
+  createdKhataEntries KhataEntry[]  @relation("CreatedKhataEntries")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  failedLoginAttempts Int @default(0)
+  lockedUntil         DateTime?
+
+  @@index([workspaceId])
+}
+
+model Workspace {
+  id        String @id @default(uuid())
+
+  name      String
+
+  // Boss
+  ownerId   String
+  owner     User @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+
+  users User[] @relation("WorkspaceEmployees")
+
+  transactions Transaction[]
+
+  auditLogs AuditLog[]
+
+  khatas Khata[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Transaction {
+  id String @id @default(uuid())
+
+  workspaceId String
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  title String
+
+  description String?
+
+  amount Decimal @db.Decimal(12,2)
+
+  type TransactionType
+
+  transactionDate DateTime
+
+  createdById String
+  createdBy User @relation("CreatedTransactions", fields: [createdById], references: [id])
+
+  version Int @default(1)
+
+  deletedAt DateTime?
+
+  auditLogs AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+}
+
+model AuditLog {
+  id String @id @default(uuid())
+
+  workspaceId String
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  action AuditAction
+
+  transactionId String?
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+
+  khataId String?
+  khata Khata? @relation(fields: [khataId], references: [id])
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  previousValue Json?
+
+  newValue Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([khataId])
+}
+
+model Khata {
+  id             String @id @default(uuid())
+  workspaceId    String
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  customerName   String
+  contactNumber  String
+  title          String
+  initialAmount  Decimal @db.Decimal(12,2)
+
+  createdById    String
+  createdBy      User @relation("CreatedKhatas", fields: [createdById], references: [id])
+
+  entries        KhataEntry[]
+
+  auditLogs      AuditLog[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  @@unique([workspaceId, customerName])
+  @@index([workspaceId])
+  @@index([deletedAt])
+}
+
+model KhataEntry {
+  id             String @id @default(uuid())
+  khataId        String
+  khata          Khata @relation(fields: [khataId], references: [id], onDelete: Cascade)
+
+  title          String
+  amount         Decimal @db.Decimal(12,2)
+  type           KhataEntryType
+  entryDate      DateTime
+
+  createdById    String
+  createdBy      User @relation("CreatedKhataEntries", fields: [createdById], references: [id])
+
+  createdAt      DateTime @default(now())
+  deletedAt      DateTime?
+
+  @@index([khataId])
+  @@index([deletedAt])
+}
+
+model LoginAuditLog {
+  id          String   @id @default(uuid())
+  email       String?
+  ipAddress   String?
+  timestamp   DateTime @default(now())
+  
+  @@index([email])
+}
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  EMPLOYEE
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum KhataEntryType {
+  CREDIT
+  PAYMENT
+}
+
+model User {
+  id           String   @id @default(uuid())
+
+  name         String
+  email        String   @unique
+  passwordHash String
+
+  role         Role
+
   // Settings & Profile
   avatarUrl    String?
   preferences  Json?

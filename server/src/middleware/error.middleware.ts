@@ -39,7 +39,7 @@ export const errorHandler: ErrorRequestHandler = (
     response.status(400).json({
       success: false,
       message: 'Validation failed',
-      error: isProduction ? undefined : error.flatten(),
+      error: error.flatten(),
     } satisfies ApiResponse);
     return;
   }

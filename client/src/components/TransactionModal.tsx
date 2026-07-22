@@ -30,7 +30,9 @@ const toDateInputValue = (iso: string) => {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
 };
 
 export const TransactionModal = ({ open, onClose, workspaceId, transaction }: TransactionModalProps) => {
@@ -44,14 +46,18 @@ export const TransactionModal = ({ open, onClose, workspaceId, transaction }: Tr
   const [transactionDate, setTransactionDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Pre-fill the form when opening in edit mode
+  // Pre-fill the form when opening
   useEffect(() => {
-    if (open && transaction) {
-      setTitle(transaction.title);
-      setDescription(transaction.description ?? '');
-      setAmount(String(transaction.amount));
-      setType(transaction.type);
-      setTransactionDate(toDateInputValue(transaction.transactionDate));
+    if (open) {
+      if (transaction) {
+        setTitle(transaction.title);
+        setDescription(transaction.description ?? '');
+        setAmount(String(transaction.amount));
+        setType(transaction.type);
+        setTransactionDate(toDateInputValue(transaction.transactionDate));
+      } else {
+        setTransactionDate(toDateInputValue(new Date().toISOString()));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, transaction]);
@@ -175,8 +181,8 @@ export const TransactionModal = ({ open, onClose, workspaceId, transaction }: Tr
             </TextField>
 
             <TextField
-              label="Transaction Date"
-              type="date"
+              label="Transaction Date & Time"
+              type="datetime-local"
               required
               fullWidth
               value={transactionDate}
