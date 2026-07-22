@@ -1,4 +1,4 @@
-import { PageShell } from '../../../../views/PageShell';
+import { ReportsPage } from '../../../../views/ReportsPage';
 
 interface Props {
     params: Promise<{
@@ -7,12 +7,7 @@ interface Props {
 }
 
 export default async function ReportsRoute({ params }: Props) {
-    await params;
+    const { workspaceId } = await params;
 
-    return (
-        <PageShell
-            title="Reports"
-            description="Ledger reports and export workflows for this workspace."
-        />
-    );
+    return <ReportsPage workspaceId={workspaceId} />;
 }

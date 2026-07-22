@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import { placeholderController } from '../controllers/placeholder.controller.js';
+import { Router } from "express";
+import { getReportsHandler } from "../controllers/report.controller.js";
 
-export const reportsRouter = Router();
+export const reportsRouter = Router({ mergeParams: true });
 
-reportsRouter.get('/', placeholderController);
+reportsRouter.get("/", getReportsHandler);

@@ -1,4 +1,5 @@
 import { PageShell } from '../../../../views/PageShell';
+import { SettingsModule } from '../../../../views/Settings/SettingsModule';
 
 interface Props {
     params: Promise<{
@@ -7,12 +8,11 @@ interface Props {
 }
 
 export default async function SettingsRoute({ params }: Props) {
-    await params;
+    const { workspaceId } = await params;
 
     return (
-        <PageShell
-            title="Settings"
-            description="Workspace profile and security settings."
-        />
+        <PageShell title="Settings">
+            <SettingsModule workspaceId={workspaceId} />
+        </PageShell>
     );
 }

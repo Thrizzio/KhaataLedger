@@ -213,3 +213,65 @@ export const createEmployee: RequestHandler = async (request, response, next) =>
     next(error);
   }
 };
+
+// PUT /workspaces/:workspaceId
+export const updateWorkspace: RequestHandler = async (request, response, next) => {
+  try {
+    if (!request.user?.id) {
+      throw new ApiError(401, 'Authentication required');
+    }
+
+    if (request.user.role !== 'OWNER') {
+      throw new ApiError(403, 'Only owners can update workspaces');
+    }
+
+    const { workspaceId } = request.params;
+    const { name } = request.body;
+
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+        throw new ApiError(400, 'Workspace name is required');
+    }
+
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace || workspace.ownerId !== request.user.id) {
+      throw new ApiError(403, 'Access denied');
+    }
+
+    const updated = await prisma.workspace.update({
+        where: { id: workspaceId },
+        data: { name: name.trim() }
+    });
+
+    response.status(200).json(createSuccessResponse('Workspace updated successfully', updated));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /workspaces/:workspaceId
+export const deleteWorkspace: RequestHandler = async (request, response, next) => {
+    try {
+      if (!request.user?.id) {
+        throw new ApiError(401, 'Authentication required');
+      }
+  
+      if (request.user.role !== 'OWNER') {
+        throw new ApiError(403, 'Only owners can delete workspaces');
+      }
+  
+      const { workspaceId } = request.params;
+  
+      const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+      if (!workspace || workspace.ownerId !== request.user.id) {
+        throw new ApiError(403, 'Access denied');
+      }
+  
+      await prisma.workspace.delete({
+          where: { id: workspaceId }
+      });
+  
+      response.status(200).json(createSuccessResponse('Workspace deleted successfully', null));
+    } catch (error) {
+      next(error);
+    }
+  };

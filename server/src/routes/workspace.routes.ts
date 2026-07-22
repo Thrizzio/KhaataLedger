@@ -6,12 +6,20 @@ import {
     getWorkspaceById,
     getWorkspaceEmployees,
     createEmployee,
+    updateWorkspace,
+    deleteWorkspace,
 } from '../controllers/workspace.controller.js';
+import { reportsRouter } from './reports.routes.js';
 
 export const workspacesRouter = Router();
 
 workspacesRouter.get('/', authenticate, getWorkspaces);
 workspacesRouter.post('/', authenticate, createWorkspace);
 workspacesRouter.get('/:workspaceId', authenticate, getWorkspaceById);
+workspacesRouter.put('/:workspaceId', authenticate, updateWorkspace);
+workspacesRouter.delete('/:workspaceId', authenticate, deleteWorkspace);
 workspacesRouter.get('/:workspaceId/employees', authenticate, getWorkspaceEmployees);
 workspacesRouter.post('/:workspaceId/employees', authenticate, createEmployee);
+
+// Reports are scoped to a workspace: GET /workspaces/:workspaceId/reports
+workspacesRouter.use('/:workspaceId/reports', authenticate, reportsRouter);
