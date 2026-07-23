@@ -6,6 +6,7 @@ export interface JwtPayload {
   id: string;
   email: string;
   role: Role;
+  workspaceId?: string;
 }
 
 export const signToken = (payload: JwtPayload): string =>

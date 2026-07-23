@@ -6,37 +6,31 @@ import { workspaceService } from '../../services/workspace.service';
 import { getAuthState } from '../../store/authStore';
 import { toast } from 'react-hot-toast';
 import type { Workspace } from '../../types/workspace';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Props {
     workspaceId: string;
 }
 
 export const WorkspaceSettings: React.FC<Props> = ({ workspaceId }) => {
-    const [workspace, setWorkspace] = useState<Workspace | null>(null);
+    const queryClient = useQueryClient();
     const [name, setName] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
     const user = getAuthState().user;
     const isOwner = user?.role === 'OWNER';
 
+    const { data: workspace, isLoading } = useQuery<Workspace>({
+        queryKey: ['workspace', workspaceId],
+        queryFn: () => workspaceService.getWorkspaceById(workspaceId).then(res => res.data.data as Workspace),
+    });
+
     useEffect(() => {
-        const fetchWorkspace = async () => {
-            try {
-                const res = await workspaceService.getWorkspaceById(workspaceId);
-                if (res.data.success && res.data.data) {
-                    setWorkspace(res.data.data);
-                    setName(res.data.data.name);
-                }
-            } catch (error) {
-                toast.error('Failed to load workspace details');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchWorkspace();
-    }, [workspaceId]);
+        if (workspace) {
+            setName(workspace.name);
+        }
+    }, [workspace]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setName(e.target.value);
@@ -49,7 +43,7 @@ export const WorkspaceSettings: React.FC<Props> = ({ workspaceId }) => {
         try {
             const res = await workspaceService.updateWorkspace(workspaceId, name);
             if (res.data.success && res.data.data) {
-                setWorkspace(res.data.data);
+                queryClient.setQueryData(['workspace', workspaceId], res.data.data);
                 setHasChanges(false);
                 toast.success('Workspace updated successfully');
             } else {

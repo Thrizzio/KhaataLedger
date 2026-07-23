@@ -91,11 +91,7 @@ export const getTransactions: RequestHandler = async (req, res) => {
       return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
     }
     if (req.user!.role === "EMPLOYEE") {
-      const employee = await prisma.user.findUnique({
-        where: { id: req.user!.id },
-        select: { workspaceId: true },
-      });
-      if (employee?.workspaceId !== workspaceId) {
+      if (req.user!.workspaceId !== workspaceId) {
         return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
       }
     }
@@ -243,11 +239,7 @@ export const addTransaction: RequestHandler = async (req, res) => {
       return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
     }
     if (req.user!.role === "EMPLOYEE") {
-      const employee = await prisma.user.findUnique({
-        where: { id: req.user!.id },
-        select: { workspaceId: true },
-      });
-      if (employee?.workspaceId !== workspaceId) {
+      if (req.user!.workspaceId !== workspaceId) {
         return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
       }
     }

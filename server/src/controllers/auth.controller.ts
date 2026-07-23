@@ -176,6 +176,7 @@ export const loginEmployee: RequestHandler = async (request, response, next) => 
       id: user.id,
       email: user.email,
       role: user.role,
+      workspaceId: user.workspaceId ?? undefined,
     });
 
     response.status(200).json(

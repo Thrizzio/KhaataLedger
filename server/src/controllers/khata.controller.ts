@@ -10,7 +10,7 @@ import {
 
 // ── Workspace access helper ──────────────────────────────────────────────────
 // Returns null when the caller may access the workspace, otherwise a denial.
-type AuthUser = { id: string; role: Role };
+type AuthUser = { id: string; role: Role; workspaceId?: string };
 type Denial = { status: number; message: string };
 
 const checkWorkspace = async (workspaceId: string, user: AuthUser): Promise<Denial | null> => {
@@ -20,11 +20,7 @@ const checkWorkspace = async (workspaceId: string, user: AuthUser): Promise<Deni
     return { status: 403, message: "You do not have access to this workspace" };
   }
   if (user.role === "EMPLOYEE") {
-    const employee = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { workspaceId: true },
-    });
-    if (employee?.workspaceId !== workspaceId) {
+    if (user.workspaceId !== workspaceId) {
       return { status: 403, message: "You do not have access to this workspace" };
     }
   }

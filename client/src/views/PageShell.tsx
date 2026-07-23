@@ -5,7 +5,12 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useState, ReactNode } from "react";
-import { TransactionModal } from "../components/TransactionModal";
+import dynamic from 'next/dynamic';
+
+const TransactionModal = dynamic(
+  () => import('../components/TransactionModal').then((mod) => mod.TransactionModal),
+  { ssr: false }
+);
 
 interface PageShellProps {
   title?: string;
