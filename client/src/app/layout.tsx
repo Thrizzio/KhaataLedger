@@ -7,7 +7,15 @@ import { appTheme } from '../theme/theme';
 import { Toaster } from 'react-hot-toast';
 import type { ReactNode } from 'react';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

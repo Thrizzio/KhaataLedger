@@ -28,7 +28,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { TransactionModal } from '../components/TransactionModal';
+import dynamic from 'next/dynamic';
+
+const TransactionModal = dynamic(
+  () => import('../components/TransactionModal').then((mod) => mod.TransactionModal),
+  { ssr: false }
+);
 import { transactionService, type Transaction } from '../services/transaction.service';
 import { useAuth } from '../hooks/useAuth';
 

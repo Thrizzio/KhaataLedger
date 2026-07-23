@@ -88,11 +88,7 @@ export const getWorkspaceById: RequestHandler = async (request, response, next) 
     }
 
     if (request.user.role === 'EMPLOYEE') {
-      const employeeRecord = await prisma.user.findUnique({
-        where: { id: request.user.id },
-        select: { workspaceId: true },
-      });
-      if (employeeRecord?.workspaceId !== workspaceId) {
+      if (request.user.workspaceId !== workspaceId) {
         throw new ApiError(403, 'Access denied');
       }
     }
