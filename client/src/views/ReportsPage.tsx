@@ -39,12 +39,9 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
   Line,
   LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -99,7 +96,11 @@ const cardSx = {
   borderRadius: 3,
   border: "1px solid",
   borderColor: "divider",
-  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)",
+  bgcolor: "background.paper",
+  display: "flex",
+  flexDirection: "column",
+  height: "100%",
 };
 
 const PIE_COLORS = { income: "#16a34a", expense: "#dc2626" };
@@ -121,22 +122,22 @@ function KpiCard({
 }) {
   return (
     <Card elevation={0} sx={cardSx}>
-      <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+      <CardContent sx={{ p: 3, display: "flex", flexDirection: "column", flexGrow: 1, "&:last-child": { pb: 3 } }}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" flexGrow={1}>
           <Box>
             <Typography
               color="text.secondary"
               variant="caption"
-              fontWeight={500}
-              sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}
+              fontWeight={600}
+              sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
             >
               {label}
             </Typography>
-            <Typography variant="h5" fontWeight={700} color={valueColor} sx={{ mt: 0.5 }}>
+            <Typography variant="h5" fontWeight={700} color={valueColor} sx={{ mt: 1, letterSpacing: -0.5 }}>
               {value}
             </Typography>
           </Box>
-          <Avatar sx={{ width: 44, height: 44, bgcolor: avatarBg, color: avatarColor }}>{icon}</Avatar>
+          <Avatar sx={{ width: 48, height: 48, bgcolor: avatarBg, color: avatarColor, borderRadius: 2 }}>{icon}</Avatar>
         </Box>
       </CardContent>
     </Card>
@@ -154,15 +155,15 @@ function SectionCard({
 }) {
   return (
     <Card elevation={0} sx={cardSx}>
-      <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
-        <Stack direction="row" spacing={1} alignItems="center" mb={1.5}>
+      <CardContent sx={{ p: 3, display: "flex", flexDirection: "column", flexGrow: 1, "&:last-child": { pb: 3 } }}>
+        <Stack direction="row" spacing={1.5} alignItems="center" mb={2}>
           {icon}
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" fontWeight={700} sx={{ letterSpacing: -0.2 }}>
             {title}
           </Typography>
         </Stack>
-        <Divider />
-        <Box mt={2}>{children}</Box>
+        <Divider sx={{ mb: 3 }} />
+        <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>{children}</Box>
       </CardContent>
     </Card>
   );
@@ -170,8 +171,8 @@ function SectionCard({
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <Box py={4} textAlign="center">
-      <Typography color="text.secondary" variant="body2">
+    <Box py={6} textAlign="center" sx={{ bgcolor: "background.default", borderRadius: 2, border: "1px dashed", borderColor: "divider" }}>
+      <Typography color="text.secondary" variant="body2" fontWeight={500}>
         {message}
       </Typography>
     </Box>
@@ -182,7 +183,14 @@ function TxTable({ rows }: { rows: ReportRow[] }) {
   if (rows.length === 0) return <EmptyState message="No transactions found." />;
   return (
     <TableContainer sx={{ maxHeight: 420 }}>
-      <Table size="small" stickyHeader>
+      <Table 
+        size="medium" 
+        stickyHeader 
+        sx={{
+          "& .MuiTableCell-root": { py: 2, borderBottom: "1px solid", borderColor: "divider" },
+          "& .MuiTableHead-root .MuiTableCell-root": { fontWeight: 600, color: "text.secondary", textTransform: "uppercase", fontSize: "0.75rem", letterSpacing: 0.5, bgcolor: "background.default" }
+        }}
+      >
         <TableHead>
           <TableRow>
             <TableCell>Title</TableCell>
@@ -194,15 +202,30 @@ function TxTable({ rows }: { rows: ReportRow[] }) {
         </TableHead>
         <TableBody>
           {rows.map((r) => (
-            <TableRow key={r.id} hover>
-              <TableCell sx={{ maxWidth: 220 }}>{r.title}</TableCell>
+            <TableRow key={r.id} hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+              <TableCell sx={{ maxWidth: 220, fontWeight: 500, color: "text.primary" }}>{r.title}</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600, color: r.type === "INCOME" ? "success.main" : "error.main" }}>
                 {r.type === "INCOME" ? "+" : "-"}
                 {formatAmount(r.amount)}
               </TableCell>
-              <TableCell>{r.type === "INCOME" ? "Income" : "Expense"}</TableCell>
-              <TableCell>{fmtDate(r.transactionDate)}</TableCell>
-              <TableCell>{r.createdBy?.name ?? "—"}</TableCell>
+              <TableCell>
+                <Box
+                  component="span"
+                  sx={{
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    bgcolor: r.type === "INCOME" ? "success.light" : "error.light",
+                    color: r.type === "INCOME" ? "success.dark" : "error.dark",
+                  }}
+                >
+                  {r.type === "INCOME" ? "Income" : "Expense"}
+                </Box>
+              </TableCell>
+              <TableCell sx={{ color: "text.secondary" }}>{fmtDate(r.transactionDate)}</TableCell>
+              <TableCell sx={{ color: "text.secondary" }}>{r.createdBy?.name ?? "—"}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -265,25 +288,17 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
     ? [
         { label: "Highest Income Day", value: data.businessInsights.highestIncomeDay ? `${fmtKey(data.businessInsights.highestIncomeDay.date)} · ${formatAmount(data.businessInsights.highestIncomeDay.amount)}` : "Not enough data" },
         { label: "Highest Expense Day", value: data.businessInsights.highestExpenseDay ? `${fmtKey(data.businessInsights.highestExpenseDay.date)} · ${formatAmount(data.businessInsights.highestExpenseDay.amount)}` : "Not enough data" },
-        { label: "Average Daily Income", value: formatAmount(data.businessInsights.averageDailyIncome) },
-        { label: "Average Daily Expense", value: formatAmount(data.businessInsights.averageDailyExpense) },
-        { label: "Avg Transactions / Day", value: String(data.businessInsights.averageTransactionsPerDay) },
+        { label: "Avg Daily Income", value: formatAmount(data.businessInsights.averageDailyIncome) },
+        { label: "Avg Daily Expense", value: formatAmount(data.businessInsights.averageDailyExpense) },
+        { label: "Avg Txns / Day", value: String(data.businessInsights.averageTransactionsPerDay) },
       ]
     : [];
-
-  const pieData = data
-    ? [
-        { name: "Income", value: data.incomeExpenseBreakdown.income },
-        { name: "Expense", value: data.incomeExpenseBreakdown.expense },
-      ]
-    : [];
-  const pieHasData = data && data.incomeExpenseBreakdown.income + data.incomeExpenseBreakdown.expense > 0;
 
   return (
     <PageShell title="Reports" workspaceId={workspaceId}>
-      <Stack spacing={3}>
+      <Stack spacing={4} sx={{ pb: 4 }}>
         {/* ── Filters ─────────────────────────────────────── */}
-        <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+        <Paper elevation={0} variant="outlined" sx={{ p: 2.5, borderRadius: 3, bgcolor: "background.paper", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
             <FormControl size="small" sx={{ minWidth: 180 }}>
               <InputLabel id="range-label">Range</InputLabel>
@@ -292,6 +307,7 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
                 label="Range"
                 value={range}
                 onChange={(e) => setRange(e.target.value as ReportRange)}
+                sx={{ borderRadius: 2 }}
               >
                 {RANGE_OPTIONS.map((o) => (
                   <MenuItem key={o.value} value={o.value}>
@@ -310,6 +326,7 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   InputLabelProps={{ shrink: true }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
                 <TextField
                   label="End Date"
@@ -318,22 +335,23 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   InputLabelProps={{ shrink: true }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
               </>
             )}
 
             <Box sx={{ ml: { sm: "auto" } }}>
-              <Stack direction="row" spacing={1}>
+              <Stack direction="row" spacing={1.5}>
                 <Button
                   variant="outlined"
                   startIcon={<FileDownloadIcon />}
                   disabled={!data || data.recentTransactions.length === 0}
                   onClick={handleExportCsv}
-                  sx={{ textTransform: "none" }}
+                  sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600 }}
                 >
                   Export CSV
                 </Button>
-                <Button variant="outlined" startIcon={<PictureAsPdfIcon />} disabled sx={{ textTransform: "none" }}>
+                <Button variant="outlined" startIcon={<PictureAsPdfIcon />} disabled sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600 }}>
                   Export PDF (Coming Soon)
                 </Button>
               </Stack>
@@ -342,14 +360,14 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
         </Paper>
 
         {isLoading && (
-          <Box display="flex" justifyContent="center" py={6}>
+          <Box display="flex" justifyContent="center" py={10}>
             <CircularProgress />
           </Box>
         )}
 
         {isError && (
-          <Paper elevation={0} variant="outlined" sx={{ p: 4, borderRadius: 3 }}>
-            <Typography color="error" textAlign="center">
+          <Paper elevation={0} variant="outlined" sx={{ p: 6, borderRadius: 3, bgcolor: "error.light" }}>
+            <Typography color="error.dark" textAlign="center" fontWeight={600}>
               Failed to load reports. Please try again.
             </Typography>
           </Paper>
@@ -358,9 +376,9 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
         {data && (
           <>
             {/* ── Financial Summary ───────────────────────── */}
-            <Grid container spacing={2.5}>
+            <Grid container spacing={3}>
               {kpiCards.map((c) => (
-                <Grid item xs={12} sm={6} md={2} key={c.label}>
+                <Grid item xs={12} sm={6} md={4} lg={2} key={c.label}>
                   <KpiCard {...c} />
                 </Grid>
               ))}
@@ -368,52 +386,33 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
 
             {/* ── Business Insights ───────────────────────── */}
             <SectionCard title="Business Insights" icon={<ShowChartIcon color="primary" />}>
-              <Grid container spacing={2}>
+              <Grid container spacing={3}>
                 {insightItems.map((it) => (
                   <Grid item xs={12} sm={6} md={2.4} key={it.label}>
-                    <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
-                      {it.label}
-                    </Typography>
-                    <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 0.5 }}>
-                      {it.value}
-                    </Typography>
+                    <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: "background.default", border: "1px solid", borderColor: "divider", height: "100%" }}>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: "uppercase", letterSpacing: 0.5, display: "block" }}>
+                        {it.label}
+                      </Typography>
+                      <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 1, color: "text.primary", letterSpacing: -0.3 }}>
+                        {it.value}
+                      </Typography>
+                    </Box>
                   </Grid>
                 ))}
               </Grid>
             </SectionCard>
 
-            {/* ── Income vs Expense ────────────────────────── */}
-            <SectionCard title="Income vs Expense" icon={<PieChartIconFallback />}>
-              {pieHasData ? (
-                <Box height={300}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
-                        {pieData.map((entry) => (
-                          <Cell key={entry.name} fill={entry.name === "Income" ? PIE_COLORS.income : PIE_COLORS.expense} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(v: number) => formatAmount(v)} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Box>
-              ) : (
-                <EmptyState message="No data available." />
-              )}
-            </SectionCard>
-
             {/* ── Daily Cash Flow ──────────────────────────── */}
             <SectionCard title="Daily Cash Flow" icon={<ShowChartIcon color="primary" />}>
               {data.dailyCashFlow.some((d) => d.net !== 0) ? (
-                <Box height={300}>
+                <Box height={350} sx={{ width: "100%", mt: 1 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data.dailyCashFlow} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="date" tickFormatter={fmtKey} fontSize={12} />
-                      <YAxis tickFormatter={(v: number) => formatAmount0(v)} fontSize={12} width={80} />
-                      <Tooltip formatter={(v: number) => formatAmount(v)} labelFormatter={(l) => fmtKey(String(l))} />
-                      <Line type="monotone" dataKey="net" name="Net" stroke="#4f46e5" strokeWidth={2} dot={false} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <XAxis dataKey="date" tickFormatter={fmtKey} fontSize={12} tickLine={false} axisLine={false} tickMargin={12} />
+                      <YAxis tickFormatter={(v: number) => formatAmount0(v)} fontSize={12} width={80} tickLine={false} axisLine={false} tickMargin={12} />
+                      <Tooltip formatter={(v: number) => formatAmount(v)} labelFormatter={(l) => fmtKey(String(l))} cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                      <Line type="monotone" dataKey="net" name="Net" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6, strokeWidth: 0 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </Box>
@@ -425,16 +424,16 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
             {/* ── Income & Expense Trend ───────────────────── */}
             <SectionCard title="Income & Expense Trend" icon={<LeaderboardIcon color="primary" />}>
               {data.incomeExpenseTrend.some((d) => d.income !== 0 || d.expense !== 0) ? (
-                <Box height={300}>
+                <Box height={350} sx={{ width: "100%", mt: 1 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.incomeExpenseTrend} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="date" tickFormatter={fmtKey} fontSize={12} />
-                      <YAxis tickFormatter={(v: number) => formatAmount0(v)} fontSize={12} width={80} />
-                      <Tooltip formatter={(v: number) => formatAmount(v)} labelFormatter={(l) => fmtKey(String(l))} />
-                      <Legend />
-                      <Bar dataKey="income" name="Income" fill={PIE_COLORS.income} radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="expense" name="Expense" fill={PIE_COLORS.expense} radius={[4, 4, 0, 0]} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <XAxis dataKey="date" tickFormatter={fmtKey} fontSize={12} tickLine={false} axisLine={false} tickMargin={12} />
+                      <YAxis tickFormatter={(v: number) => formatAmount0(v)} fontSize={12} width={80} tickLine={false} axisLine={false} tickMargin={12} />
+                      <Tooltip formatter={(v: number) => formatAmount(v)} labelFormatter={(l) => fmtKey(String(l))} cursor={{ fill: '#f1f5f9' }} />
+                      <Legend wrapperStyle={{ paddingTop: 20 }} />
+                      <Bar dataKey="income" name="Income" fill={PIE_COLORS.income} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                      <Bar dataKey="expense" name="Expense" fill={PIE_COLORS.expense} radius={[4, 4, 0, 0]} maxBarSize={40} />
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
@@ -460,30 +459,34 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
             {/* ── Recent Transactions ─────────────────────── */}
             <SectionCard title="Recent Transactions" icon={<ReceiptLongIcon color="primary" />}>
               <TxTable rows={data.recentTransactions} />
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-                {data.recentTransactions.length} transaction(s) in the selected range.
-              </Typography>
+              <Box mt={2}>
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  {data.recentTransactions.length} transaction(s) in the selected range.
+                </Typography>
+              </Box>
             </SectionCard>
 
             {/* ── Khata Summary ────────────────────────────── */}
             <SectionCard title="Khata Summary" icon={<PeopleIcon color="primary" />}>
-              <Grid container spacing={2.5}>
-                <Grid item xs={6} md={3}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} lg={3}>
                   <KpiCard label="Outstanding Credit" value={formatAmount0(data.khataSummary.outstandingCredit)} icon={<TrendingUpIcon />} avatarBg="warning.light" avatarColor="warning.main" valueColor="warning.main" />
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid item xs={12} sm={6} lg={3}>
                   <KpiCard label="Collected" value={formatAmount0(data.khataSummary.collected)} icon={<AccountBalanceWalletIcon />} avatarBg="success.light" avatarColor="success.main" valueColor="success.main" />
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid item xs={12} sm={6} lg={3}>
                   <KpiCard label="Pending Customers" value={String(data.khataSummary.pendingCustomers)} icon={<PeopleIcon />} avatarBg="secondary.light" avatarColor="secondary.main" valueColor="text.primary" />
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid item xs={12} sm={6} lg={3}>
                   <KpiCard label="Overdue Amount" value={formatAmount0(data.khataSummary.overdueAmount)} icon={<TrendingDownIcon />} avatarBg="error.light" avatarColor="error.main" valueColor="error.main" />
                 </Grid>
               </Grid>
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
-                Overdue Amount requires a due-date field on khata entries, which the current schema does not include; shown as 0 until that is added.
-              </Typography>
+              <Box mt={3}>
+                <Typography variant="caption" color="text.secondary">
+                  Overdue Amount requires a due-date field on khata entries, which the current schema does not include; shown as 0 until that is added.
+                </Typography>
+              </Box>
             </SectionCard>
           </>
         )}
@@ -491,8 +494,3 @@ export const ReportsPage = ({ workspaceId }: ReportsPageProps) => {
     </PageShell>
   );
 };
-
-// Small inline icon so the pie section header matches the others (no chart icon import needed).
-const PieChartIconFallback = () => (
-  <Avatar sx={{ width: 28, height: 28, bgcolor: "primary.light", color: "primary.main", fontSize: 14 }}>%</Avatar>
-);
