@@ -276,14 +276,19 @@ model Supplier {
   workspaceId   String
   workspace     Workspace @relation("SupplierWorkspace", fields: [workspaceId], references: [id], onDelete: Cascade)
   name          String
-  purchases Purchase[] @relation("PurchaseSupplier")  
   phoneNumber   String?
+  email         String?
+  address       String?
+  purchases Purchase[] @relation("PurchaseSupplier")
   outstandingBalance Decimal @db.Decimal(12,2) @default(0) // Amount owed to supplier
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
 
   @@index([workspaceId])
+  @@index([deletedAt])
 }
+
 
 model Sale {
   id            String      @id @default(uuid())
