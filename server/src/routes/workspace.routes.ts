@@ -11,6 +11,7 @@ import {
 } from '../controllers/workspace.controller.js';
 import { reportsRouter } from './reports.routes.js';
 import { inventoryRouter } from './inventory.routes.js';
+import { customersRouter } from './customers.routes.js';
 
 export const workspacesRouter = Router();
 
@@ -27,3 +28,6 @@ workspacesRouter.use('/:workspaceId/reports', authenticate, reportsRouter);
 
 // Inventory is scoped to a workspace: /workspaces/:workspaceId/inventory
 workspacesRouter.use('/:workspaceId/inventory', inventoryRouter);
+
+// Customers are scoped to a workspace: /workspaces/:workspaceId/customers
+workspacesRouter.use('/:workspaceId/customers', customersRouter);

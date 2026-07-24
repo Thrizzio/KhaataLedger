@@ -254,6 +254,8 @@ model Customer {
   workspace          Workspace @relation("CustomerWorkspace", fields: [workspaceId], references: [id], onDelete: Cascade)
   name               String
   phoneNumber        String?
+  email              String?
+  address            String?
   outstandingBalance Decimal  @db.Decimal(12,2) @default(0)
 
   sales              Sale[]       @relation("SaleCustomer")
@@ -262,9 +264,12 @@ model Customer {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   @@index([workspaceId])
+  @@index([deletedAt])
 }
+
 
 model Supplier {
   id            String   @id @default(uuid())

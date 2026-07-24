@@ -1,10 +1,21 @@
 import { Router } from 'express';
-import { placeholderController } from '../controllers/placeholder.controller.js';
+import { authenticate } from '../middleware/auth.middleware.js';
+import { authorizeRoles } from '../middleware/role.middleware.js';
+import {
+    listCustomers,
+    getCustomer,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+} from '../controllers/customer.controller.js';
 
-export const customersRouter = Router();
+export const customersRouter = Router({ mergeParams: true });
 
-customersRouter.get('/', placeholderController);
-customersRouter.post('/', placeholderController);
-customersRouter.get('/:id', placeholderController);
-customersRouter.patch('/:id', placeholderController);
-customersRouter.delete('/:id', placeholderController);
+// Both owners and employees can view customers
+customersRouter.get('/', authenticate, listCustomers);
+customersRouter.get('/:id', authenticate, getCustomer);
+
+// Only owners can mutate customers
+customersRouter.post('/', authenticate, authorizeRoles('OWNER'), createCustomer);
+customersRouter.patch('/:id', authenticate, authorizeRoles('OWNER'), updateCustomer);
+customersRouter.delete('/:id', authenticate, authorizeRoles('OWNER'), deleteCustomer);
