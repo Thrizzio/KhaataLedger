@@ -10,6 +10,7 @@ import {
     deleteWorkspace,
 } from '../controllers/workspace.controller.js';
 import { reportsRouter } from './reports.routes.js';
+import { inventoryRouter } from './inventory.routes.js';
 
 export const workspacesRouter = Router();
 
@@ -23,3 +24,6 @@ workspacesRouter.post('/:workspaceId/employees', authenticate, createEmployee);
 
 // Reports are scoped to a workspace: GET /workspaces/:workspaceId/reports
 workspacesRouter.use('/:workspaceId/reports', authenticate, reportsRouter);
+
+// Inventory is scoped to a workspace: /workspaces/:workspaceId/inventory
+workspacesRouter.use('/:workspaceId/inventory', inventoryRouter);
