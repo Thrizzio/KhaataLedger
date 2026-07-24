@@ -1,0 +1,121 @@
+import type { RequestHandler } from 'express';
+import { prisma } from '../config/prisma.js';
+import { ApiError } from '../utils/api-error.js';
+import { createSuccessResponse } from '../utils/api-response.js';
+import { createPurchaseSchema } from '../validators/purchase.validator.js';
+
+// ── Workspace access guard (OWNER only) ───────────────────────────────────────
+async function requireOwnerAccess(
+    workspaceId: string,
+    user: Express.User,
+): Promise<void> {
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace) throw new ApiError(404, 'Workspace not found');
+    if (workspace.ownerId !== user.id) {
+        throw new ApiError(403, 'Only workspace owners can create purchases');
+    }
+}
+
+// ── POST /workspaces/:workspaceId/purchases ───────────────────────────────────
+export const createPurchase: RequestHandler = async (req, res, next) => {
+    try {
+        const workspaceId = req.params['workspaceId'] as string;
+        const user = req.user!;
+
+        await requireOwnerAccess(workspaceId, user);
+
+        // ── Validate request body ────────────────────────────────────────────────
+        const parsed = createPurchaseSchema.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, 'Validation failed', parsed.error.flatten()));
+        }
+
+        const { supplierId, purchaseDate, paymentType, items } = parsed.data;
+
+        // ── Pre-transaction checks (read-only — safe outside tx) ─────────────────
+
+        // 1. Verify supplier belongs to this workspace
+        const supplier = await prisma.supplier.findFirst({
+            where: { id: supplierId, workspaceId, deletedAt: null },
+        });
+        if (!supplier) {
+            throw new ApiError(404, 'Supplier not found in this workspace');
+        }
+
+        // 2. Verify every inventory item belongs to this workspace
+        const itemIds = items.map((i) => i.inventoryItemId);
+        const inventoryItems = await prisma.inventoryItem.findMany({
+            where: { id: { in: itemIds }, workspaceId, deletedAt: null },
+            select: { id: true, name: true, currentStock: true },
+        });
+
+        if (inventoryItems.length !== itemIds.length) {
+            const foundIds = new Set(inventoryItems.map((i) => i.id));
+            const missing = itemIds.filter((id) => !foundIds.has(id));
+            throw new ApiError(
+                404,
+                `The following inventory items were not found in this workspace: ${missing.join(', ')}`,
+            );
+        }
+
+        // Build a lookup for item names (for snapshot)
+        const itemLookup = new Map(inventoryItems.map((i) => [i.id, i]));
+
+        // ── Calculate totalAmount server-side — never from client ─────────────────
+        const totalAmount = items.reduce(
+            (sum, item) => sum + item.quantity * item.purchasePrice,
+            0,
+        );
+
+        // ── Atomic transaction ────────────────────────────────────────────────────
+        const purchase = await prisma.$transaction(async (tx) => {
+            // a. Create the Purchase header
+            const newPurchase = await tx.purchase.create({
+                data: {
+                    workspaceId,
+                    supplierId,
+                    createdById: user.id,
+                    purchaseDate,
+                    totalAmount,
+                    paymentType,
+                },
+            });
+
+            // b. Create all PurchaseLineItems with productName snapshot
+            await tx.purchaseLineItem.createMany({
+                data: items.map((item) => ({
+                    purchaseId: newPurchase.id,
+                    inventoryItemId: item.inventoryItemId,
+                    quantity: item.quantity,
+                    purchasePrice: item.purchasePrice,
+                    productName: itemLookup.get(item.inventoryItemId)!.name,
+                })),
+            });
+
+            // c. Update stock and lastPurchasePrice for each item
+            await Promise.all(
+                items.map((item) =>
+                    tx.inventoryItem.update({
+                        where: { id: item.inventoryItemId },
+                        data: {
+                            currentStock: { increment: item.quantity },
+                            lastPurchasePrice: item.purchasePrice,
+                        },
+                    }),
+                ),
+            );
+
+            return newPurchase;
+        });
+
+        // Fetch with line items for response
+        const result = await prisma.purchase.findUnique({
+            where: { id: purchase.id },
+            include: { lineItems: true, supplier: { select: { id: true, name: true } } },
+        });
+
+        return res.status(201).json(createSuccessResponse('Purchase created', result));
+    } catch (error) {
+        next(error);
+    }
+};
