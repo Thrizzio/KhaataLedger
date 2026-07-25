@@ -105,7 +105,16 @@ export const createPurchase: RequestHandler = async (req, res, next) => {
                 ),
             );
 
+            // d. Credit purchase → supplier is now owed totalAmount
+            if (paymentType === 'CREDIT') {
+                await tx.supplier.update({
+                    where: { id: supplierId },
+                    data: { outstandingBalance: { increment: totalAmount } },
+                });
+            }
+
             return newPurchase;
+
         });
 
         // Fetch with line items for response
