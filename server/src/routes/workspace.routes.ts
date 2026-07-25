@@ -17,6 +17,7 @@ import { purchasesRouter } from './purchases.routes.js';
 import { salesRouter } from './sales.routes.js';
 import { customerPaymentsRouter } from './customerPayments.routes.js';
 import { supplierPaymentsRouter } from './supplierPayments.routes.js';
+import { getDashboard, getRecentActivity } from '../controllers/dashboard.controller.js';
 
 export const workspacesRouter = Router();
 
@@ -51,3 +52,9 @@ workspacesRouter.use('/:workspaceId/customer-payments', customerPaymentsRouter);
 
 // Supplier payments: /workspaces/:workspaceId/supplier-payments
 workspacesRouter.use('/:workspaceId/supplier-payments', supplierPaymentsRouter);
+
+// Dashboard: GET /workspaces/:workspaceId/dashboard
+workspacesRouter.get('/:workspaceId/dashboard', authenticate, getDashboard);
+
+// Recent activity: GET /workspaces/:workspaceId/activity
+workspacesRouter.get('/:workspaceId/activity', authenticate, getRecentActivity);

@@ -8,8 +8,12 @@ import {
     updateInventoryItem,
     deleteInventoryItem,
 } from '../controllers/inventory.controller.js';
+import { getLowStockItems } from '../controllers/dashboard.controller.js';
 
 export const inventoryRouter = Router({ mergeParams: true });
+
+// ── Static read routes (must be registered BEFORE /:id to avoid conflicts) ───
+inventoryRouter.get('/low-stock', authenticate, getLowStockItems);
 
 // Both owners and employees can view inventory
 inventoryRouter.get('/', authenticate, listInventory);
@@ -19,3 +23,4 @@ inventoryRouter.get('/:id', authenticate, getInventoryItem);
 inventoryRouter.post('/', authenticate, authorizeRoles('OWNER'), createInventoryItem);
 inventoryRouter.patch('/:id', authenticate, authorizeRoles('OWNER'), updateInventoryItem);
 inventoryRouter.delete('/:id', authenticate, authorizeRoles('OWNER'), deleteInventoryItem);
+
