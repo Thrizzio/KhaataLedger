@@ -15,6 +15,8 @@ import { customersRouter } from './customers.routes.js';
 import { suppliersRouter } from './suppliers.routes.js';
 import { purchasesRouter } from './purchases.routes.js';
 import { salesRouter } from './sales.routes.js';
+import { customerPaymentsRouter } from './customerPayments.routes.js';
+import { supplierPaymentsRouter } from './supplierPayments.routes.js';
 
 export const workspacesRouter = Router();
 
@@ -43,3 +45,9 @@ workspacesRouter.use('/:workspaceId/purchases', purchasesRouter);
 
 // Sales are scoped to a workspace: /workspaces/:workspaceId/sales
 workspacesRouter.use('/:workspaceId/sales', salesRouter);
+
+// Customer payments: /workspaces/:workspaceId/customer-payments
+workspacesRouter.use('/:workspaceId/customer-payments', customerPaymentsRouter);
+
+// Supplier payments: /workspaces/:workspaceId/supplier-payments
+workspacesRouter.use('/:workspaceId/supplier-payments', supplierPaymentsRouter);

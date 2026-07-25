@@ -59,8 +59,10 @@ model User {
   transactions Transaction[] @relation("CreatedTransactions")
   auditLogs    AuditLog[]
 
-  createdKhatas       Khata[]       @relation("CreatedKhatas")
-  createdKhataEntries KhataEntry[]  @relation("CreatedKhataEntries")
+  createdKhatas       Khata[]         @relation("CreatedKhatas")
+  createdKhataEntries KhataEntry[]    @relation("CreatedKhataEntries")
+  createdCustomerPayments CustomerPayment[] @relation("CreatedCustomerPayments")
+  createdSupplierPayments SupplierPayment[] @relation("CreatedSupplierPayments")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -92,6 +94,8 @@ model Workspace {
   inventoryItems InventoryItem[] @relation("InventoryItemWorkspace")
   customers Customer[] @relation("CustomerWorkspace")
   suppliers Supplier[] @relation("SupplierWorkspace")
+  customerPayments CustomerPayment[] @relation("CustomerPaymentWorkspace")
+  supplierPayments SupplierPayment[] @relation("SupplierPaymentWorkspace")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -196,9 +200,13 @@ model KhataEntry {
   type           KhataEntryType
   entryDate      DateTime
 
-  // Change #3: optional FK to the Sale that created this credit entry
+  // Optional FK to the Sale that created this credit entry
   saleId         String?
   sale           Sale?          @relation("KhataEntrySale", fields: [saleId], references: [id])
+
+  // Optional FK to the CustomerPayment that created this PAYMENT entry
+  customerPaymentId String? @unique
+  customerPayment   CustomerPayment? @relation("KhataEntryPayment", fields: [customerPaymentId], references: [id])
 
   createdById    String
   createdBy      User           @relation("CreatedKhataEntries", fields: [createdById], references: [id])
@@ -208,6 +216,7 @@ model KhataEntry {
 
   @@index([khataId])
   @@index([saleId])
+  @@index([customerPaymentId])
   @@index([deletedAt])
 }
 
@@ -258,9 +267,9 @@ model Customer {
   address            String?
   outstandingBalance Decimal  @db.Decimal(12,2) @default(0)
 
-  sales              Sale[]       @relation("SaleCustomer")
-  // Change #2: back-relation added once Khata gains customerId FK (Change #1)
-  khatas             Khata[]      @relation("KhataCustomer")
+  sales              Sale[]            @relation("SaleCustomer")
+  khatas             Khata[]           @relation("KhataCustomer")
+  customerPayments   CustomerPayment[] @relation("CustomerPaymentCustomer")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -279,8 +288,9 @@ model Supplier {
   phoneNumber   String?
   email         String?
   address       String?
-  purchases Purchase[] @relation("PurchaseSupplier")
-  outstandingBalance Decimal @db.Decimal(12,2) @default(0) // Amount owed to supplier
+  purchases        Purchase[]        @relation("PurchaseSupplier")
+  supplierPayments SupplierPayment[] @relation("SupplierPaymentSupplier")
+  outstandingBalance Decimal @db.Decimal(12,2) @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   deletedAt     DateTime?
@@ -359,4 +369,51 @@ model PurchaseLineItem {
 
   @@index([purchaseId])
   @@index([inventoryItemId])
+}
+
+// ── Payment Settlement Models ─────────────────────────────────────────────────
+
+model CustomerPayment {
+  id          String   @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation("CustomerPaymentWorkspace", fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  customerId  String
+  customer    Customer @relation("CustomerPaymentCustomer", fields: [customerId], references: [id])
+
+  amount      Decimal  @db.Decimal(12,2)
+  paymentDate DateTime
+  notes       String?
+
+  createdById String
+  createdBy   User     @relation("CreatedCustomerPayments", fields: [createdById], references: [id])
+
+  // 1-to-1: this payment is the source of one KhataEntry(PAYMENT)
+  khataEntry  KhataEntry? @relation("KhataEntryPayment")
+
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+  @@index([customerId])
+}
+
+model SupplierPayment {
+  id          String   @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation("SupplierPaymentWorkspace", fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  supplierId  String
+  supplier    Supplier @relation("SupplierPaymentSupplier", fields: [supplierId], references: [id])
+
+  amount      Decimal  @db.Decimal(12,2)
+  paymentDate DateTime
+  notes       String?
+
+  createdById String
+  createdBy   User     @relation("CreatedSupplierPayments", fields: [createdById], references: [id])
+
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+  @@index([supplierId])
 }
