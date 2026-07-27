@@ -7,8 +7,18 @@ export const dashboardApi = {
         httpClient.get<ApiResponse<DashboardMetrics>>(`/workspaces/${workspaceId}/dashboard`),
 
     getActivity: (workspaceId: string) =>
-        httpClient.get<ApiResponse<ActivityItem[]>>(`/workspaces/${workspaceId}/activity`),
+        httpClient.get<
+            ApiResponse<{
+                activity: ActivityItem[];
+                total: number;
+            }>
+        >(`/workspaces/${workspaceId}/activity`),
 
     getLowStock: (workspaceId: string) =>
-        httpClient.get<ApiResponse<LowStockItem[]>>(`/workspaces/${workspaceId}/inventory/low-stock`),
+        httpClient.get<
+            ApiResponse<{
+                items: LowStockItem[];
+                threshold: number;
+            }>
+        >(`/workspaces/${workspaceId}/inventory/low-stock`),
 };
