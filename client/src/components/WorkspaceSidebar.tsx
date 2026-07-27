@@ -1,12 +1,14 @@
 "use client";
 
-import AssessmentIcon from '@mui/icons-material/Assessment';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import GroupIcon from '@mui/icons-material/Group';
-import HistoryIcon from '@mui/icons-material/History';
 import LogoutIcon from '@mui/icons-material/Logout';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SettingsIcon from '@mui/icons-material/Settings';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
+import PeopleIcon from '@mui/icons-material/People';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
+import PaymentsIcon from '@mui/icons-material/Payments';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -39,18 +41,19 @@ const getNavItems = (workspaceId: string, role?: UserRole) => {
     const base = `/workspaces/${workspaceId}`;
     const ownerItems = [
         { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Khata', path: `${base}/khata`, icon: <AccountBalanceWalletIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Employees', path: `${base}/employees`, icon: <GroupIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Reports', path: `${base}/reports`, icon: <AssessmentIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Audit Log', path: `${base}/audit`, icon: <HistoryIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Inventory', path: `${base}/inventory`, icon: <Inventory2Icon sx={{ fontSize: 20 }} /> },
+        { label: 'Customers', path: `${base}/customers`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Suppliers', path: `${base}/suppliers`, icon: <LocalShippingIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Purchases', path: `${base}/purchases`, icon: <ShoppingCartIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Sales', path: `${base}/sales`, icon: <PointOfSaleIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Payments', path: `${base}/payments`, icon: <PaymentsIcon sx={{ fontSize: 20 }} /> },
         { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> },
     ];
     const employeeItems = [
         { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Expenses', path: `${base}/expenses`, icon: <ReceiptLongIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Khata', path: `${base}/khata`, icon: <AccountBalanceWalletIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Audit Log', path: `${base}/audit`, icon: <HistoryIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Inventory', path: `${base}/inventory`, icon: <Inventory2Icon sx={{ fontSize: 20 }} /> },
+        { label: 'Customers', path: `${base}/customers`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Sales', path: `${base}/sales`, icon: <PointOfSaleIcon sx={{ fontSize: 20 }} /> },
     ];
     return role === 'OWNER' ? ownerItems : employeeItems;
 };
