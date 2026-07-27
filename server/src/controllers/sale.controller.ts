@@ -16,6 +16,69 @@ async function requireOwnerAccess(
     }
 }
 
+async function requireWorkspaceAccess(
+    workspaceId: string,
+    user: Express.User,
+): Promise<void> {
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace) throw new ApiError(404, 'Workspace not found');
+
+    if (user.role === 'OWNER' && workspace.ownerId !== user.id) {
+        throw new ApiError(403, 'You do not have access to this workspace');
+    }
+    if (user.role === 'EMPLOYEE' && user.workspaceId !== workspaceId) {
+        throw new ApiError(403, 'You do not have access to this workspace');
+    }
+}
+
+// ── GET /workspaces/:workspaceId/sales ───────────────────────────────────────
+export const listSales: RequestHandler = async (req, res, next) => {
+    try {
+        const workspaceId = req.params['workspaceId'] as string;
+        await requireWorkspaceAccess(workspaceId, req.user!);
+
+        const { saleQuerySchema } = await import('../validators/sale.validator.js');
+        const parsed = saleQuerySchema.safeParse(req.query);
+        if (!parsed.success) {
+            return next(new ApiError(400, 'Invalid query parameters', parsed.error.flatten()));
+        }
+
+        const { page, limit, search, sortBy, order } = parsed.data;
+        const skip = (page - 1) * limit;
+
+        const baseWhere = { workspaceId, deletedAt: null as null };
+        const searchWhere = search
+            ? {
+                customer: {
+                    name: { contains: search, mode: 'insensitive' as const },
+                },
+            }
+            : {};
+
+        const where = { ...baseWhere, ...searchWhere };
+
+        const [items, total] = await Promise.all([
+            prisma.sale.findMany({
+                where,
+                orderBy: { [sortBy]: order },
+                skip,
+                take: limit,
+                include: { lineItems: true, customer: { select: { id: true, name: true } } },
+            }),
+            prisma.sale.count({ where }),
+        ]);
+
+        return res.status(200).json(
+            createSuccessResponse('Sales fetched', {
+                items,
+                pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+            }),
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
 // ── POST /workspaces/:workspaceId/sales ───────────────────────────────────────
 export const createSale: RequestHandler = async (req, res, next) => {
     try {

@@ -37,3 +37,15 @@ export const createSaleSchema = z
     });
 
 export type CreateSaleInput = z.infer<typeof createSaleSchema>;
+
+const VALID_SORT_FIELDS = ['saleDate', 'createdAt'] as const;
+
+export const saleQuerySchema = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    search: z.string().optional(),
+    sortBy: z.enum(VALID_SORT_FIELDS).default('saleDate'),
+    order: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export type SaleQueryInput = z.infer<typeof saleQuerySchema>;

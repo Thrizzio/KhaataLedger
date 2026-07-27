@@ -20,3 +20,15 @@ export const createPurchaseSchema = z.object({
 });
 
 export type CreatePurchaseInput = z.infer<typeof createPurchaseSchema>;
+
+const VALID_SORT_FIELDS = ['purchaseDate', 'createdAt'] as const;
+
+export const purchaseQuerySchema = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    search: z.string().optional(),
+    sortBy: z.enum(VALID_SORT_FIELDS).default('purchaseDate'),
+    order: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export type PurchaseQueryInput = z.infer<typeof purchaseQuerySchema>;
