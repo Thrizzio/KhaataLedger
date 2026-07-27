@@ -227,6 +227,15 @@ function khataSnapshot(k: any) {
 async function wipe() {
   console.log("Wiping existing data...");
   await prisma.$transaction([
+    prisma.saleLineItem.deleteMany({}),
+    prisma.purchaseLineItem.deleteMany({}),
+    prisma.sale.deleteMany({}),
+    prisma.purchase.deleteMany({}),
+    prisma.inventoryItem.deleteMany({}),
+    prisma.customerPayment.deleteMany({}),
+    prisma.supplierPayment.deleteMany({}),
+    prisma.customer.deleteMany({}),
+    prisma.supplier.deleteMany({}),
     prisma.auditLog.deleteMany({}),
     prisma.khataEntry.deleteMany({}),
     prisma.khata.deleteMany({}),
