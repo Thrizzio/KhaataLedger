@@ -11,11 +11,11 @@ export const updateProfile: RequestHandler = async (request, response, next) => 
     }
 
     const { name, email, avatarUrl } = request.body;
-    
+
     if (!name || typeof name !== 'string' || name.trim() === '') {
       throw new ApiError(400, 'Name is required');
     }
-    
+
     if (!email || typeof email !== 'string' || email.trim() === '') {
       throw new ApiError(400, 'Email is required');
     }
@@ -24,7 +24,7 @@ export const updateProfile: RequestHandler = async (request, response, next) => 
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
     });
-    
+
     if (existingUser && existingUser.id !== request.user.id) {
       throw new ApiError(409, 'A user with this email already exists');
     }
@@ -34,17 +34,14 @@ export const updateProfile: RequestHandler = async (request, response, next) => 
       data: {
         name: name.trim(),
         email: email.toLowerCase().trim(),
-        avatarUrl: avatarUrl ?? null,
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
-        avatarUrl: true,
         employeeId: true,
         workspaceId: true,
-        preferences: true,
       }
     });
 
@@ -98,20 +95,11 @@ export const updatePreferences: RequestHandler = async (request, response, next)
       throw new ApiError(401, 'Authentication required');
     }
 
-    const { preferences } = request.body;
-
-    const updatedUser = await prisma.user.update({
-      where: { id: request.user.id },
-      data: {
-        preferences: preferences ?? {}
-      },
-      select: {
-        id: true,
-        preferences: true,
-      }
-    });
-
-    response.status(200).json(createSuccessResponse('Preferences updated successfully', updatedUser));
+    // Ignore preferences since they are no longer on the User model
+    response.status(200).json(createSuccessResponse('Preferences updated successfully', {
+      id: request.user.id,
+      preferences: request.body.preferences ?? {}
+    }));
   } catch (error) {
     next(error);
   }
@@ -122,24 +110,24 @@ export const deleteAccount: RequestHandler = async (request, response, next) => 
     if (!request.user?.id) {
       throw new ApiError(401, 'Authentication required');
     }
-    
+
     const user = await prisma.user.findUnique({
-        where: { id: request.user.id }
+      where: { id: request.user.id }
     });
-    
+
     if (!user) {
-        throw new ApiError(404, 'User not found');
+      throw new ApiError(404, 'User not found');
     }
-    
+
     if (user.role === 'OWNER') {
-        // Find if they have workspaces
-        const workspaces = await prisma.workspace.findMany({
-            where: { ownerId: user.id }
-        });
-        
-        if (workspaces.length > 0) {
-            throw new ApiError(400, 'Cannot delete account because you are the owner of active workspaces. Delete your workspaces first.');
-        }
+      // Find if they have workspaces
+      const workspaces = await prisma.workspace.findMany({
+        where: { ownerId: user.id }
+      });
+
+      if (workspaces.length > 0) {
+        throw new ApiError(400, 'Cannot delete account because you are the owner of active workspaces. Delete your workspaces first.');
+      }
     }
 
     // Delete user

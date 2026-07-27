@@ -23,6 +23,9 @@ coverage/
 .turbo/
 *.tsbuildinfo
 
+CLAUDE.md
+CLAUDE.md
+
 server/src/prisma/dev.db
 server/src/prisma/dev.db-journal
 
