@@ -7,7 +7,15 @@ export function useLowStock(workspaceId?: string) {
         queryKey: queryKeys.inventory.lowStock(workspaceId!),
         queryFn: async () => {
             const response = await dashboardApi.getLowStock(workspaceId!);
-            return response.data.data!;
+            const { items, threshold } = response.data.data!;
+            return items.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                sku: item.sku,
+                currentStock: item.currentStock,
+                minStockLevel: threshold,
+                purchasePrice: Number(item.lastPurchasePrice || 0)
+            })) as import('../types').LowStockItem[];
         },
         enabled: Boolean(workspaceId),
     });

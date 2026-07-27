@@ -7,7 +7,22 @@ export function useActivity(workspaceId?: string) {
         queryKey: queryKeys.activity(workspaceId!),
         queryFn: async () => {
             const response = await dashboardApi.getActivity(workspaceId!);
-            return response.data.data!;
+            const { activity } = response.data.data as any;
+            return activity.map((raw: any) => {
+                let mappedType = 'SALE';
+                if (raw.type === 'SALE') mappedType = 'SALE';
+                if (raw.type === 'PURCHASE') mappedType = 'PURCHASE';
+                if (raw.type === 'CUSTOMER_PAYMENT') mappedType = 'INCOME';
+                if (raw.type === 'SUPPLIER_PAYMENT') mappedType = 'EXPENSE';
+
+                return {
+                    id: raw.referenceId,
+                    type: mappedType,
+                    title: raw.title,
+                    amount: raw.amount,
+                    transactionDate: raw.timestamp
+                };
+            }) as import('../types').ActivityItem[];
         },
         enabled: Boolean(workspaceId),
     });
