@@ -8,7 +8,8 @@ export const queryKeys = {
     dashboard: (wid: string) => ['dashboard', wid] as const,
     activity: (wid: string) => ['activity', wid] as const,
     inventory: {
-        list: (wid: string, search?: string) => ['inventory', wid, 'list', search] as const,
+        all: (wid: string) => ['inventory', wid] as const,
+        list: (wid: string) => ['inventory', wid, 'list'] as const,
         item: (wid: string, id: string) => ['inventory', wid, id] as const,
         lowStock: (wid: string) => ['inventory', wid, 'low-stock'] as const,
     },
