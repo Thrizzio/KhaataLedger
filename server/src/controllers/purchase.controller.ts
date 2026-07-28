@@ -46,7 +46,7 @@ export const listPurchases: RequestHandler = async (req, res, next) => {
         const { page, limit, search, sortBy, order } = parsed.data;
         const skip = (page - 1) * limit;
 
-        const baseWhere = { workspaceId, deletedAt: null as null };
+        const baseWhere = { workspaceId };
         const searchWhere = search
             ? {
                 supplier: {
@@ -201,7 +201,7 @@ export const getPurchase: RequestHandler = async (req, res, next) => {
         await requireWorkspaceAccess(workspaceId, req.user!);
 
         const purchase = await prisma.purchase.findFirst({
-            where: { id: purchaseId, workspaceId, deletedAt: null },
+            where: { id: purchaseId, workspaceId },
             include: { lineItems: true, supplier: { select: { id: true, name: true } } },
         });
 

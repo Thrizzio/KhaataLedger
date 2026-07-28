@@ -46,7 +46,7 @@ export const listSales: RequestHandler = async (req, res, next) => {
         const { page, limit, search, sortBy, order } = parsed.data;
         const skip = (page - 1) * limit;
 
-        const baseWhere = { workspaceId, deletedAt: null as null };
+        const baseWhere = { workspaceId };
         const searchWhere = search
             ? {
                 customer: {
