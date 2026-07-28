@@ -8,16 +8,16 @@ import { toast } from 'react-hot-toast';
 
 export const NotificationSettings: React.FC = () => {
     const user = getAuthState().user;
-    
+
     // Default preferences
-    const defaultPrefs = { 
-        emailNotifications: true, 
-        transactionAlerts: true, 
-        employeeActivity: false, 
-        auditLogAlerts: false, 
-        workspaceUpdates: true 
+    const defaultPrefs = {
+        emailNotifications: true,
+
+        employeeActivity: false,
+        auditLogAlerts: false,
+        workspaceUpdates: true
     };
-    
+
     const [preferences, setPreferences] = useState(defaultPrefs);
     const [hasChanges, setHasChanges] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -73,7 +73,7 @@ export const NotificationSettings: React.FC = () => {
                             <div className={styles.label}>Email Notifications</div>
                             <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Receive daily summaries and important updates via email.</div>
                         </div>
-                        <div 
+                        <div
                             className={`${styles.toggleSwitch} ${preferences.emailNotifications ? styles.toggleSwitchActive : ''}`}
                             onClick={() => handleChange('emailNotifications', !preferences.emailNotifications)}
                         >
@@ -81,27 +81,14 @@ export const NotificationSettings: React.FC = () => {
                         </div>
                     </div>
 
-                    <hr style={{ border: 0, borderTop: '1px solid #e5e7eb', margin: '0.5rem 0' }} />
 
-                    <div className={styles.flexRow}>
-                        <div>
-                            <div className={styles.label}>Transaction Alerts</div>
-                            <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Get notified when a new transaction is created or modified.</div>
-                        </div>
-                        <div 
-                            className={`${styles.toggleSwitch} ${preferences.transactionAlerts ? styles.toggleSwitchActive : ''}`}
-                            onClick={() => handleChange('transactionAlerts', !preferences.transactionAlerts)}
-                        >
-                            <div className={styles.toggleThumb} />
-                        </div>
-                    </div>
 
                     <div className={styles.flexRow} style={{ marginTop: '1rem' }}>
                         <div>
                             <div className={styles.label}>Employee Activity</div>
                             <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Alerts for when employees join, leave, or update their profile.</div>
                         </div>
-                        <div 
+                        <div
                             className={`${styles.toggleSwitch} ${preferences.employeeActivity ? styles.toggleSwitchActive : ''}`}
                             onClick={() => handleChange('employeeActivity', !preferences.employeeActivity)}
                         >
@@ -114,7 +101,7 @@ export const NotificationSettings: React.FC = () => {
                             <div className={styles.label}>Audit Log Alerts</div>
                             <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Receive alerts for destructive actions like deletions.</div>
                         </div>
-                        <div 
+                        <div
                             className={`${styles.toggleSwitch} ${preferences.auditLogAlerts ? styles.toggleSwitchActive : ''}`}
                             onClick={() => handleChange('auditLogAlerts', !preferences.auditLogAlerts)}
                         >
@@ -127,7 +114,7 @@ export const NotificationSettings: React.FC = () => {
                             <div className={styles.label}>Workspace Updates</div>
                             <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Notifications regarding your workspace settings and limits.</div>
                         </div>
-                        <div 
+                        <div
                             className={`${styles.toggleSwitch} ${preferences.workspaceUpdates ? styles.toggleSwitchActive : ''}`}
                             onClick={() => handleChange('workspaceUpdates', !preferences.workspaceUpdates)}
                         >
@@ -141,7 +128,7 @@ export const NotificationSettings: React.FC = () => {
                 <div className={styles.saveBar}>
                     <span className={styles.saveBarText}>You have unsaved changes</span>
                     <div className={styles.saveBarActions}>
-                        <button 
+                        <button
                             className={styles.saveBarButton + ' ' + styles.saveBarButtonSecondary}
                             onClick={() => {
                                 setPreferences(user && (user as any).preferences && (user as any).preferences.notifications ? { ...defaultPrefs, ...(user as any).preferences.notifications } : defaultPrefs);
@@ -150,7 +137,7 @@ export const NotificationSettings: React.FC = () => {
                         >
                             Discard
                         </button>
-                        <button 
+                        <button
                             className={styles.saveBarButton + ' ' + styles.saveBarButtonPrimary}
                             onClick={handleSave}
                             disabled={isSaving}

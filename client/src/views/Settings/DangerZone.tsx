@@ -43,7 +43,7 @@ export const DangerZone: React.FC<Props> = ({ workspaceId }) => {
     };
 
     const handleDeleteWorkspace = async () => {
-        if (!window.confirm('Are you absolutely sure you want to delete this workspace? All data, transactions, and Khatas will be permanently removed.')) {
+        if (!window.confirm('Are you absolutely sure you want to delete this workspace? All data will be permanently removed.')) {
             return;
         }
 
@@ -79,7 +79,7 @@ export const DangerZone: React.FC<Props> = ({ workspaceId }) => {
                                 Permanently remove your Personal Account and all of its contents from the Khaata Ledger platform. This action is not reversible.
                             </div>
                         </div>
-                        <button 
+                        <button
                             className={styles.button + ' ' + styles.buttonDanger}
                             onClick={handleDeleteAccount}
                             disabled={isDeletingAccount}
@@ -95,10 +95,10 @@ export const DangerZone: React.FC<Props> = ({ workspaceId }) => {
                                 <div>
                                     <div style={{ fontSize: '1rem', fontWeight: 600, color: '#111827' }}>Delete Workspace</div>
                                     <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                                        Permanently delete this workspace and all associated data, employees, transactions, and customers.
+                                        Permanently delete this workspace and all associated data, employees, and customers.
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     className={styles.button + ' ' + styles.buttonDanger}
                                     onClick={handleDeleteWorkspace}
                                     disabled={isDeletingWorkspace}

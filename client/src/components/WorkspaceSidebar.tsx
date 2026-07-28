@@ -47,6 +47,7 @@ const getNavItems = (workspaceId: string, role?: UserRole) => {
         { label: 'Purchases', path: `${base}/purchases`, icon: <ShoppingCartIcon sx={{ fontSize: 20 }} /> },
         { label: 'Sales', path: `${base}/sales`, icon: <PointOfSaleIcon sx={{ fontSize: 20 }} /> },
         { label: 'Payments', path: `${base}/payments`, icon: <PaymentsIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Employees', path: `${base}/employees`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> },
         { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> },
     ];
     const employeeItems = [

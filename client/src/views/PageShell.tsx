@@ -1,16 +1,9 @@
 "use client";
 
-import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useState, ReactNode } from "react";
-import dynamic from 'next/dynamic';
-
-const TransactionModal = dynamic(
-  () => import('../components/TransactionModal').then((mod) => mod.TransactionModal),
-  { ssr: false }
-);
+import { ReactNode } from "react";
 
 interface PageShellProps {
   title?: string;
@@ -21,10 +14,6 @@ interface PageShellProps {
 }
 
 export const PageShell = ({ title, description, children, workspaceId = '' }: PageShellProps) => {
-  const [openTransactionModal, setOpenTransactionModal] = useState(false);
-
-  const handleOpenModal = () => setOpenTransactionModal(true);
-  const handleCloseModal = () => setOpenTransactionModal(false);
 
   return (
     <>
@@ -40,9 +29,6 @@ export const PageShell = ({ title, description, children, workspaceId = '' }: Pa
             </Typography>
           )}
 
-          <Button variant="contained" onClick={handleOpenModal} sx={{ ml: 'auto' }}>
-            + Add Transaction
-          </Button>
         </Stack>
 
         {description && (
@@ -56,11 +42,6 @@ export const PageShell = ({ title, description, children, workspaceId = '' }: Pa
         {children}
       </Stack>
 
-      <TransactionModal
-        open={openTransactionModal}
-        onClose={handleCloseModal}
-        workspaceId={workspaceId}
-      />
     </>
   );
 };
