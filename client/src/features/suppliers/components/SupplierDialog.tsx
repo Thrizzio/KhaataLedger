@@ -18,9 +18,10 @@ interface SupplierDialogProps {
     onClose: () => void;
     workspaceId: string;
     initialData?: Supplier | null;
+    onSuccess?: (supplier: Supplier) => void;
 }
 
-export function SupplierDialog({ open, onClose, workspaceId, initialData }: SupplierDialogProps) {
+export function SupplierDialog({ open, onClose, workspaceId, initialData, onSuccess }: SupplierDialogProps) {
     const isEditing = Boolean(initialData);
     const { createMutation, updateMutation } = useSupplierMutations(workspaceId);
 
@@ -48,12 +49,12 @@ export function SupplierDialog({ open, onClose, workspaceId, initialData }: Supp
         if (isEditing && initialData) {
             updateMutation.mutate(
                 { id: initialData.id, payload: data },
-                { onSuccess: () => onClose() }
+                { onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as Supplier); onClose(); } }
             );
         } else {
             createMutation.mutate(
                 data,
-                { onSuccess: () => onClose() }
+                { onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as Supplier); onClose(); } }
             );
         }
     };

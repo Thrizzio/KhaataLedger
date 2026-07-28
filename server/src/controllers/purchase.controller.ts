@@ -191,3 +191,26 @@ export const createPurchase: RequestHandler = async (req, res, next) => {
         next(error);
     }
 };
+
+// ── GET /workspaces/:workspaceId/purchases/:id ────────────────────────────────
+export const getPurchase: RequestHandler = async (req, res, next) => {
+    try {
+        const workspaceId = req.params['workspaceId'] as string;
+        const purchaseId = req.params['id'] as string;
+
+        await requireWorkspaceAccess(workspaceId, req.user!);
+
+        const purchase = await prisma.purchase.findFirst({
+            where: { id: purchaseId, workspaceId, deletedAt: null },
+            include: { lineItems: true, supplier: { select: { id: true, name: true } } },
+        });
+
+        if (!purchase) {
+            throw new ApiError(404, 'Purchase not found');
+        }
+
+        return res.status(200).json(createSuccessResponse('Purchase retrieved', purchase));
+    } catch (error) {
+        next(error);
+    }
+};

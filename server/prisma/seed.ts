@@ -187,9 +187,9 @@ const KHATA_TITLES = [
 // ── Passwords (hashed with the same salt rounds as the app) ─────────────────────
 const DEV_PASSWORD = "Password123"; // used for every seeded account
 
-// ── Deterministic self IDs (createMany does not return IDs) ─────────────────────
-let idCounter = 0;
-const nextId = (prefix: string) => `${prefix}_${(++idCounter).toString().padStart(7, "0")}`;
+// ── True UUID generation (creates compliant Zod payload hashes natively) ───────
+import { randomUUID } from "crypto";
+const nextId = (prefix: string) => randomUUID();
 
 // ── Snapshot builders (mirror controller shapes for realistic audit logs) ───────
 function txnSnapshot(t: any) {
@@ -724,7 +724,7 @@ async function main() {
         createdById: pickCreator(wsRow.id),
         purchaseDate: dateDate,
         totalAmount: totalAmount,
-        paymentType: pick(["CASH", "CREDIT"]),
+        paymentType: pick(["CASH", "CREDIT"] as const),
         createdAt: dateDate
       });
     }
@@ -759,7 +759,7 @@ async function main() {
         createdById: pickCreator(wsRow.id),
         saleDate: dateDate,
         totalAmount: totalAmount,
-        paymentType: pick(["CASH", "CREDIT"]),
+        paymentType: pick(["CASH", "CREDIT"] as const),
         createdAt: dateDate
       });
     }

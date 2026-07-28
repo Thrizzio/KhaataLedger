@@ -14,12 +14,18 @@ import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddIcon from '@mui/icons-material/Add';
 import CircularProgress from '@mui/material/CircularProgress';
+import Autocomplete from '@mui/material/Autocomplete';
+
+import { useState } from 'react';
 
 import { purchaseFormSchema, type PurchaseFormValues } from '../validation';
 import { useCreatePurchase } from '../hooks/useCreatePurchase';
 import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
 import { useInventory } from '../../inventory/hooks/useInventory';
+import { SupplierDialog } from '../../suppliers/components/SupplierDialog';
+import { InventoryDialog } from '../../inventory/components/InventoryDialog';
 
 interface PurchaseFormProps {
     open: boolean;
@@ -33,10 +39,14 @@ const formatCurrency = (amount: number) =>
 export function PurchaseForm({ open, onClose, workspaceId }: PurchaseFormProps) {
     const mutation = useCreatePurchase(workspaceId);
 
+    const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
+    const [inventoryDialogOpen, setInventoryDialogOpen] = useState(false);
+    const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
+
     const { data: supplierData, isLoading: loadingSuppliers } = useSuppliers(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
     const { data: inventoryData, isLoading: loadingInventory } = useInventory(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
 
-    const { control, handleSubmit, reset, formState: { errors } } = useForm<PurchaseFormValues>({
+    const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<PurchaseFormValues>({
         resolver: zodResolver(purchaseFormSchema),
         defaultValues: {
             supplierId: '',
@@ -99,11 +109,21 @@ export function PurchaseForm({ open, onClose, workspaceId }: PurchaseFormProps) 
                                     name="supplierId"
                                     control={control}
                                     render={({ field }) => (
-                                        <TextField {...field} select label="Supplier *" error={!!errors.supplierId} helperText={errors.supplierId?.message} fullWidth>
-                                            {supplierData?.items.map(s => (
-                                                <MenuItem key={s.id} value={s.id}>{s.name} (Bal: {formatCurrency(s.outstandingBalance)})</MenuItem>
-                                            ))}
-                                        </TextField>
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                            <Autocomplete
+                                                options={supplierData?.items || []}
+                                                getOptionLabel={(option) => `${option.name} (Bal: ${formatCurrency(option.outstandingBalance)})`}
+                                                value={supplierData?.items.find(s => s.id === field.value) || null}
+                                                onChange={(_, newValue) => field.onChange(newValue?.id || '')}
+                                                sx={{ flexGrow: 1 }}
+                                                renderInput={(params) => (
+                                                    <TextField {...params} label="Supplier *" error={!!errors.supplierId} helperText={errors.supplierId?.message} />
+                                                )}
+                                            />
+                                            <Button variant="outlined" onClick={() => setSupplierDialogOpen(true)} startIcon={<AddIcon />}>
+                                                New
+                                            </Button>
+                                        </Box>
                                     )}
                                 />
                             </Grid>
@@ -144,11 +164,32 @@ export function PurchaseForm({ open, onClose, workspaceId }: PurchaseFormProps) 
                                                 name={`items.${index}.inventoryItemId`}
                                                 control={control}
                                                 render={({ field }) => (
-                                                    <TextField {...field} select label="Product" error={!!errors.items?.[index]?.inventoryItemId} helperText={errors.items?.[index]?.inventoryItemId?.message} fullWidth>
-                                                        {inventoryData?.items.map(inv => (
-                                                            <MenuItem key={inv.id} value={inv.id}>{inv.name} (Stock: {inv.currentStock})</MenuItem>
-                                                        ))}
-                                                    </TextField>
+                                                    <Autocomplete
+                                                        options={inventoryData?.items || []}
+                                                        getOptionLabel={(option) => `${option.name} (Stock: ${option.currentStock})`}
+                                                        value={inventoryData?.items.find(i => i.id === field.value) || null}
+                                                        onChange={(_, newValue) => {
+                                                            field.onChange(newValue?.id || '');
+                                                            // Auto-fill defaults doesn't apply per prompt instructions, 
+                                                            // purchasePrice is entered manually.
+                                                        }}
+                                                        noOptionsText={
+                                                            <Button
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onClick={() => {
+                                                                    setActiveItemIndex(index);
+                                                                    setInventoryDialogOpen(true);
+                                                                }}
+                                                                fullWidth
+                                                            >
+                                                                + Create New Item
+                                                            </Button>
+                                                        }
+                                                        fullWidth
+                                                        renderInput={(params) => (
+                                                            <TextField {...params} label="Product" error={!!errors.items?.[index]?.inventoryItemId} helperText={errors.items?.[index]?.inventoryItemId?.message} />
+                                                        )}
+                                                    />
                                                 )}
                                             />
                                         </Box>
@@ -206,6 +247,30 @@ export function PurchaseForm({ open, onClose, workspaceId }: PurchaseFormProps) 
                     </Button>
                 </DialogActions>
             </form>
+
+            {supplierDialogOpen && (
+                <SupplierDialog
+                    open={supplierDialogOpen}
+                    onClose={() => setSupplierDialogOpen(false)}
+                    workspaceId={workspaceId}
+                    onSuccess={(newSupplier) => {
+                        setValue('supplierId', newSupplier.id, { shouldValidate: true, shouldDirty: true });
+                    }}
+                />
+            )}
+
+            {inventoryDialogOpen && (
+                <InventoryDialog
+                    open={inventoryDialogOpen}
+                    onClose={() => setInventoryDialogOpen(false)}
+                    workspaceId={workspaceId}
+                    onSuccess={(newItem) => {
+                        if (activeItemIndex !== null) {
+                            setValue(`items.${activeItemIndex}.inventoryItemId`, newItem.id, { shouldValidate: true, shouldDirty: true });
+                        }
+                    }}
+                />
+            )}
         </Dialog>
     );
 }

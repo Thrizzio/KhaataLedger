@@ -19,9 +19,10 @@ interface InventoryDialogProps {
     onClose: () => void;
     workspaceId: string;
     initialData?: InventoryItem | null;
+    onSuccess?: (item: InventoryItem) => void;
 }
 
-export function InventoryDialog({ open, onClose, workspaceId, initialData }: InventoryDialogProps) {
+export function InventoryDialog({ open, onClose, workspaceId, initialData, onSuccess }: InventoryDialogProps) {
     const isEditing = Boolean(initialData);
     const { createMutation, updateMutation } = useInventoryMutations(workspaceId);
 
@@ -49,12 +50,12 @@ export function InventoryDialog({ open, onClose, workspaceId, initialData }: Inv
         if (isEditing && initialData) {
             updateMutation.mutate(
                 { id: initialData.id, payload: data },
-                { onSuccess: () => onClose() }
+                { onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as InventoryItem); onClose(); } }
             );
         } else {
             createMutation.mutate(
                 data,
-                { onSuccess: () => onClose() }
+                { onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as InventoryItem); onClose(); } }
             );
         }
     };

@@ -81,16 +81,6 @@ export function PurchaseTable({ workspaceId, searchStr }: PurchaseTableProps) {
         }
     ];
 
-    if (isError) {
-        return (
-            <EmptyState
-                icon={<ReceiptIcon />}
-                title="Backend Endpoint Missing"
-                description="The GET /purchases endpoint does not exist on the current backend API version. The purchase functionality is structurally complete but requires the backend controller integration to render historical lists."
-            />
-        )
-    }
-
     return (
         <DataTable
             columns={columns}
