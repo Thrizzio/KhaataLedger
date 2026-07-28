@@ -629,6 +629,157 @@ async function main() {
   console.log(`Inserting ${khataAudits.length} khata audit logs...`);
   await chunked(khataAudits, 500, (batch) => prisma.auditLog.createMany({ data: batch }));
 
+  // 5.5) NEW BUSINESS DOMAINS (Inventory, Customers, Suppliers, Sales, Purchases)
+  console.log("Generating Inventory, Customers, Suppliers, Sales, and Purchases...");
+
+  const SUPPLIER_NAMES = ["TechTronics", "BuildRight Supplies", "Global Goods", "Prime Components", "Nexus Distribution", "Vanguard Importers", "Atlas Logistics"];
+  const ITEM_NAMES = ["Cement Bag 50kg", "Paint 20L", "Drill Machine", "Office Chair", "LED Bulb", "Monitor 24 inch", "Keyboard", "Mouse", "Gravel Ton", "Steel Rods", "Router", "Copper Wire", "Laptop", "Coffee Beans", "Printer Paper"];
+
+  const customers = [];
+  const suppliers = [];
+  const items = [];
+  const purchases = [];
+  const purchaseLines = [];
+  const sales = [];
+  const saleLines = [];
+
+  for (const ws of WORKSPACES) {
+    const wsRow = wsByName.get(ws.name)!;
+
+    // Customers
+    const wsCustomers = [];
+    for (let i = 0; i < 15; i++) {
+      const cus = {
+        id: nextId("cus"),
+        workspaceId: wsRow.id,
+        name: pick(CUSTOMER_NAMES) + " " + i,
+        phoneNumber: "9" + randInt(100000000, 999999999),
+        outstandingBalance: 0,
+        createdAt: START
+      };
+      customers.push(cus);
+      wsCustomers.push(cus);
+    }
+
+    // Suppliers
+    const wsSuppliers = [];
+    for (let i = 0; i < 5; i++) {
+      const sup = {
+        id: nextId("sup"),
+        workspaceId: wsRow.id,
+        name: pick(SUPPLIER_NAMES) + " " + i,
+        phoneNumber: "9" + randInt(100000000, 999999999),
+        outstandingBalance: 0,
+        createdAt: START
+      };
+      suppliers.push(sup);
+      wsSuppliers.push(sup);
+    }
+
+    // Inventory Items
+    const wsItems = [];
+    for (let i = 0; i < 20; i++) {
+      const itm = {
+        id: nextId("itm"),
+        workspaceId: wsRow.id,
+        name: pick(ITEM_NAMES) + " - " + randInt(100, 999),
+        sku: "SKU" + randInt(10000, 99999),
+        unit: pick(["kg", "pcs", "box", "liter"]),
+        currentStock: randInt(2, 100), // Some low stock
+        defaultSellingPrice: randFloat(100, 2000),
+        lastPurchasePrice: randFloat(50, 900),
+        createdAt: START
+      };
+      items.push(itm);
+      wsItems.push(itm);
+    }
+
+    // Purchases
+    for (let i = 0; i < 30; i++) {
+      const dateDate = addDays(START, randInt(0, TOTAL_DAYS));
+      const sup = pick(wsSuppliers);
+      const pid = nextId("pur");
+
+      let totalAmount = 0;
+      for (let j = 0; j < randInt(1, 4); j++) {
+        const item = pick(wsItems);
+        const qty = randInt(1, 20);
+        const price = item.lastPurchasePrice;
+        totalAmount += qty * price;
+
+        purchaseLines.push({
+          id: nextId("pline"),
+          purchaseId: pid,
+          inventoryItemId: item.id,
+          productName: item.name,
+          quantity: qty,
+          purchasePrice: price
+        });
+      }
+
+      purchases.push({
+        id: pid,
+        workspaceId: wsRow.id,
+        supplierId: sup.id,
+        createdById: pickCreator(wsRow.id),
+        purchaseDate: dateDate,
+        totalAmount: totalAmount,
+        paymentType: pick(["CASH", "CREDIT"]),
+        createdAt: dateDate
+      });
+    }
+
+    // Sales
+    for (let i = 0; i < 60; i++) {
+      const dateDate = addDays(START, randInt(0, TOTAL_DAYS));
+      const cus = pick(wsCustomers);
+      const sid = nextId("sal");
+
+      let totalAmount = 0;
+      for (let j = 0; j < randInt(1, 4); j++) {
+        const item = pick(wsItems);
+        const qty = randInt(1, 5);
+        const price = item.defaultSellingPrice;
+        totalAmount += qty * price;
+
+        saleLines.push({
+          id: nextId("sline"),
+          saleId: sid,
+          inventoryItemId: item.id,
+          productName: item.name,
+          quantity: qty,
+          sellingPrice: price
+        });
+      }
+
+      sales.push({
+        id: sid,
+        workspaceId: wsRow.id,
+        customerId: cus.id,
+        createdById: pickCreator(wsRow.id),
+        saleDate: dateDate,
+        totalAmount: totalAmount,
+        paymentType: pick(["CASH", "CREDIT"]),
+        createdAt: dateDate
+      });
+    }
+  }
+
+  console.log(`Inserting ${customers.length} customers, ${suppliers.length} suppliers... `);
+  await chunked(customers, 500, (batch) => prisma.customer.createMany({ data: batch }));
+  await chunked(suppliers, 500, (batch) => prisma.supplier.createMany({ data: batch }));
+
+  console.log(`Inserting ${items.length} items...`);
+  await chunked(items, 500, (batch) => prisma.inventoryItem.createMany({ data: batch }));
+
+  console.log(`Inserting ${purchases.length} purchases, ${purchaseLines.length} lines...`);
+  await chunked(purchases, 500, (batch) => prisma.purchase.createMany({ data: batch }));
+  await chunked(purchaseLines, 500, (batch) => prisma.purchaseLineItem.createMany({ data: batch }));
+
+  console.log(`Inserting ${sales.length} sales, ${saleLines.length} lines...`);
+  await chunked(sales, 500, (batch) => prisma.sale.createMany({ data: batch }));
+  await chunked(saleLines, 500, (batch) => prisma.saleLineItem.createMany({ data: batch }));
+
   // 6) Summary
   const [nOwners, nWs, nEmp, nTxn, nTxnDeleted, nKhata, nEntries, nAudit] = await Promise.all([
     prisma.user.count({ where: { role: "OWNER" } }),
