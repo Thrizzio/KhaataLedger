@@ -15,11 +15,14 @@ import Box from '@mui/material/Box';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CircularProgress from '@mui/material/CircularProgress';
+import Autocomplete from '@mui/material/Autocomplete';
 
 import { saleFormSchema, type SaleFormValues } from '../validation';
 import { useCreateSale } from '../hooks/useCreateSale';
 import { useCustomers } from '../../customers/hooks/useCustomers';
 import { useInventory } from '../../inventory/hooks/useInventory';
+import { CustomerDialog } from '../../customers/components/CustomerDialog';
+import { InventoryDialog } from '../../inventory/components/InventoryDialog';
 
 interface SaleFormProps {
     open: boolean;
@@ -32,6 +35,9 @@ const formatCurrency = (amount: number) =>
 
 export function SaleForm({ open, onClose, workspaceId }: SaleFormProps) {
     const mutation = useCreateSale(workspaceId);
+
+    const [isCustomerDialogOpen, setCustomerDialogOpen] = useState(false);
+    const [isInventoryDialogOpen, setInventoryDialogOpen] = useState(false);
 
     const { data: customerData, isLoading: loadingCustomers } = useCustomers(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
     const { data: inventoryData, isLoading: loadingInventory } = useInventory(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
@@ -112,25 +118,33 @@ export function SaleForm({ open, onClose, workspaceId }: SaleFormProps) {
                     ) : (
                         <Grid container spacing={3} sx={{ mt: 1 }}>
                             <Grid size={{ xs: 12, md: 6 }}>
-                                <Controller
-                                    name="customerId"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <TextField
-                                            {...field}
-                                            select
-                                            label={watchPaymentType === 'CREDIT' ? 'Customer *' : 'Customer (Optional)'}
-                                            error={!!errors.customerId}
-                                            helperText={errors.customerId?.message}
-                                            fullWidth
-                                        >
-                                            <MenuItem value=""><em>None (Walk-in)</em></MenuItem>
-                                            {customerData?.customers.map(c => (
-                                                <MenuItem key={c.id} value={c.id}>{c.name} (Bal: {formatCurrency(c.outstandingBalance)})</MenuItem>
-                                            ))}
-                                        </TextField>
-                                    )}
-                                />
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Controller
+                                        name="customerId"
+                                        control={control}
+                                        render={({ field: { onChange, value } }) => (
+                                            <Autocomplete
+                                                fullWidth
+                                                options={customerData?.customers || []}
+                                                getOptionLabel={(option) => `${option.name} (Bal: ${formatCurrency(option.outstandingBalance)})`}
+                                                value={customerData?.customers.find(c => c.id === value) || null}
+                                                onChange={(_, newValue) => onChange(newValue?.id || '')}
+                                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        label={watchPaymentType === 'CREDIT' ? 'Customer *' : 'Customer (Optional)'}
+                                                        error={!!errors.customerId}
+                                                        helperText={errors.customerId?.message}
+                                                    />
+                                                )}
+                                            />
+                                        )}
+                                    />
+                                    <Button variant="outlined" onClick={() => setCustomerDialogOpen(true)} sx={{ minWidth: 'auto', px: 2 }}>
+                                        + New
+                                    </Button>
+                                </Box>
                             </Grid>
                             <Grid size={{ xs: 12, md: 3 }}>
                                 <Controller
@@ -170,29 +184,34 @@ export function SaleForm({ open, onClose, workspaceId }: SaleFormProps) {
 
                                     return (
                                         <Box key={field.id} sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'flex-start' }}>
-                                            <Box sx={{ flexGrow: 1 }}>
+                                            <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
                                                 <Controller
                                                     name={`items.${index}.inventoryItemId`}
                                                     control={control}
-                                                    render={({ field }) => (
-                                                        <TextField
-                                                            {...field}
-                                                            select
-                                                            label="Product"
-                                                            error={!!errors.items?.[index]?.inventoryItemId}
-                                                            helperText={errors.items?.[index]?.inventoryItemId?.message}
+                                                    render={({ field: { onChange, value } }) => (
+                                                        <Autocomplete
                                                             fullWidth
-                                                            onChange={(e) => {
-                                                                field.onChange(e);
-                                                                // optionally auto-fill price here if required? backend doesn't mandate front-end injection for sellingPrice matching, but we'll leave manual entry default for flexibility
+                                                            options={inventoryData?.items || []}
+                                                            getOptionLabel={(option) => `${option.name} (Stock: ${option.currentStock})`}
+                                                            value={inventoryData?.items.find(i => i.id === value) || null}
+                                                            onChange={(_, newValue) => {
+                                                                onChange(newValue?.id || '');
                                                             }}
-                                                        >
-                                                            {inventoryData?.items.map(inv => (
-                                                                <MenuItem key={inv.id} value={inv.id}>{inv.name} (Stock: {inv.currentStock})</MenuItem>
-                                                            ))}
-                                                        </TextField>
+                                                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                                                            renderInput={(params) => (
+                                                                <TextField
+                                                                    {...params}
+                                                                    label="Product"
+                                                                    error={!!errors.items?.[index]?.inventoryItemId}
+                                                                    helperText={errors.items?.[index]?.inventoryItemId?.message}
+                                                                />
+                                                            )}
+                                                        />
                                                     )}
                                                 />
+                                                <Button variant="outlined" onClick={() => setInventoryDialogOpen(true)} sx={{ minWidth: 'auto', px: 2 }}>
+                                                    + New
+                                                </Button>
                                             </Box>
                                             <Box sx={{ width: 140 }}>
                                                 <Controller
@@ -261,6 +280,17 @@ export function SaleForm({ open, onClose, workspaceId }: SaleFormProps) {
                     </Button>
                 </DialogActions>
             </form>
+            
+            <CustomerDialog
+                open={isCustomerDialogOpen}
+                onClose={() => setCustomerDialogOpen(false)}
+                workspaceId={workspaceId}
+            />
+            <InventoryDialog
+                open={isInventoryDialogOpen}
+                onClose={() => setInventoryDialogOpen(false)}
+                workspaceId={workspaceId}
+            />
         </Dialog>
     );
 }

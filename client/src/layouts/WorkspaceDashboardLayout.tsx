@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -22,7 +22,12 @@ export const WorkspaceDashboardLayout = ({
     workspaceId,
 }: WorkspaceDashboardLayoutProps) => {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
     const { user } = useAuth();
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const { data: workspace } = useQuery<Workspace>({
         queryKey: ['workspace', workspaceId],
@@ -37,13 +42,17 @@ export const WorkspaceDashboardLayout = ({
         // Outer: horizontal flex — sidebar | main column
         <Box sx={{ display: 'flex', minHeight: '100vh' }}>
 
-            <WorkspaceSidebar
-                workspaceId={workspaceId}
-                mobileOpen={mobileOpen}
-                onClose={() => setMobileOpen(false)}
-                userRole={user?.role}
-                drawerWidth={drawerWidth}
-            />
+            {isMounted ? (
+                <WorkspaceSidebar
+                    workspaceId={workspaceId}
+                    mobileOpen={mobileOpen}
+                    onClose={() => setMobileOpen(false)}
+                    userRole={user?.role}
+                    drawerWidth={drawerWidth}
+                />
+            ) : (
+                <Box sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }} />
+            )}
 
             {/* Main column: navbar on top, then scrollable content below */}
             <Box

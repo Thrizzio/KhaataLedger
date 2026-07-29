@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 import { prisma } from '../config/prisma.js';
 import { ApiError } from '../utils/api-error.js';
 import { createSuccessResponse } from '../utils/api-response.js';
-import { createSupplierPaymentSchema } from '../validators/supplierPayment.validator.js';
+import { createSupplierPaymentSchema, supplierPaymentQuerySchema } from '../validators/supplierPayment.validator.js';
 
 // ── Workspace access guard (OWNER only) ───────────────────────────────────────
 async function requireOwnerAccess(workspaceId: string, user: Express.User): Promise<void> {
@@ -12,6 +12,68 @@ async function requireOwnerAccess(workspaceId: string, user: Express.User): Prom
         throw new ApiError(403, 'Only workspace owners can record payments');
     }
 }
+
+async function requireWorkspaceAccess(workspaceId: string, user: Express.User): Promise<void> {
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace) throw new ApiError(404, 'Workspace not found');
+
+    if (user.role === 'OWNER' && workspace.ownerId !== user.id) {
+        throw new ApiError(403, 'You do not have access to this workspace');
+    }
+    if (user.role === 'EMPLOYEE' && user.workspaceId !== workspaceId) {
+        throw new ApiError(403, 'You do not have access to this workspace');
+    }
+}
+
+// ── GET /workspaces/:workspaceId/supplier-payments ────────────────────────────
+export const listSupplierPayments: RequestHandler = async (req, res, next) => {
+    try {
+        const workspaceId = req.params['workspaceId'] as string;
+        await requireWorkspaceAccess(workspaceId, req.user!);
+
+        const parsed = supplierPaymentQuerySchema.safeParse(req.query);
+        if (!parsed.success) {
+            return next(new ApiError(400, 'Invalid query parameters', parsed.error.flatten()));
+        }
+
+        const { page, limit, search, sortBy, order } = parsed.data;
+        const skip = (page - 1) * limit;
+
+        const baseWhere = { workspaceId };
+        const searchWhere = search
+            ? {
+                supplier: {
+                    name: { contains: search, mode: 'insensitive' as const },
+                },
+            }
+            : {};
+
+        const where = { ...baseWhere, ...searchWhere };
+
+        const [items, total] = await Promise.all([
+            prisma.supplierPayment.findMany({
+                where,
+                orderBy: { [sortBy]: order },
+                skip,
+                take: limit,
+                include: {
+                    supplier: { select: { id: true, name: true } },
+                    createdBy: { select: { id: true, name: true } },
+                },
+            }),
+            prisma.supplierPayment.count({ where }),
+        ]);
+
+        return res.status(200).json(
+            createSuccessResponse('Supplier payments fetched', {
+                items,
+                pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+            }),
+        );
+    } catch (error) {
+        next(error);
+    }
+};
 
 // ── POST /workspaces/:workspaceId/supplier-payments ───────────────────────────
 export const createSupplierPayment: RequestHandler = async (req, res, next) => {

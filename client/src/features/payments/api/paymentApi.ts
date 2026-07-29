@@ -12,4 +12,14 @@ export const paymentApi = {
         const response = await httpClient.post<ApiResponse<any>>(`/workspaces/${workspaceId}/supplier-payments`, payload);
         return response.data.data;
     },
+
+    getCustomerPayments: async (workspaceId: string, params: any) => {
+        const response = await httpClient.get<ApiResponse<any>>(`/workspaces/${workspaceId}/customer-payments`, { params });
+        return response.data.data;
+    },
+
+    getSupplierPayments: async (workspaceId: string, params: any) => {
+        const response = await httpClient.get<ApiResponse<any>>(`/workspaces/${workspaceId}/supplier-payments`, { params });
+        return response.data.data;
+    },
 };
