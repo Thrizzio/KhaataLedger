@@ -23,4 +23,10 @@ export const workspaceService = {
 
     deleteWorkspace: (workspaceId: string) =>
         httpClient.delete<ApiResponse<null>>(`/workspaces/${workspaceId}`),
+
+    getEmployee: (workspaceId: string, employeeId: string) =>
+        httpClient.get<ApiResponse<Employee>>(`/workspaces/${workspaceId}/employees/${employeeId}`),
+
+    updateEmployeePermissions: (workspaceId: string, employeeId: string, permissions: string[]) =>
+        httpClient.put<ApiResponse<Employee>>(`/workspaces/${workspaceId}/employees/${employeeId}/permissions`, { permissions }),
 };

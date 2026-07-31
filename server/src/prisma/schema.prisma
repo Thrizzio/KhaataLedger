@@ -44,6 +44,8 @@ model User {
 
   role         Role
 
+  permissions  String[] @default([])
+
   sales Sale[] @relation("SaleCreator")
   purchases Purchase[] @relation("PurchaseCreator")
   // Employee credentials

@@ -115,16 +115,20 @@ export const getWorkspaceEmployees: RequestHandler = async (request, response, n
       throw new ApiError(401, 'Authentication required');
     }
 
-    if (request.user.role !== 'OWNER') {
-      throw new ApiError(403, 'Only owners can view employees');
-    }
-
     const { workspaceId } = request.params;
 
-    // Verify the workspace belongs to this owner
+    // Verify workspace access
     const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
-    if (!workspace || workspace.ownerId !== request.user.id) {
+    if (!workspace) {
+      throw new ApiError(404, 'Workspace not found');
+    }
+
+    if (request.user.role === 'OWNER' && workspace.ownerId !== request.user.id) {
       throw new ApiError(403, 'Access denied');
+    }
+
+    if (request.user.role === 'EMPLOYEE' && request.user.workspaceId !== workspaceId) {
+       throw new ApiError(403, 'Access denied');
     }
 
     const employees = await prisma.user.findMany({
@@ -193,6 +197,7 @@ export const createEmployee: RequestHandler = async (request, response, next) =>
         passwordHash,
         role: 'EMPLOYEE',
         workspaceId,
+        permissions: ['DASHBOARD_VIEW', 'INVENTORY_VIEW', 'SALES_VIEW', 'SALES_RECORD', 'CUSTOMERS_VIEW'],
       },
       select: {
         id: true,
@@ -200,6 +205,7 @@ export const createEmployee: RequestHandler = async (request, response, next) =>
         email: true,
         role: true,
         workspaceId: true,
+        permissions: true,
         createdAt: true,
       },
     });
@@ -271,3 +277,104 @@ export const deleteWorkspace: RequestHandler = async (request, response, next) =
       next(error);
     }
   };
+
+// GET /workspaces/:workspaceId/employees/:employeeId
+export const getEmployeeById: RequestHandler = async (request, response, next) => {
+  try {
+    if (!request.user?.id) {
+      throw new ApiError(401, 'Authentication required');
+    }
+
+    const { workspaceId, employeeId } = request.params;
+
+    // Verify workspace access
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace) {
+      throw new ApiError(404, 'Workspace not found');
+    }
+
+    if (request.user.role === 'OWNER' && workspace.ownerId !== request.user.id) {
+      throw new ApiError(403, 'Access denied');
+    }
+
+    if (request.user.role === 'EMPLOYEE' && request.user.workspaceId !== workspaceId) {
+       throw new ApiError(403, 'Access denied');
+    }
+
+    // Only OWNER can view other employees, but employee can view themselves
+    if (request.user.role === 'EMPLOYEE' && request.user.id !== employeeId) {
+      throw new ApiError(403, 'Access denied to this employee record');
+    }
+
+    const employee = await prisma.user.findUnique({
+      where: { id: employeeId, workspaceId, role: 'EMPLOYEE' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        employeeId: true,
+        permissions: true,
+        createdAt: true,
+      },
+    });
+
+    if (!employee) {
+      throw new ApiError(404, 'Employee not found');
+    }
+
+    response.status(200).json(createSuccessResponse('Employee fetched successfully', employee));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PUT /workspaces/:workspaceId/employees/:employeeId/permissions
+export const updateEmployeePermissions: RequestHandler = async (request, response, next) => {
+  try {
+    if (!request.user?.id) {
+      throw new ApiError(401, 'Authentication required');
+    }
+
+    if (request.user.role !== 'OWNER') {
+      throw new ApiError(403, 'Only owners can modify permissions');
+    }
+
+    const { workspaceId, employeeId } = request.params;
+    const { permissions } = request.body;
+
+    if (!Array.isArray(permissions)) {
+      throw new ApiError(400, 'Permissions must be an array of strings');
+    }
+
+    // Verify workspace ownership
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace || workspace.ownerId !== request.user.id) {
+      throw new ApiError(403, 'Access denied');
+    }
+
+    const employee = await prisma.user.findUnique({
+      where: { id: employeeId, workspaceId, role: 'EMPLOYEE' },
+    });
+
+    if (!employee) {
+      throw new ApiError(404, 'Employee not found');
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: employeeId },
+      data: { permissions },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        permissions: true,
+      },
+    });
+
+    response.status(200).json(createSuccessResponse('Employee permissions updated successfully', updated));
+  } catch (error) {
+    next(error);
+  }
+};

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.middleware.js';
-import { authorizeRoles } from '../middleware/role.middleware.js';
+import { requirePermission } from '../middleware/permissions.middleware.js';
 import {
     listSuppliers,
     getSupplier,
@@ -14,15 +14,13 @@ import { getTopPayables } from '../controllers/dashboard.controller.js';
 export const suppliersRouter = Router({ mergeParams: true });
 
 // ── Static read routes (must be registered BEFORE /:id to avoid conflicts) ───
-suppliersRouter.get('/top-payables', authenticate, getTopPayables);
+suppliersRouter.get('/top-payables', authenticate, requirePermission('DASHBOARD_VIEW'), getTopPayables);
 
-// Both owners and employees can view suppliers
-suppliersRouter.get('/', authenticate, listSuppliers);
-suppliersRouter.get('/:id', authenticate, getSupplier);
-suppliersRouter.get('/:supplierId/ledger', authenticate, getSupplierLedger);
+suppliersRouter.get('/', authenticate, requirePermission('SUPPLIERS_VIEW'), listSuppliers);
+suppliersRouter.get('/:id', authenticate, requirePermission('SUPPLIERS_VIEW'), getSupplier);
+suppliersRouter.get('/:supplierId/ledger', authenticate, requirePermission('SUPPLIERS_VIEW'), getSupplierLedger);
 
-// Only owners can mutate suppliers
-suppliersRouter.post('/', authenticate, authorizeRoles('OWNER'), createSupplier);
-suppliersRouter.patch('/:id', authenticate, authorizeRoles('OWNER'), updateSupplier);
-suppliersRouter.delete('/:id', authenticate, authorizeRoles('OWNER'), deleteSupplier);
+suppliersRouter.post('/', authenticate, requirePermission('SUPPLIERS_CREATE'), createSupplier);
+suppliersRouter.patch('/:id', authenticate, requirePermission('SUPPLIERS_EDIT'), updateSupplier);
+suppliersRouter.delete('/:id', authenticate, requirePermission('SUPPLIERS_DELETE'), deleteSupplier);
 

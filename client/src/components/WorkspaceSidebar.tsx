@@ -26,6 +26,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import NextLink from './NextLink';
 import type { UserRole } from '../types/auth';
 import { useAuth } from '../hooks/useAuth';
+import { usePermission } from '../hooks/usePermission';
 import { setAuthData } from '../store/authStore';
 import { useWorkspace } from '../hooks/useWorkspace';
 
@@ -37,7 +38,9 @@ interface WorkspaceSidebarProps {
     drawerWidth: number;
 }
 
-const getNavItems = (workspaceId: string, role?: UserRole) => {
+import { Permission } from '../types/auth';
+
+const getNavItems = (workspaceId: string, role?: UserRole, hasPermission?: (p: Permission) => boolean) => {
     const base = `/workspaces/${workspaceId}`;
     const ownerItems = [
         { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
@@ -50,13 +53,20 @@ const getNavItems = (workspaceId: string, role?: UserRole) => {
         { label: 'Employees', path: `${base}/employees`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> },
         { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> },
     ];
-    const employeeItems = [
-        { label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Inventory', path: `${base}/inventory`, icon: <Inventory2Icon sx={{ fontSize: 20 }} /> },
-        { label: 'Customers', path: `${base}/customers`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> },
-        { label: 'Sales', path: `${base}/sales`, icon: <PointOfSaleIcon sx={{ fontSize: 20 }} /> },
-    ];
-    return role === 'OWNER' ? ownerItems : employeeItems;
+    
+    if (role === 'OWNER') return ownerItems;
+
+    const employeeItems = [];
+    if (hasPermission?.(Permission.DASHBOARD_VIEW)) employeeItems.push({ label: 'Dashboard', path: `${base}/dashboard`, icon: <DashboardIcon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.INVENTORY_VIEW)) employeeItems.push({ label: 'Inventory', path: `${base}/inventory`, icon: <Inventory2Icon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.CUSTOMERS_VIEW)) employeeItems.push({ label: 'Customers', path: `${base}/customers`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.SUPPLIERS_VIEW)) employeeItems.push({ label: 'Suppliers', path: `${base}/suppliers`, icon: <LocalShippingIcon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.PURCHASES_VIEW)) employeeItems.push({ label: 'Purchases', path: `${base}/purchases`, icon: <ShoppingCartIcon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.SALES_VIEW)) employeeItems.push({ label: 'Sales', path: `${base}/sales`, icon: <PointOfSaleIcon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.PAYMENTS_CUSTOMER_VIEW) || hasPermission?.(Permission.PAYMENTS_SUPPLIER_VIEW)) employeeItems.push({ label: 'Payments', path: `${base}/payments`, icon: <PaymentsIcon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.EMPLOYEES_VIEW)) employeeItems.push({ label: 'Employees', path: `${base}/employees`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> });
+    
+    return employeeItems;
 };
 
 // Extracted so both mobile + desktop drawers share identical content
@@ -70,9 +80,10 @@ const DrawerContent = ({
     pathname: string | null;
 }) => {
     const { user } = useAuth();
+    const { hasPermission } = usePermission();
     const router = useRouter();
     const { clearWorkspaceId } = useWorkspace();
-    const items = getNavItems(workspaceId, userRole);
+    const items = getNavItems(workspaceId, userRole, hasPermission);
 
     const handleLogout = () => {
         setAuthData(null, null);

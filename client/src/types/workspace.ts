@@ -14,6 +14,7 @@ export interface Employee {
     role: 'EMPLOYEE';
     employeeId: string | null;
     workspaceId: string | null;
+    permissions: string[];
     createdAt: string;
 }
 

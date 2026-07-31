@@ -12,6 +12,8 @@ import { PageHeader } from '../shared/components/PageHeader';
 import { SectionCard } from '../shared/components/SectionCard';
 import { SaleTable } from '../features/sales/components/SaleTable';
 import { SaleForm } from '../features/sales/components/SaleForm';
+import { usePermission } from '../hooks/usePermission';
+import { Permission } from '../types/auth';
 
 interface SalesPageProps {
     workspaceId: string;
@@ -21,15 +23,20 @@ export const SalesPage = ({ workspaceId }: SalesPageProps) => {
     const [searchStr, setSearchStr] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
 
+    const { hasPermission } = usePermission();
+    const canRecordSale = hasPermission(Permission.SALES_RECORD);
+
     return (
         <PageShell workspaceId={workspaceId}>
             <PageHeader
                 title="Sales"
                 subtitle="Record outbound sales against inventory instantly updating customer ledgers and daily aggregates."
                 action={
-                    <Button variant="contained" onClick={() => setCreateOpen(true)}>
-                        + Record Sale
-                    </Button>
+                    canRecordSale ? (
+                        <Button variant="contained" onClick={() => setCreateOpen(true)}>
+                            + Record Sale
+                        </Button>
+                    ) : undefined
                 }
             />
 
