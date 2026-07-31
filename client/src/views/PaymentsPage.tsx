@@ -11,8 +11,9 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { PageShell } from './PageShell';
 import { PageHeader } from '../shared/components/PageHeader';
 import { SectionCard } from '../shared/components/SectionCard';
-import { EmptyState } from '../shared/components/EmptyState';
 import { PaymentForm } from '../features/payments/components/PaymentForm';
+import { CustomerPaymentTable } from '../features/payments/components/CustomerPaymentTable';
+import { SupplierPaymentTable } from '../features/payments/components/SupplierPaymentTable';
 
 interface PaymentsPageProps {
     workspaceId: string;
@@ -48,11 +49,8 @@ export const PaymentsPage = ({ workspaceId }: PaymentsPageProps) => {
                     </Tabs>
                 </Box>
 
-                <EmptyState
-                    icon={<AccountBalanceWalletIcon />}
-                    title="Read Functionality Restricted"
-                    description="The centralized REST API restricts historical payment queries at this endpoint natively. Payments are automatically parsed instantly back down into the detailed Profile Ledgers sequentially exactly as deployed across the Khata logic constraints."
-                />
+                {tabIndex === 0 && <CustomerPaymentTable workspaceId={workspaceId} />}
+                {tabIndex === 1 && <SupplierPaymentTable workspaceId={workspaceId} />}
             </SectionCard>
 
             <PaymentForm

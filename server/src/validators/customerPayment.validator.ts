@@ -12,3 +12,15 @@ export const createCustomerPaymentSchema = z.object({
 });
 
 export type CreateCustomerPaymentInput = z.infer<typeof createCustomerPaymentSchema>;
+
+const VALID_SORT_FIELDS = ['paymentDate', 'createdAt'] as const;
+
+export const customerPaymentQuerySchema = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    search: z.string().optional(),
+    sortBy: z.enum(VALID_SORT_FIELDS).default('paymentDate'),
+    order: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export type CustomerPaymentQueryInput = z.infer<typeof customerPaymentQuerySchema>;
