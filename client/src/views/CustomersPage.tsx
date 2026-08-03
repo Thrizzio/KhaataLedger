@@ -17,9 +17,22 @@ interface CustomersPageProps {
     workspaceId: string;
 }
 
+import { Permission } from '../types/auth';
+import { usePermission } from '../hooks/usePermission';
+import { UnauthorizedView } from '../components/UnauthorizedView';
+
 export const CustomersPage = ({ workspaceId }: CustomersPageProps) => {
     const [searchStr, setSearchStr] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
+    const { hasPermission } = usePermission();
+
+    if (!hasPermission(Permission.CUSTOMERS_VIEW)) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <UnauthorizedView />
+            </PageShell>
+        );
+    }
 
     return (
         <PageShell workspaceId={workspaceId}>
@@ -27,9 +40,11 @@ export const CustomersPage = ({ workspaceId }: CustomersPageProps) => {
                 title="Customers"
                 subtitle="Manage your business customers and track entirely unified sales ledgers."
                 action={
-                    <Button variant="contained" onClick={() => setCreateOpen(true)}>
-                        + Create Customer
-                    </Button>
+                    hasPermission(Permission.CUSTOMERS_CREATE) ? (
+                        <Button variant="contained" onClick={() => setCreateOpen(true)}>
+                            + Create Customer
+                        </Button>
+                    ) : null
                 }
             />
 

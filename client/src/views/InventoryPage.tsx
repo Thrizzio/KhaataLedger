@@ -17,9 +17,22 @@ interface InventoryPageProps {
     workspaceId: string;
 }
 
+import { Permission } from '../types/auth';
+import { usePermission } from '../hooks/usePermission';
+import { UnauthorizedView } from '../components/UnauthorizedView';
+
 export const InventoryPage = ({ workspaceId }: InventoryPageProps) => {
     const [searchStr, setSearchStr] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
+    const { hasPermission } = usePermission();
+
+    if (!hasPermission(Permission.INVENTORY_VIEW)) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <UnauthorizedView />
+            </PageShell>
+        );
+    }
 
     return (
         <PageShell workspaceId={workspaceId}>
@@ -28,9 +41,11 @@ export const InventoryPage = ({ workspaceId }: InventoryPageProps) => {
                 title="Inventory"
                 subtitle="Manage your business stock, pricing, and view item analytics."
                 action={
-                    <Button variant="contained" onClick={() => setCreateOpen(true)}>
-                        + Create Item
-                    </Button>
+                    hasPermission(Permission.INVENTORY_CREATE) ? (
+                        <Button variant="contained" onClick={() => setCreateOpen(true)}>
+                            + Create Item
+                        </Button>
+                    ) : null
                 }
             />
 

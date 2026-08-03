@@ -26,68 +26,7 @@ interface EmployeeDetailsPageProps {
     employeeId: string;
 }
 
-const PERMISSION_GROUPS = [
-    {
-        title: 'Inventory',
-        permissions: [
-            { key: Permission.INVENTORY_VIEW, label: 'View Inventory' },
-            { key: Permission.INVENTORY_CREATE, label: 'Create Inventory Items' },
-            { key: Permission.INVENTORY_EDIT, label: 'Edit Inventory Items' },
-            { key: Permission.INVENTORY_DELETE, label: 'Delete Inventory Items' },
-        ],
-    },
-    {
-        title: 'Sales',
-        permissions: [
-            { key: Permission.SALES_VIEW, label: 'View Sales' },
-            { key: Permission.SALES_RECORD, label: 'Record Sales' },
-            { key: Permission.SALES_CANCEL, label: 'Cancel Sales' },
-            { key: Permission.SALES_VIEW_DETAILS, label: 'View Sale Details' },
-        ],
-    },
-    {
-        title: 'Purchases',
-        permissions: [
-            { key: Permission.PURCHASES_VIEW, label: 'View Purchases' },
-            { key: Permission.PURCHASES_RECORD, label: 'Record Purchases' },
-            { key: Permission.PURCHASES_CANCEL, label: 'Cancel Purchases' },
-        ],
-    },
-    {
-        title: 'Customers',
-        permissions: [
-            { key: Permission.CUSTOMERS_VIEW, label: 'View Customers' },
-            { key: Permission.CUSTOMERS_CREATE, label: 'Create Customers' },
-            { key: Permission.CUSTOMERS_EDIT, label: 'Edit Customers' },
-            { key: Permission.CUSTOMERS_DELETE, label: 'Delete Customers' },
-        ],
-    },
-    {
-        title: 'Suppliers',
-        permissions: [
-            { key: Permission.SUPPLIERS_VIEW, label: 'View Suppliers' },
-            { key: Permission.SUPPLIERS_CREATE, label: 'Create Suppliers' },
-            { key: Permission.SUPPLIERS_EDIT, label: 'Edit Suppliers' },
-            { key: Permission.SUPPLIERS_DELETE, label: 'Delete Suppliers' },
-        ],
-    },
-    {
-        title: 'Payments',
-        permissions: [
-            { key: Permission.PAYMENTS_CUSTOMER_VIEW, label: 'View Customer Payments' },
-            { key: Permission.PAYMENTS_CUSTOMER_RECORD, label: 'Record Customer Payments' },
-            { key: Permission.PAYMENTS_SUPPLIER_VIEW, label: 'View Supplier Payments' },
-            { key: Permission.PAYMENTS_SUPPLIER_RECORD, label: 'Record Supplier Payments' },
-        ],
-    },
-    {
-        title: 'General',
-        permissions: [
-            { key: Permission.DASHBOARD_VIEW, label: 'View Dashboard' },
-            { key: Permission.EMPLOYEES_VIEW, label: 'View Employees' },
-        ],
-    },
-];
+import { PERMISSION_GROUPS } from '../components/EmployeeDialog';
 
 export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetailsPageProps) => {
     const router = useRouter();
@@ -107,7 +46,8 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
         mutationFn: (newPermissions: string[]) => workspaceService.updateEmployeePermissions(workspaceId, employeeId, newPermissions),
         onSuccess: () => {
             toast.success('Permissions updated successfully!');
-            queryClient.invalidateQueries({ queryKey: ['employee', employeeId] });
+            queryClient.invalidateQueries({ queryKey: ['employee'] });
+            queryClient.invalidateQueries({ queryKey: ['employees', workspaceId] });
         },
         onError: () => {
             toast.error('Failed to update permissions.');

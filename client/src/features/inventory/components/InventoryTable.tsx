@@ -14,6 +14,8 @@ import { useInventory } from '../hooks/useInventory';
 import { useInventoryMutations } from '../hooks/useInventoryMutations';
 import { InventoryDialog } from './InventoryDialog';
 import type { InventoryItem } from '../types';
+import { Permission } from '../../../types/auth';
+import { usePermission } from '../../../hooks/usePermission';
 
 interface InventoryTableProps {
     workspaceId: string;
@@ -24,6 +26,7 @@ const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
 export function InventoryTable({ workspaceId, searchStr }: InventoryTableProps) {
+    const { hasPermission } = usePermission();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -72,12 +75,16 @@ export function InventoryTable({ workspaceId, searchStr }: InventoryTableProps) 
         {
             id: 'actions', label: 'Actions', align: 'right', render: (row) => (
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-                    <IconButton size="small" onClick={() => handleEdit(row)} color="primary">
-                        <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => setDeleteItem(row)} color="error">
-                        <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    {hasPermission(Permission.INVENTORY_EDIT) && (
+                        <IconButton size="small" onClick={() => handleEdit(row)} color="primary">
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                    )}
+                    {hasPermission(Permission.INVENTORY_DELETE) && (
+                        <IconButton size="small" onClick={() => setDeleteItem(row)} color="error">
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    )}
                 </Box>
             )
         },

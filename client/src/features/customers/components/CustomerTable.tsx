@@ -15,6 +15,8 @@ import { useCustomers } from '../hooks/useCustomers';
 import { useCustomerMutations } from '../hooks/useCustomerMutations';
 import { CustomerDialog } from './CustomerDialog';
 import type { Customer } from '../types';
+import { Permission } from '../../../types/auth';
+import { usePermission } from '../../../hooks/usePermission';
 
 interface CustomerTableProps {
     workspaceId: string;
@@ -25,6 +27,7 @@ const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
 export function CustomerTable({ workspaceId, searchStr }: CustomerTableProps) {
+    const { hasPermission } = usePermission();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -72,15 +75,21 @@ export function CustomerTable({ workspaceId, searchStr }: CustomerTableProps) {
         {
             id: 'actions', label: 'Actions', align: 'right', render: (row) => (
                 <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                    <IconButton size="small" component={Link} href={`/workspaces/${workspaceId}/customers/${row.id}`} color="info" aria-label="view ledger">
-                        <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleEdit(row)} color="primary" aria-label="edit">
-                        <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => setDeleteCustomer(row)} color="error" aria-label="delete">
-                        <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    {hasPermission(Permission.CUSTOMERS_VIEW) && (
+                        <IconButton size="small" component={Link} href={`/workspaces/${workspaceId}/customers/${row.id}`} color="info" aria-label="view ledger">
+                            <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                    )}
+                    {hasPermission(Permission.CUSTOMERS_EDIT) && (
+                        <IconButton size="small" onClick={() => handleEdit(row)} color="primary" aria-label="edit">
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                    )}
+                    {hasPermission(Permission.CUSTOMERS_DELETE) && (
+                        <IconButton size="small" onClick={() => setDeleteCustomer(row)} color="error" aria-label="delete">
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    )}
                 </Stack>
             )
         },
