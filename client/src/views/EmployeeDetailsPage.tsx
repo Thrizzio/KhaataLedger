@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -14,6 +14,7 @@ import Divider from '@mui/material/Divider';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Avatar from '@mui/material/Avatar';
 import Chip from '@mui/material/Chip';
+import SaveIcon from '@mui/icons-material/Save';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { workspaceService } from '../services/workspace.service';
@@ -95,6 +96,9 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
     const { user } = useAuth();
     const isOwner = user?.role === 'OWNER';
 
+    const [localPermissions, setLocalPermissions] = useState<string[]>([]);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
     const { data: employee, isLoading, isError } = useQuery<Employee>({
         queryKey: ['employee', employeeId],
         queryFn: () => workspaceService.getEmployee(workspaceId, employeeId).then(r => {
@@ -103,11 +107,19 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
         }),
     });
 
+    useEffect(() => {
+        if (employee) {
+            setLocalPermissions(employee.permissions || []);
+            setHasUnsavedChanges(false);
+        }
+    }, [employee]);
+
     const updatePermissionsMutation = useMutation({
         mutationFn: (newPermissions: string[]) => workspaceService.updateEmployeePermissions(workspaceId, employeeId, newPermissions),
         onSuccess: () => {
             toast.success('Permissions updated successfully!');
             queryClient.invalidateQueries({ queryKey: ['employee', employeeId] });
+            setHasUnsavedChanges(false);
         },
         onError: () => {
             toast.error('Failed to update permissions.');
@@ -131,14 +143,19 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
         );
     }
 
-    const currentPermissions = employee.permissions || [];
-
     const togglePermission = (permissionKey: string) => {
         if (!isOwner) return;
-        const newPermissions = currentPermissions.includes(permissionKey)
-            ? currentPermissions.filter(p => p !== permissionKey)
-            : [...currentPermissions, permissionKey];
-        updatePermissionsMutation.mutate(newPermissions);
+        const newPermissions = localPermissions.includes(permissionKey)
+            ? localPermissions.filter(p => p !== permissionKey)
+            : [...localPermissions, permissionKey];
+        
+        setLocalPermissions(newPermissions);
+        setHasUnsavedChanges(true);
+    };
+
+    const handleSaveChanges = () => {
+        if (!isOwner) return;
+        updatePermissionsMutation.mutate(localPermissions);
     };
 
     return (
@@ -171,14 +188,29 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
             </Card>
 
             <Box>
-                <Typography variant="h5" fontWeight={600} mb={3}>
-                    Permission Management
-                </Typography>
-                {!isOwner && (
-                    <Typography color="text.secondary" mb={2}>
-                        Only owners can modify permissions.
-                    </Typography>
-                )}
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                    <Box>
+                        <Typography variant="h5" fontWeight={600}>
+                            Permission Management
+                        </Typography>
+                        {!isOwner && (
+                            <Typography color="text.secondary" mt={1}>
+                                Only owners can modify permissions.
+                            </Typography>
+                        )}
+                    </Box>
+                    {isOwner && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<SaveIcon />}
+                            onClick={handleSaveChanges}
+                            disabled={!hasUnsavedChanges || updatePermissionsMutation.isPending}
+                        >
+                            {updatePermissionsMutation.isPending ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                    )}
+                </Stack>
                 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                     {PERMISSION_GROUPS.map(group => (
@@ -193,7 +225,7 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
                                         key={perm.key}
                                         control={
                                             <Switch
-                                                checked={currentPermissions.includes(perm.key)}
+                                                checked={localPermissions.includes(perm.key)}
                                                 onChange={() => togglePermission(perm.key)}
                                                 disabled={!isOwner || updatePermissionsMutation.isPending}
                                                 color="primary"
@@ -210,3 +242,4 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
         </Stack>
     );
 };
+
