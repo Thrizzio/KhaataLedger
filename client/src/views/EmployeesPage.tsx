@@ -30,11 +30,14 @@ import { useForm } from 'react-hook-form';
 import { workspaceService } from '../services/workspace.service';
 import type { CreateEmployeePayload, Employee } from '../types/workspace';
 
+import { useAuth } from '../hooks/useAuth';
+
 interface EmployeesPageProps {
     workspaceId: string;
 }
 
 export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -85,13 +88,15 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
                         Manage workspace employees. Employees cannot register themselves.
                     </Typography>
                 </Box>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setDialogOpen(true)}
-                >
-                    Add Employee
-                </Button>
+                {user?.role === 'OWNER' && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setDialogOpen(true)}
+                    >
+                        Add Employee
+                    </Button>
+                )}
             </Stack>
 
             {/* Table */}
@@ -134,11 +139,11 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
                                 {employees.map((emp) => (
                                     <TableRow key={emp.id} hover>
                                         <TableCell>
-                                            <Stack direction="row" alignItems="center" spacing={1.5}>
+                                            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ cursor: 'pointer' }} onClick={() => window.location.href = `/workspaces/${workspaceId}/employees/${emp.id}`}>
                                                 <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light', color: 'primary.main', fontSize: 14 }}>
                                                     {emp.name[0]?.toUpperCase()}
                                                 </Avatar>
-                                                <Typography fontWeight={500}>{emp.name}</Typography>
+                                                <Typography fontWeight={500} color="primary.main" sx={{ textDecoration: 'underline' }}>{emp.name}</Typography>
                                             </Stack>
                                         </TableCell>
                                         <TableCell>{emp.email}</TableCell>

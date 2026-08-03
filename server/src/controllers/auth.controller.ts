@@ -188,6 +188,7 @@ export const loginEmployee: RequestHandler = async (request, response, next) => 
           email: user.email,
           role: user.role,
           workspaceId: user.workspaceId,
+          permissions: user.permissions,
         },
       })
     );

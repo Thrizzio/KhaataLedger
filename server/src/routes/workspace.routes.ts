@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.middleware.js';
+import { requirePermission } from '../middleware/permissions.middleware.js';
 import {
     createWorkspace,
     getWorkspaces,
@@ -8,6 +9,8 @@ import {
     createEmployee,
     updateWorkspace,
     deleteWorkspace,
+    getEmployeeById,
+    updateEmployeePermissions
 } from '../controllers/workspace.controller.js';
 import { reportsRouter } from './reports.routes.js';
 import { inventoryRouter } from './inventory.routes.js';
@@ -26,8 +29,10 @@ workspacesRouter.post('/', authenticate, createWorkspace);
 workspacesRouter.get('/:workspaceId', authenticate, getWorkspaceById);
 workspacesRouter.put('/:workspaceId', authenticate, updateWorkspace);
 workspacesRouter.delete('/:workspaceId', authenticate, deleteWorkspace);
-workspacesRouter.get('/:workspaceId/employees', authenticate, getWorkspaceEmployees);
+workspacesRouter.get('/:workspaceId/employees', authenticate, requirePermission('EMPLOYEES_VIEW'), getWorkspaceEmployees);
 workspacesRouter.post('/:workspaceId/employees', authenticate, createEmployee);
+workspacesRouter.get('/:workspaceId/employees/:employeeId', authenticate, getEmployeeById);
+workspacesRouter.put('/:workspaceId/employees/:employeeId/permissions', authenticate, updateEmployeePermissions);
 
 // Reports are scoped to a workspace: GET /workspaces/:workspaceId/reports
 workspacesRouter.use('/:workspaceId/reports', authenticate, reportsRouter);
@@ -54,7 +59,7 @@ workspacesRouter.use('/:workspaceId/customer-payments', customerPaymentsRouter);
 workspacesRouter.use('/:workspaceId/supplier-payments', supplierPaymentsRouter);
 
 // Dashboard: GET /workspaces/:workspaceId/dashboard
-workspacesRouter.get('/:workspaceId/dashboard', authenticate, getDashboard);
+workspacesRouter.get('/:workspaceId/dashboard', authenticate, requirePermission('DASHBOARD_VIEW'), getDashboard);
 
 // Recent activity: GET /workspaces/:workspaceId/activity
-workspacesRouter.get('/:workspaceId/activity', authenticate, getRecentActivity);
+workspacesRouter.get('/:workspaceId/activity', authenticate, requirePermission('DASHBOARD_VIEW'), getRecentActivity);

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.middleware.js';
-import { authorizeRoles } from '../middleware/role.middleware.js';
+import { requirePermission } from '../middleware/permissions.middleware.js';
 import {
     listInventory,
     getInventoryItem,
@@ -13,14 +13,12 @@ import { getLowStockItems } from '../controllers/dashboard.controller.js';
 export const inventoryRouter = Router({ mergeParams: true });
 
 // ── Static read routes (must be registered BEFORE /:id to avoid conflicts) ───
-inventoryRouter.get('/low-stock', authenticate, getLowStockItems);
+inventoryRouter.get('/low-stock', authenticate, requirePermission('DASHBOARD_VIEW'), getLowStockItems);
 
-// Both owners and employees can view inventory
-inventoryRouter.get('/', authenticate, listInventory);
-inventoryRouter.get('/:id', authenticate, getInventoryItem);
+inventoryRouter.get('/', authenticate, requirePermission('INVENTORY_VIEW'), listInventory);
+inventoryRouter.get('/:id', authenticate, requirePermission('INVENTORY_VIEW'), getInventoryItem);
 
-// Only owners can mutate inventory
-inventoryRouter.post('/', authenticate, authorizeRoles('OWNER'), createInventoryItem);
-inventoryRouter.patch('/:id', authenticate, authorizeRoles('OWNER'), updateInventoryItem);
-inventoryRouter.delete('/:id', authenticate, authorizeRoles('OWNER'), deleteInventoryItem);
+inventoryRouter.post('/', authenticate, requirePermission('INVENTORY_CREATE'), createInventoryItem);
+inventoryRouter.patch('/:id', authenticate, requirePermission('INVENTORY_EDIT'), updateInventoryItem);
+inventoryRouter.delete('/:id', authenticate, requirePermission('INVENTORY_DELETE'), deleteInventoryItem);
 
