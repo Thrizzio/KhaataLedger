@@ -169,7 +169,7 @@ export const createEmployee: RequestHandler = async (request, response, next) =>
       throw new ApiError(403, 'Access denied');
     }
 
-    const { name, email, password } = request.body ?? {};
+    const { name, email, password, permissions = ['DASHBOARD_VIEW', 'INVENTORY_VIEW', 'SALES_VIEW', 'SALES_RECORD', 'CUSTOMERS_VIEW'] } = request.body ?? {};
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       throw new ApiError(400, 'Employee name is required');
@@ -197,7 +197,7 @@ export const createEmployee: RequestHandler = async (request, response, next) =>
         passwordHash,
         role: 'EMPLOYEE',
         workspaceId,
-        permissions: ['DASHBOARD_VIEW', 'INVENTORY_VIEW', 'SALES_VIEW', 'SALES_RECORD', 'CUSTOMERS_VIEW'],
+        permissions: Array.isArray(permissions) ? permissions : ['DASHBOARD_VIEW', 'INVENTORY_VIEW', 'SALES_VIEW', 'SALES_RECORD', 'CUSTOMERS_VIEW'],
       },
       select: {
         id: true,

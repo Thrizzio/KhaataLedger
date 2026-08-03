@@ -7,9 +7,6 @@ import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
@@ -20,17 +17,21 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import PersonIcon from '@mui/icons-material/Person';
 import Avatar from '@mui/material/Avatar';
 import toast from 'react-hot-toast';
-import { useForm } from 'react-hook-form';
-import { workspaceService } from '../services/workspace.service';
+import { EmployeeDialog } from '../components/EmployeeDialog';
 import type { CreateEmployeePayload, Employee } from '../types/workspace';
 
 import { useAuth } from '../hooks/useAuth';
+import { PageShell } from './PageShell';
+import { UnauthorizedView } from '../components/UnauthorizedView';
+import { Permission } from '../types/auth';
+import { usePermission } from '../hooks/usePermission';
+import { workspaceService } from '../services/workspace.service';
 
 interface EmployeesPageProps {
     workspaceId: string;
@@ -40,6 +41,7 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
     const { data: employees, isLoading, isError } = useQuery<Employee[]>({
         queryKey: ['employees', workspaceId],
@@ -47,33 +49,61 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
             workspaceService.getEmployees(workspaceId).then((r) => r.data.data ?? []),
     });
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateEmployeePayload>({
-        defaultValues: { name: '', email: '', password: '' },
-    });
+    const { hasPermission } = usePermission();
+
+    if (!hasPermission(Permission.EMPLOYEES_VIEW)) {
+        return <UnauthorizedView />;
+    }
+
+
 
     const createMutation = useMutation({
         mutationFn: (payload: CreateEmployeePayload) =>
             workspaceService.createEmployee(workspaceId, payload),
         onSuccess: (response) => {
-            toast.success(response.data.message || 'Employee created!');
+            toast.success(response?.data?.message || 'Employee created!');
             queryClient.invalidateQueries({ queryKey: ['employees', workspaceId] });
             queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
             queryClient.invalidateQueries({ queryKey: ['workspaces'] });
             setDialogOpen(false);
-            reset();
         },
         onError: (error: any) => {
             toast.error(error?.response?.data?.message || 'Failed to create employee.');
         },
     });
 
-    const onSubmit = (values: CreateEmployeePayload) => {
-        createMutation.mutate(values);
+    const updateMutation = useMutation({
+        mutationFn: (payload: { employeeId: string, permissions: string[] }) =>
+            workspaceService.updateEmployeePermissions(workspaceId, payload.employeeId, payload.permissions),
+        onSuccess: () => {
+            toast.success('Permissions updated successfully!');
+            queryClient.invalidateQueries({ queryKey: ['employees', workspaceId] });
+            queryClient.invalidateQueries({ queryKey: ['employee'] });
+            setDialogOpen(false);
+            setEditingEmployee(null);
+        },
+        onError: () => {
+            toast.error('Failed to update permissions.');
+        }
+    });
+
+    const onSubmit = (values: CreateEmployeePayload & { permissions: string[] }) => {
+        if (editingEmployee) {
+            updateMutation.mutate({ employeeId: editingEmployee.id, permissions: values.permissions });
+        } else {
+            createMutation.mutate(values);
+        }
     };
 
     const handleClose = () => {
         setDialogOpen(false);
-        reset();
+        setEditingEmployee(null);
+    };
+
+    const handleEdit = (employee: Employee, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingEmployee(employee);
+        setDialogOpen(true);
     };
 
     return (
@@ -139,11 +169,11 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
                                 {employees.map((emp) => (
                                     <TableRow key={emp.id} hover>
                                         <TableCell>
-                                            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ cursor: 'pointer' }} onClick={() => window.location.href = `/workspaces/${workspaceId}/employees/${emp.id}`}>
+                                            <Stack direction="row" alignItems="center" spacing={1.5}>
                                                 <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light', color: 'primary.main', fontSize: 14 }}>
                                                     {emp.name[0]?.toUpperCase()}
                                                 </Avatar>
-                                                <Typography fontWeight={500} color="primary.main" sx={{ textDecoration: 'underline' }}>{emp.name}</Typography>
+                                                <Typography fontWeight={500} color="primary.main">{emp.name}</Typography>
                                             </Stack>
                                         </TableCell>
                                         <TableCell>{emp.email}</TableCell>
@@ -153,6 +183,13 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
                                         <TableCell>
                                             {new Date(emp.createdAt).toLocaleDateString()}
                                         </TableCell>
+                                        <TableCell align="right">
+                                            {user?.role === 'OWNER' && (
+                                                <Button size="small" startIcon={<EditIcon />} onClick={(e) => handleEdit(emp, e)}>
+                                                    Edit
+                                                </Button>
+                                            )}
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -161,55 +198,13 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
                 )}
             </Paper>
 
-            {/* Add Employee Dialog */}
-            <Dialog open={dialogOpen} onClose={handleClose} maxWidth="xs" fullWidth>
-                <DialogTitle fontWeight={700}>Add Employee</DialogTitle>
-                <Divider />
-                <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-                    <DialogContent>
-                        <Stack spacing={2} mt={1}>
-                            <TextField
-                                label="Full Name"
-                                fullWidth
-                                {...register('name', { required: 'Name is required' })}
-                                error={Boolean(errors.name)}
-                                helperText={errors.name?.message}
-                                disabled={createMutation.isPending}
-                            />
-                            <TextField
-                                label="Email Address"
-                                type="email"
-                                fullWidth
-                                {...register('email', { required: 'Email is required' })}
-                                error={Boolean(errors.email)}
-                                helperText={errors.email?.message}
-                                disabled={createMutation.isPending}
-                            />
-                            <TextField
-                                label="Temporary Password"
-                                type="password"
-                                fullWidth
-                                {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Min 6 characters' } })}
-                                error={Boolean(errors.password)}
-                                helperText={errors.password?.message || 'Employee will use this to log in.'}
-                                disabled={createMutation.isPending}
-                            />
-                        </Stack>
-                    </DialogContent>
-                    <DialogActions sx={{ px: 3, pb: 3 }}>
-                        <Button onClick={handleClose} color="inherit">
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={createMutation.isPending}
-                        >
-                            {createMutation.isPending ? 'Creating...' : 'Create Employee'}
-                        </Button>
-                    </DialogActions>
-                </Box>
-            </Dialog>
+            <EmployeeDialog
+                open={dialogOpen}
+                onClose={handleClose}
+                onSubmit={onSubmit}
+                isPending={createMutation.isPending || updateMutation.isPending}
+                initialData={editingEmployee}
+            />
         </Stack>
     );
 };

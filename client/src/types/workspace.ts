@@ -22,4 +22,5 @@ export interface CreateEmployeePayload {
     name: string;
     email: string;
     password: string;
+    permissions?: string[];
 }

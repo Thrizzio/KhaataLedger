@@ -17,6 +17,9 @@ import { ActivityTimeline } from '../features/dashboard/components/ActivityTimel
 import { LowStockTable } from '../features/dashboard/components/LowStockTable';
 import { useDashboard } from '../features/dashboard/hooks/useDashboard';
 import { useAuth } from '../hooks/useAuth';
+import { Permission } from '../types/auth';
+import { usePermission } from '../hooks/usePermission';
+import { UnauthorizedView } from '../components/UnauthorizedView';
 import type { DashboardMetrics } from '../features/dashboard/types';
 
 interface DashboardPageProps {
@@ -79,11 +82,20 @@ function DashboardMetricsGrid({ workspaceId }: { workspaceId: string }) {
 
 export const DashboardPage = ({ workspaceId }: DashboardPageProps = {}) => {
   const { user } = useAuth();
+  const { hasPermission } = usePermission();
   const firstName = user?.name?.split(' ')[0] ?? 'there';
   const greeting = getGreeting();
   // Safe default: we should expect workspaceId from the URL params handled by next.js, 
   // but if it's undefined, we can render a safe shell.
   if (!workspaceId) return <PageShell />;
+
+  if (!hasPermission(Permission.DASHBOARD_VIEW)) {
+      return (
+          <PageShell workspaceId={workspaceId}>
+              <UnauthorizedView />
+          </PageShell>
+      );
+  }
 
   return (
     <PageShell workspaceId={workspaceId}>

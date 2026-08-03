@@ -17,9 +17,22 @@ interface PurchasesPageProps {
     workspaceId: string;
 }
 
+import { Permission } from '../types/auth';
+import { usePermission } from '../hooks/usePermission';
+import { UnauthorizedView } from '../components/UnauthorizedView';
+
 export const PurchasesPage = ({ workspaceId }: PurchasesPageProps) => {
     const [searchStr, setSearchStr] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
+    const { hasPermission } = usePermission();
+
+    if (!hasPermission(Permission.PURCHASES_VIEW)) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <UnauthorizedView />
+            </PageShell>
+        );
+    }
 
     return (
         <PageShell workspaceId={workspaceId}>
@@ -27,9 +40,11 @@ export const PurchasesPage = ({ workspaceId }: PurchasesPageProps) => {
                 title="Purchases"
                 subtitle="Record inventory intake from suppliers automatically updating stocks and accounting balances."
                 action={
-                    <Button variant="contained" onClick={() => setCreateOpen(true)}>
-                        + Record Purchase
-                    </Button>
+                    hasPermission(Permission.PURCHASES_RECORD) ? (
+                        <Button variant="contained" onClick={() => setCreateOpen(true)}>
+                            + Record Purchase
+                        </Button>
+                    ) : null
                 }
             />
 
