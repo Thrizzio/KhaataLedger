@@ -35,7 +35,7 @@ workspacesRouter.get('/:workspaceId/employees/:employeeId', authenticate, getEmp
 workspacesRouter.put('/:workspaceId/employees/:employeeId/permissions', authenticate, updateEmployeePermissions);
 
 // Reports are scoped to a workspace: GET /workspaces/:workspaceId/reports
-workspacesRouter.use('/:workspaceId/reports', authenticate, reportsRouter);
+workspacesRouter.use('/:workspaceId/reports', authenticate, requirePermission('DASHBOARD_VIEW'), reportsRouter);
 
 // Inventory is scoped to a workspace: /workspaces/:workspaceId/inventory
 workspacesRouter.use('/:workspaceId/inventory', inventoryRouter);
