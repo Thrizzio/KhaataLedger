@@ -128,7 +128,7 @@ export const getWorkspaceEmployees: RequestHandler = async (request, response, n
     }
 
     if (request.user.role === 'EMPLOYEE' && request.user.workspaceId !== workspaceId) {
-       throw new ApiError(403, 'Access denied');
+      throw new ApiError(403, 'Access denied');
     }
 
     const employees = await prisma.user.findMany({
@@ -139,6 +139,7 @@ export const getWorkspaceEmployees: RequestHandler = async (request, response, n
         email: true,
         role: true,
         employeeId: true,
+        permissions: true,
         createdAt: true,
       },
       orderBy: { createdAt: 'asc' },
@@ -231,7 +232,7 @@ export const updateWorkspace: RequestHandler = async (request, response, next) =
     const { name } = request.body;
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
-        throw new ApiError(400, 'Workspace name is required');
+      throw new ApiError(400, 'Workspace name is required');
     }
 
     const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
@@ -240,8 +241,8 @@ export const updateWorkspace: RequestHandler = async (request, response, next) =
     }
 
     const updated = await prisma.workspace.update({
-        where: { id: workspaceId },
-        data: { name: name.trim() }
+      where: { id: workspaceId },
+      data: { name: name.trim() }
     });
 
     response.status(200).json(createSuccessResponse('Workspace updated successfully', updated));
@@ -252,31 +253,31 @@ export const updateWorkspace: RequestHandler = async (request, response, next) =
 
 // DELETE /workspaces/:workspaceId
 export const deleteWorkspace: RequestHandler = async (request, response, next) => {
-    try {
-      if (!request.user?.id) {
-        throw new ApiError(401, 'Authentication required');
-      }
-  
-      if (request.user.role !== 'OWNER') {
-        throw new ApiError(403, 'Only owners can delete workspaces');
-      }
-  
-      const { workspaceId } = request.params;
-  
-      const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
-      if (!workspace || workspace.ownerId !== request.user.id) {
-        throw new ApiError(403, 'Access denied');
-      }
-  
-      await prisma.workspace.delete({
-          where: { id: workspaceId }
-      });
-  
-      response.status(200).json(createSuccessResponse('Workspace deleted successfully', null));
-    } catch (error) {
-      next(error);
+  try {
+    if (!request.user?.id) {
+      throw new ApiError(401, 'Authentication required');
     }
-  };
+
+    if (request.user.role !== 'OWNER') {
+      throw new ApiError(403, 'Only owners can delete workspaces');
+    }
+
+    const { workspaceId } = request.params;
+
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    if (!workspace || workspace.ownerId !== request.user.id) {
+      throw new ApiError(403, 'Access denied');
+    }
+
+    await prisma.workspace.delete({
+      where: { id: workspaceId }
+    });
+
+    response.status(200).json(createSuccessResponse('Workspace deleted successfully', null));
+  } catch (error) {
+    next(error);
+  }
+};
 
 // GET /workspaces/:workspaceId/employees/:employeeId
 export const getEmployeeById: RequestHandler = async (request, response, next) => {
@@ -298,7 +299,7 @@ export const getEmployeeById: RequestHandler = async (request, response, next) =
     }
 
     if (request.user.role === 'EMPLOYEE' && request.user.workspaceId !== workspaceId) {
-       throw new ApiError(403, 'Access denied');
+      throw new ApiError(403, 'Access denied');
     }
 
     // Only OWNER can view other employees, but employee can view themselves
