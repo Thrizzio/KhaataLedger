@@ -19,15 +19,39 @@ interface PaymentsPageProps {
     workspaceId: string;
 }
 
+import { Permission } from '../types/auth';
+import { usePermission } from '../hooks/usePermission';
+import { UnauthorizedView } from '../components/UnauthorizedView';
+
 export const PaymentsPage = ({ workspaceId }: PaymentsPageProps) => {
     const [tabIndex, setTabIndex] = useState(0);
     const [isFormOpen, setFormOpen] = useState(false);
+    const { hasPermission } = usePermission();
+
+    const canViewCustomer = hasPermission(Permission.PAYMENTS_CUSTOMER_VIEW);
+    const canViewSupplier = hasPermission(Permission.PAYMENTS_SUPPLIER_VIEW);
+    
+    if (!canViewCustomer && !canViewSupplier) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <UnauthorizedView />
+            </PageShell>
+        );
+    }
+
+    // Force tab index if one is restricted
+    if (!canViewCustomer && tabIndex === 0) setTabIndex(1);
+    if (!canViewSupplier && tabIndex === 1) setTabIndex(0);
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setTabIndex(newValue);
     };
 
     const activeMode = tabIndex === 0 ? 'CUSTOMER' : 'SUPPLIER';
+    
+    const canRecordPayment = activeMode === 'CUSTOMER' 
+        ? hasPermission(Permission.PAYMENTS_CUSTOMER_RECORD)
+        : hasPermission(Permission.PAYMENTS_SUPPLIER_RECORD);
 
     return (
         <PageShell workspaceId={workspaceId}>
@@ -35,22 +59,24 @@ export const PaymentsPage = ({ workspaceId }: PaymentsPageProps) => {
                 title="Payments"
                 subtitle="Settle outstanding ledgers securely managing incoming and outgoing cash flows perfectly."
                 action={
-                    <Button variant="contained" onClick={() => setFormOpen(true)}>
-                        + {activeMode === 'CUSTOMER' ? 'Record Customer Payment' : 'Settle Supplier Payment'}
-                    </Button>
+                    canRecordPayment ? (
+                        <Button variant="contained" onClick={() => setFormOpen(true)}>
+                            + {activeMode === 'CUSTOMER' ? 'Record Customer Payment' : 'Settle Supplier Payment'}
+                        </Button>
+                    ) : null
                 }
             />
 
             <SectionCard>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <Tabs value={tabIndex} onChange={handleTabChange} aria-label="payment tabs">
-                        <Tab label="Customer Payments" />
-                        <Tab label="Supplier Payments" />
+                        {canViewCustomer && <Tab label="Customer Payments" />}
+                        {canViewSupplier && <Tab label="Supplier Payments" />}
                     </Tabs>
                 </Box>
 
-                {tabIndex === 0 && <CustomerPaymentTable workspaceId={workspaceId} />}
-                {tabIndex === 1 && <SupplierPaymentTable workspaceId={workspaceId} />}
+                {tabIndex === 0 && canViewCustomer && <CustomerPaymentTable workspaceId={workspaceId} />}
+                {tabIndex === 1 && canViewSupplier && <SupplierPaymentTable workspaceId={workspaceId} />}
             </SectionCard>
 
             <PaymentForm

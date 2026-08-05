@@ -14,6 +14,7 @@ import { SaleTable } from '../features/sales/components/SaleTable';
 import { SaleForm } from '../features/sales/components/SaleForm';
 import { usePermission } from '../hooks/usePermission';
 import { Permission } from '../types/auth';
+import { UnauthorizedView } from '../components/UnauthorizedView';
 
 interface SalesPageProps {
     workspaceId: string;
@@ -25,6 +26,14 @@ export const SalesPage = ({ workspaceId }: SalesPageProps) => {
 
     const { hasPermission } = usePermission();
     const canRecordSale = hasPermission(Permission.SALES_RECORD);
+
+    if (!hasPermission(Permission.SALES_VIEW)) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <UnauthorizedView />
+            </PageShell>
+        );
+    }
 
     return (
         <PageShell workspaceId={workspaceId}>

@@ -65,6 +65,7 @@ const getNavItems = (workspaceId: string, role?: UserRole, hasPermission?: (p: P
     if (hasPermission?.(Permission.SALES_VIEW)) employeeItems.push({ label: 'Sales', path: `${base}/sales`, icon: <PointOfSaleIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.PAYMENTS_CUSTOMER_VIEW) || hasPermission?.(Permission.PAYMENTS_SUPPLIER_VIEW)) employeeItems.push({ label: 'Payments', path: `${base}/payments`, icon: <PaymentsIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.EMPLOYEES_VIEW)) employeeItems.push({ label: 'Employees', path: `${base}/employees`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.SETTINGS_VIEW)) employeeItems.push({ label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> });
     
     return employeeItems;
 };

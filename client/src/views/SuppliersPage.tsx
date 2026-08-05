@@ -17,9 +17,22 @@ interface SuppliersPageProps {
     workspaceId: string;
 }
 
+import { Permission } from '../types/auth';
+import { usePermission } from '../hooks/usePermission';
+import { UnauthorizedView } from '../components/UnauthorizedView';
+
 export const SuppliersPage = ({ workspaceId }: SuppliersPageProps) => {
     const [searchStr, setSearchStr] = useState('');
     const [isCreateOpen, setCreateOpen] = useState(false);
+    const { hasPermission } = usePermission();
+
+    if (!hasPermission(Permission.SUPPLIERS_VIEW)) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <UnauthorizedView />
+            </PageShell>
+        );
+    }
 
     return (
         <PageShell workspaceId={workspaceId}>
@@ -27,9 +40,11 @@ export const SuppliersPage = ({ workspaceId }: SuppliersPageProps) => {
                 title="Suppliers"
                 subtitle="Manage your vendors, view purchase histories, and track accounts payable."
                 action={
-                    <Button variant="contained" onClick={() => setCreateOpen(true)}>
-                        + Create Supplier
-                    </Button>
+                    hasPermission(Permission.SUPPLIERS_CREATE) ? (
+                        <Button variant="contained" onClick={() => setCreateOpen(true)}>
+                            + Create Supplier
+                        </Button>
+                    ) : null
                 }
             />
 
