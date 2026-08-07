@@ -279,6 +279,89 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         amount: formatCurrency(Number(p.totalAmount))
       }));
 
+    // Cash Flow Aggregations
+    let totalCashSales = 0;
+    let totalCreditSales = 0;
+
+    currentSales.forEach(s => {
+      if (s.paymentType === 'CASH') {
+        totalCashSales += Number(s.totalAmount);
+      } else {
+        totalCreditSales += Number(s.totalAmount);
+      }
+    });
+
+    let totalCashPurchases = 0;
+    activePurchases.forEach(p => {
+      if (p.paymentType === 'CASH') {
+        totalCashPurchases += Number(p.totalAmount);
+      }
+    });
+
+    const activeCustomerPayments = await prisma.customerPayment.findMany({
+      where: { workspaceId, createdAt: { gte: currentStart, lt: currentEnd } },
+      include: { customer: true }
+    });
+
+    const activeSupplierPayments = await prisma.supplierPayment.findMany({
+      where: { workspaceId, createdAt: { gte: currentStart, lt: currentEnd } },
+      include: { supplier: true }
+    });
+
+    let totalCustomerCollections = 0;
+    activeCustomerPayments.forEach(p => totalCustomerCollections += Number(p.amount));
+
+    let totalSupplierPayments = 0;
+    activeSupplierPayments.forEach(p => totalSupplierPayments += Number(p.amount));
+
+    const cashInflow = totalCashSales + totalCustomerCollections;
+    const cashOutflow = totalCashPurchases + totalSupplierPayments;
+    const netCashFlow = cashInflow - cashOutflow;
+
+    let netCashFlowStatus = 'Neutral';
+    if (netCashFlow > 0) netCashFlowStatus = 'Positive';
+    else if (netCashFlow < 0) netCashFlowStatus = 'Negative';
+
+    const incomingTransactions = [
+      ...currentSales.filter(s => s.paymentType === 'CASH').map(s => ({
+        date: new Date(s.createdAt).toLocaleDateString(),
+        source: s.customer?.name ? `Sale: ${s.customer.name}` : 'Cash Sale',
+        amountVal: Number(s.totalAmount),
+        amount: formatCurrency(Number(s.totalAmount))
+      })),
+      ...activeCustomerPayments.map(p => ({
+        date: new Date(p.createdAt).toLocaleDateString(),
+        source: `Collection: ${p.customer?.name || 'Unknown'}`,
+        amountVal: Number(p.amount),
+        amount: formatCurrency(Number(p.amount))
+      }))
+    ];
+
+    const largestInflows = incomingTransactions
+      .sort((a, b) => b.amountVal - a.amountVal)
+      .slice(0, 5)
+      .map(({ date, source, amount }) => ({ date, source, amount }));
+
+    const outgoingTransactions = [
+      ...activePurchases.filter(p => p.paymentType === 'CASH').map(p => ({
+        date: new Date(p.createdAt).toLocaleDateString(),
+        supplier: p.supplier?.name || 'Cash Purchase',
+        amountVal: Number(p.totalAmount),
+        amount: formatCurrency(Number(p.totalAmount))
+      })),
+      ...activeSupplierPayments.map(p => ({
+        date: new Date(p.createdAt).toLocaleDateString(),
+        supplier: `Payment: ${p.supplier?.name || 'Unknown'}`,
+        amountVal: Number(p.amount),
+        amount: formatCurrency(Number(p.amount))
+      }))
+    ];
+
+    const largestOutflows = outgoingTransactions
+      .sort((a, b) => b.amountVal - a.amountVal)
+      .slice(0, 5)
+      .map(({ date, supplier, amount }) => ({ date, supplier, amount }));
+
     (data as any).period = period;
     (data as any).sections = {
       sales: {
@@ -331,7 +414,21 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         largestPurchases
       },
       profitability: { metrics: [] },
-      cashFlow: { metrics: [] },
+      cashFlow: {
+        metrics: [
+          { label: "Cash Inflow", value: formatCurrency(cashInflow) },
+          { label: "Cash Outflow", value: formatCurrency(cashOutflow) },
+          { label: "Net Cash Flow", value: formatCurrency(netCashFlow), status: netCashFlowStatus }
+        ],
+        paymentBreakdown: [
+          { source: "Cash Sales", amount: formatCurrency(totalCashSales) },
+          { source: "Credit Sales", amount: formatCurrency(totalCreditSales) },
+          { source: "Customer Collections", amount: formatCurrency(totalCustomerCollections) },
+          { source: "Supplier Payments", amount: formatCurrency(totalSupplierPayments) }
+        ],
+        largestInflows,
+        largestOutflows
+      },
     };
 
     return res.status(200).json({ success: true, data });

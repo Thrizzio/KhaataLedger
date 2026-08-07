@@ -3,6 +3,7 @@ export type ReportPeriod = 'today' | 'week' | 'month';
 export interface Metric {
     label: string;
     value: string;
+    status?: string;
 }
 
 export interface Growth {
@@ -57,6 +58,24 @@ export interface PurchaseReportSection extends ReportSection {
     largestPurchases?: PurchaseRecordList[];
 }
 
+export interface PaymentBreakdown {
+    source: string;
+    amount: string;
+}
+
+export interface TransactionList {
+    date: string;
+    source?: string;
+    supplier?: string;
+    amount: string;
+}
+
+export interface CashFlowReportSection extends ReportSection {
+    paymentBreakdown?: PaymentBreakdown[];
+    largestInflows?: TransactionList[];
+    largestOutflows?: TransactionList[];
+}
+
 export interface ReportsData {
     period: ReportPeriod;
     generatedAt: string;
@@ -67,6 +86,6 @@ export interface ReportsData {
         suppliers: SupplierReportSection;
         purchases: PurchaseReportSection;
         profitability: ReportSection;
-        cashFlow: ReportSection;
+        cashFlow: CashFlowReportSection;
     };
 }
