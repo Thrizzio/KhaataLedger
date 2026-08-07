@@ -405,6 +405,47 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
       .slice(0, 5)
       .map(c => ({ name: c.name, amount: formatCurrency(c.total) }));
 
+    // Inventory Aggregations
+    const activeInventory = await prisma.inventoryItem.findMany({
+      where: { workspaceId, deletedAt: null }
+    });
+
+    let totalInventoryValue = 0;
+    let lowStockItemsCount = 0;
+    let outOfStockItemsCount = 0;
+    const hardcodedReorderLevel = 5;
+
+    activeInventory.forEach(item => {
+      const stock = item.currentStock;
+      totalInventoryValue += stock * Number(item.defaultSellingPrice);
+      if (stock === 0) outOfStockItemsCount++;
+      else if (stock <= hardcodedReorderLevel) lowStockItemsCount++;
+    });
+
+    const totalProductsCount = activeInventory.length;
+    const averageStockPerProduct = totalProductsCount > 0
+      ? (activeInventory.reduce((acc, curr) => acc + curr.currentStock, 0) / totalProductsCount)
+      : 0;
+
+    const lowStockProductsMap = [...activeInventory]
+      .filter(item => item.currentStock <= hardcodedReorderLevel && item.currentStock > 0)
+      .sort((a, b) => a.currentStock - b.currentStock)
+      .slice(0, 5)
+      .map(item => ({
+        product: item.name,
+        stock: item.currentStock.toString(),
+        reorderLevel: hardcodedReorderLevel.toString()
+      }));
+
+    const outOfStockProductsMap = [...activeInventory]
+      .filter(item => item.currentStock === 0)
+      .map(item => ({ product: item.name }));
+
+    const highestStockProductsMap = [...activeInventory]
+      .sort((a, b) => b.currentStock - a.currentStock)
+      .slice(0, 5)
+      .map(item => ({ product: item.name, stock: item.currentStock.toString() }));
+
     (data as any).period = period;
     (data as any).sections = {
       sales: {
@@ -423,7 +464,18 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         worstSellingProducts,
         topCustomers
       },
-      inventory: { metrics: [] },
+      inventory: {
+        metrics: [
+          { label: "Total Inventory Value", value: formatCurrency(totalInventoryValue) },
+          { label: "Total Products", value: totalProductsCount.toString() },
+          { label: "Low Stock Items", value: lowStockItemsCount.toString() },
+          { label: "Out of Stock Items", value: outOfStockItemsCount.toString() },
+          { label: "Average Stock Per Product", value: Math.floor(averageStockPerProduct).toString() }
+        ],
+        lowStockProducts: lowStockProductsMap,
+        outOfStockProducts: outOfStockProductsMap,
+        highestStockProducts: highestStockProductsMap
+      },
       customers: {
         metrics: [
           { label: "Outstanding Customer Credit", value: formatCurrency(outstandingCustomerCredit) },

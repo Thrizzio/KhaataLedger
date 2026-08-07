@@ -81,6 +81,27 @@ export interface CashFlowReportSection extends ReportSection {
     largestOutflows?: TransactionList[];
 }
 
+export interface InventoryLowStockList {
+    product: string;
+    stock: string;
+    reorderLevel: string;
+}
+
+export interface InventoryOutList {
+    product: string;
+}
+
+export interface InventoryHighList {
+    product: string;
+    stock: string;
+}
+
+export interface InventoryReportSection extends ReportSection {
+    lowStockProducts?: InventoryLowStockList[];
+    outOfStockProducts?: InventoryOutList[];
+    highestStockProducts?: InventoryHighList[];
+}
+
 export interface ProfitabilityReportSection extends ReportSection {
     highestRevenueProducts?: RevenueProductList[];
     topCustomers?: CustomerList[];
@@ -91,7 +112,7 @@ export interface ReportsData {
     generatedAt: string;
     sections: {
         sales: SalesReportSection;
-        inventory: ReportSection;
+        inventory: InventoryReportSection;
         customers: CustomerReportSection;
         suppliers: SupplierReportSection;
         purchases: PurchaseReportSection;
