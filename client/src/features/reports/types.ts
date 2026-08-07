@@ -20,6 +20,11 @@ export interface CustomerList {
     amount: string;
 }
 
+export interface SupplierList {
+    name: string;
+    amount: string;
+}
+
 export interface ReportSection {
     metrics: Metric[];
 }
@@ -36,6 +41,11 @@ export interface CustomerReportSection extends ReportSection {
     highestOutstandingCustomers?: CustomerList[];
 }
 
+export interface SupplierReportSection extends ReportSection {
+    topSuppliersByPurchaseValue?: SupplierList[];
+    topSuppliersByPurchaseCount?: SupplierList[];
+}
+
 export interface ReportsData {
     period: ReportPeriod;
     generatedAt: string;
@@ -43,7 +53,7 @@ export interface ReportsData {
         sales: SalesReportSection;
         inventory: ReportSection;
         customers: CustomerReportSection;
-        suppliers: ReportSection;
+        suppliers: SupplierReportSection;
         purchases: ReportSection;
         profitability: ReportSection;
         cashFlow: ReportSection;

@@ -183,6 +183,66 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
       ? totalRevenue / uniquePurchasingCustomersCount
       : 0;
 
+    // Supplier Aggregations
+    const activeSuppliers = await prisma.supplier.findMany({
+      where: { workspaceId, deletedAt: null }
+    });
+
+    let outstandingSupplierDues = 0;
+    let suppliersWithOutstandingDues = 0;
+    let newSuppliersAdded = 0;
+
+    activeSuppliers.forEach(s => {
+      const bal = Number(s.outstandingBalance);
+      outstandingSupplierDues += bal;
+      if (bal > 0) suppliersWithOutstandingDues++;
+
+      const created = new Date(s.createdAt).getTime();
+      if (created >= currentStart.getTime() && created < currentEnd.getTime()) {
+        newSuppliersAdded++;
+      }
+    });
+
+    const activePurchases = await prisma.purchase.findMany({
+      where: {
+        workspaceId,
+        createdAt: { gte: currentStart, lt: currentEnd }
+      },
+      include: { supplier: true }
+    });
+
+    const supplierPurchaseMap = new Map<string, { name: string, total: number, count: number }>();
+    let totalPurchaseValue = 0;
+
+    activePurchases.forEach(p => {
+      const amount = Number(p.totalAmount);
+      totalPurchaseValue += amount;
+      const suppName = p.supplier?.name || 'Unknown Supplier';
+      const suppId = p.supplierId || 'unknown';
+
+      if (!supplierPurchaseMap.has(suppId)) {
+        supplierPurchaseMap.set(suppId, { name: suppName, total: 0, count: 0 });
+      }
+      const entry = supplierPurchaseMap.get(suppId)!;
+      entry.total += amount;
+      entry.count += 1;
+    });
+
+    const uniquePurchasingSuppliersCount = supplierPurchaseMap.size;
+    const averagePurchaseValuePerSupplier = uniquePurchasingSuppliersCount > 0
+      ? totalPurchaseValue / uniquePurchasingSuppliersCount
+      : 0;
+
+    const topSuppliersByPurchaseValue = Array.from(supplierPurchaseMap.values())
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5)
+      .map(s => ({ name: s.name, amount: formatCurrency(s.total) }));
+
+    const topSuppliersByPurchaseCount = Array.from(supplierPurchaseMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map(s => ({ name: s.name, amount: s.count.toString() }));
+
     (data as any).period = period;
     (data as any).sections = {
       sales: {
@@ -212,7 +272,16 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         topCustomers,
         highestOutstandingCustomers
       },
-      suppliers: { metrics: [] },
+      suppliers: {
+        metrics: [
+          { label: "Total Outstanding Supplier Dues", value: formatCurrency(outstandingSupplierDues) },
+          { label: "Suppliers with Outstanding Dues", value: suppliersWithOutstandingDues.toString() },
+          { label: "New Suppliers Added", value: newSuppliersAdded.toString() },
+          { label: "Average Purchase Value per Supplier", value: formatCurrency(averagePurchaseValuePerSupplier) }
+        ],
+        topSuppliersByPurchaseValue,
+        topSuppliersByPurchaseCount
+      },
       purchases: { metrics: [] },
       profitability: { metrics: [] },
       cashFlow: { metrics: [] },
