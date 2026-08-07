@@ -151,6 +151,38 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
 
     const formatCurrency = (val: number) => `₹${val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+    // Customer Aggregations
+    const activeCustomers = await prisma.customer.findMany({
+      where: { workspaceId, deletedAt: null }
+    });
+
+    let outstandingCustomerCredit = 0;
+    let customersWithOutstandingCredit = 0;
+    let newCustomersAdded = 0;
+
+    activeCustomers.forEach(c => {
+      const bal = Number(c.outstandingBalance);
+      outstandingCustomerCredit += bal;
+      if (bal > 0) customersWithOutstandingCredit++;
+
+      const created = new Date(c.createdAt).getTime();
+      if (created >= currentStart.getTime() && created < currentEnd.getTime()) {
+        newCustomersAdded++;
+      }
+    });
+
+    const highestOutstandingCustomers = [...activeCustomers]
+      .filter(c => Number(c.outstandingBalance) > 0)
+      .sort((a, b) => Number(b.outstandingBalance) - Number(a.outstandingBalance))
+      .slice(0, 5)
+      .map(c => ({ name: c.name, amount: formatCurrency(Number(c.outstandingBalance)) }));
+
+    // Average Customer Spend uses customerMap from active Sales aggregation
+    const uniquePurchasingCustomersCount = customerMap.size;
+    const averageCustomerSpend = uniquePurchasingCustomersCount > 0
+      ? totalRevenue / uniquePurchasingCustomersCount
+      : 0;
+
     (data as any).period = period;
     (data as any).sections = {
       sales: {
@@ -170,7 +202,16 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         topCustomers
       },
       inventory: { metrics: [] },
-      customers: { metrics: [] },
+      customers: {
+        metrics: [
+          { label: "Outstanding Customer Credit", value: formatCurrency(outstandingCustomerCredit) },
+          { label: "Customers with Outstanding Credit", value: customersWithOutstandingCredit.toString() },
+          { label: "New Customers Added", value: newCustomersAdded.toString() },
+          { label: "Average Customer Spend", value: formatCurrency(averageCustomerSpend) }
+        ],
+        topCustomers,
+        highestOutstandingCustomers
+      },
       suppliers: { metrics: [] },
       purchases: { metrics: [] },
       profitability: { metrics: [] },

@@ -7,8 +7,9 @@ import { ReportPeriodSelector } from './components/ReportPeriodSelector';
 import { BusinessSummaryCard } from './components/BusinessSummaryCard';
 import { ReportSectionCard } from './components/ReportSectionCard';
 import { SalesReportCard } from './components/SalesReportCard';
+import { CustomerReportCard } from './components/CustomerReportCard';
 import { EmptyState } from '../../shared/components/EmptyState';
-import type { ReportPeriod, SalesReportSection } from './types';
+import type { ReportPeriod, SalesReportSection, CustomerReportSection } from './types';
 import BarChartIcon from '@mui/icons-material/BarChart';
 
 interface Props {
@@ -70,7 +71,9 @@ export function ReportsPage({ workspaceId }: Props) {
                         {SECTIONS.map((section) => (
                             <Grid item xs={12} md={6} lg={4} key={section.id}>
                                 {section.id === 'sales' && data.sections.sales ? (
-                                    <SalesReportCard title={section.title} data={data.sections.sales} />
+                                    <SalesReportCard title={section.title} data={data.sections.sales as SalesReportSection} />
+                                ) : section.id === 'customers' && data.sections.customers ? (
+                                    <CustomerReportCard title={section.title} data={data.sections.customers as CustomerReportSection} />
                                 ) : (
                                     <ReportSectionCard title={section.title} />
                                 )}

@@ -31,13 +31,18 @@ export interface SalesReportSection extends ReportSection {
     topCustomers?: CustomerList[];
 }
 
+export interface CustomerReportSection extends ReportSection {
+    topCustomers?: CustomerList[];
+    highestOutstandingCustomers?: CustomerList[];
+}
+
 export interface ReportsData {
     period: ReportPeriod;
     generatedAt: string;
     sections: {
         sales: SalesReportSection;
         inventory: ReportSection;
-        customers: ReportSection;
+        customers: CustomerReportSection;
         suppliers: ReportSection;
         purchases: ReportSection;
         profitability: ReportSection;
