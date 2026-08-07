@@ -72,7 +72,10 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
     // Current Sales Aggregations
     const currentSales = await prisma.sale.findMany({
       where: { workspaceId, saleDate: { gte: currentStart, lt: currentEnd } },
-      include: { customer: { select: { name: true } } }
+      include: {
+        customer: { select: { name: true } },
+        lineItems: { include: { inventoryItem: { select: { name: true } } } }
+      }
     });
 
     const previousSales = await prisma.sale.findMany({
@@ -362,6 +365,46 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
       .slice(0, 5)
       .map(({ date, supplier, amount }) => ({ date, supplier, amount }));
 
+    // Profitability Aggregations
+    const estimatedGrossProfit = totalRevenue - totalPurchaseValue;
+    const grossProfitMargin = totalRevenue > 0 ? (estimatedGrossProfit / totalRevenue) * 100 : 0;
+
+    let profitabilityStatus = 'Low';
+    let profitStatusMap = 'Negative'; // Re-use status color map for Metric UI
+    if (grossProfitMargin > 30) {
+      profitabilityStatus = 'Excellent';
+      profitStatusMap = 'Positive';
+    } else if (grossProfitMargin > 15) {
+      profitabilityStatus = 'Healthy';
+      profitStatusMap = 'Positive';
+    } else if (grossProfitMargin > 5) {
+      profitabilityStatus = 'Average';
+      profitStatusMap = 'Neutral';
+    }
+
+    const productRevenueMap = new Map<string, number>();
+    currentSales.forEach(s => {
+      s.lineItems.forEach(li => {
+        const pn = li.productName || li.inventoryItem?.name || 'Unknown Product';
+        const current = productRevenueMap.get(pn) || 0;
+        productRevenueMap.set(pn, current + (li.quantity * Number(li.sellingPrice)));
+      });
+    });
+
+    const highestRevenueProducts = Array.from(productRevenueMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, revenue]) => ({
+        product: name,
+        revenue: formatCurrency(revenue)
+      }));
+
+    // Reuse customerMap calculated during Sales/Customers
+    const topRevenueCustomers = Array.from(customerMap.values())
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5)
+      .map(c => ({ name: c.name, amount: formatCurrency(c.total) }));
+
     (data as any).period = period;
     (data as any).sections = {
       sales: {
@@ -413,7 +456,17 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         mostPurchasedProducts,
         largestPurchases
       },
-      profitability: { metrics: [] },
+      profitability: {
+        metrics: [
+          { label: "Total Revenue", value: formatCurrency(totalRevenue) },
+          { label: "Total Purchase Cost", value: formatCurrency(totalPurchaseValue) },
+          { label: "Estimated Gross Profit", value: formatCurrency(estimatedGrossProfit), status: profitStatusMap },
+          { label: "Gross Profit Margin", value: `${grossProfitMargin.toFixed(1)}%`, status: profitStatusMap },
+          { label: "Profitability Status", value: profitabilityStatus, status: profitStatusMap }
+        ],
+        highestRevenueProducts,
+        topCustomers: topRevenueCustomers
+      },
       cashFlow: {
         metrics: [
           { label: "Cash Inflow", value: formatCurrency(cashInflow) },

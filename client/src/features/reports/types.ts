@@ -16,6 +16,11 @@ export interface ProductList {
     quantity: string;
 }
 
+export interface RevenueProductList {
+    product: string;
+    revenue: string;
+}
+
 export interface CustomerList {
     name: string;
     amount: string;
@@ -76,6 +81,11 @@ export interface CashFlowReportSection extends ReportSection {
     largestOutflows?: TransactionList[];
 }
 
+export interface ProfitabilityReportSection extends ReportSection {
+    highestRevenueProducts?: RevenueProductList[];
+    topCustomers?: CustomerList[];
+}
+
 export interface ReportsData {
     period: ReportPeriod;
     generatedAt: string;
@@ -85,7 +95,7 @@ export interface ReportsData {
         customers: CustomerReportSection;
         suppliers: SupplierReportSection;
         purchases: PurchaseReportSection;
-        profitability: ReportSection;
+        profitability: ProfitabilityReportSection;
         cashFlow: CashFlowReportSection;
     };
 }
