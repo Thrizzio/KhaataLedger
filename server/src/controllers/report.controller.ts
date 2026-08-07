@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { prisma } from "../config/prisma.js";
 import { z } from "zod";
 import { getReports, REPORT_RANGES, type ReportRange } from "../services/report.service.js";
+import { generateBusinessSummary } from "../services/aiSummary.service.js";
 
 export const getReportsHandler: RequestHandler = async (req, res) => {
   try {
@@ -535,6 +536,9 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         largestOutflows
       },
     };
+
+    const aiSummary = await generateBusinessSummary(data);
+    (data as any).aiSummary = aiSummary;
 
     return res.status(200).json({ success: true, data });
   } catch (error) {

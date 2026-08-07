@@ -71,7 +71,7 @@ export function ReportsPage({ workspaceId }: Props) {
                 />
             ) : (
                 <Box>
-                    <BusinessSummaryCard period={data.period} />
+                    <BusinessSummaryCard aiSummary={data.aiSummary} />
                     <Grid container spacing={3}>
                         {SECTIONS.map((section) => (
                             <Grid item xs={12} md={6} lg={4} key={section.id}>

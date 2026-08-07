@@ -96,6 +96,14 @@ export interface InventoryHighList {
     stock: string;
 }
 
+export interface BusinessAISummary {
+    headline: string;
+    summary: string;
+    highlights: string[];
+    warnings: string[];
+    recommendations: string[];
+}
+
 export interface InventoryReportSection extends ReportSection {
     lowStockProducts?: InventoryLowStockList[];
     outOfStockProducts?: InventoryOutList[];
@@ -110,6 +118,7 @@ export interface ProfitabilityReportSection extends ReportSection {
 export interface ReportsData {
     period: ReportPeriod;
     generatedAt: string;
+    aiSummary?: BusinessAISummary | null;
     sections: {
         sales: SalesReportSection;
         inventory: InventoryReportSection;
