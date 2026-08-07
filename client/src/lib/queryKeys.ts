@@ -35,4 +35,5 @@ export const queryKeys = {
         customerList: (wid: string) => ['customer-payments', wid, 'list'] as const,
         supplierList: (wid: string) => ['supplier-payments', wid, 'list'] as const,
     },
+    reports: (wid: string, period: string) => ['reports', wid, period] as const,
 } as const;

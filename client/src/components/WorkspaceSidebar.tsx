@@ -8,6 +8,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import Avatar from '@mui/material/Avatar';
@@ -49,11 +50,12 @@ const getNavItems = (workspaceId: string, role?: UserRole, hasPermission?: (p: P
         { label: 'Suppliers', path: `${base}/suppliers`, icon: <LocalShippingIcon sx={{ fontSize: 20 }} /> },
         { label: 'Purchases', path: `${base}/purchases`, icon: <ShoppingCartIcon sx={{ fontSize: 20 }} /> },
         { label: 'Sales', path: `${base}/sales`, icon: <PointOfSaleIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Reports', path: `${base}/reports`, icon: <AssessmentIcon sx={{ fontSize: 20 }} /> },
         { label: 'Payments', path: `${base}/payments`, icon: <PaymentsIcon sx={{ fontSize: 20 }} /> },
         { label: 'Employees', path: `${base}/employees`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> },
         { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> },
     ];
-    
+
     if (role === 'OWNER') return ownerItems;
 
     const employeeItems = [];
@@ -63,10 +65,11 @@ const getNavItems = (workspaceId: string, role?: UserRole, hasPermission?: (p: P
     if (hasPermission?.(Permission.SUPPLIERS_VIEW)) employeeItems.push({ label: 'Suppliers', path: `${base}/suppliers`, icon: <LocalShippingIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.PURCHASES_VIEW)) employeeItems.push({ label: 'Purchases', path: `${base}/purchases`, icon: <ShoppingCartIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.SALES_VIEW)) employeeItems.push({ label: 'Sales', path: `${base}/sales`, icon: <PointOfSaleIcon sx={{ fontSize: 20 }} /> });
+    if (hasPermission?.(Permission.REPORTS_VIEW)) employeeItems.push({ label: 'Reports', path: `${base}/reports`, icon: <AssessmentIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.PAYMENTS_CUSTOMER_VIEW) || hasPermission?.(Permission.PAYMENTS_SUPPLIER_VIEW)) employeeItems.push({ label: 'Payments', path: `${base}/payments`, icon: <PaymentsIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.EMPLOYEES_VIEW)) employeeItems.push({ label: 'Employees', path: `${base}/employees`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.SETTINGS_VIEW)) employeeItems.push({ label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> });
-    
+
     return employeeItems;
 };
 
