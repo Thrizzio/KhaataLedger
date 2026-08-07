@@ -9,8 +9,9 @@ import { ReportSectionCard } from './components/ReportSectionCard';
 import { SalesReportCard } from './components/SalesReportCard';
 import { CustomerReportCard } from './components/CustomerReportCard';
 import { SupplierReportCard } from './components/SupplierReportCard';
+import { PurchaseReportCard } from './components/PurchaseReportCard';
 import { EmptyState } from '../../shared/components/EmptyState';
-import type { ReportPeriod, SalesReportSection, CustomerReportSection, SupplierReportSection } from './types';
+import type { ReportPeriod, SalesReportSection, CustomerReportSection, SupplierReportSection, PurchaseReportSection } from './types';
 import BarChartIcon from '@mui/icons-material/BarChart';
 
 interface Props {
@@ -77,6 +78,8 @@ export function ReportsPage({ workspaceId }: Props) {
                                     <CustomerReportCard title={section.title} data={data.sections.customers as CustomerReportSection} />
                                 ) : section.id === 'suppliers' && data.sections.suppliers ? (
                                     <SupplierReportCard title={section.title} data={data.sections.suppliers as SupplierReportSection} />
+                                ) : section.id === 'purchases' && data.sections.purchases ? (
+                                    <PurchaseReportCard title={section.title} data={data.sections.purchases as PurchaseReportSection} />
                                 ) : (
                                     <ReportSectionCard title={section.title} />
                                 )}

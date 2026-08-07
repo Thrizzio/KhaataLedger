@@ -25,6 +25,12 @@ export interface SupplierList {
     amount: string;
 }
 
+export interface PurchaseRecordList {
+    supplier: string;
+    date: string;
+    amount: string;
+}
+
 export interface ReportSection {
     metrics: Metric[];
 }
@@ -46,6 +52,11 @@ export interface SupplierReportSection extends ReportSection {
     topSuppliersByPurchaseCount?: SupplierList[];
 }
 
+export interface PurchaseReportSection extends ReportSection {
+    mostPurchasedProducts?: ProductList[];
+    largestPurchases?: PurchaseRecordList[];
+}
+
 export interface ReportsData {
     period: ReportPeriod;
     generatedAt: string;
@@ -54,7 +65,7 @@ export interface ReportsData {
         inventory: ReportSection;
         customers: CustomerReportSection;
         suppliers: SupplierReportSection;
-        purchases: ReportSection;
+        purchases: PurchaseReportSection;
         profitability: ReportSection;
         cashFlow: ReportSection;
     };

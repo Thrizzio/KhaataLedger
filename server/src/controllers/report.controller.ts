@@ -208,11 +208,13 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         workspaceId,
         createdAt: { gte: currentStart, lt: currentEnd }
       },
-      include: { supplier: true }
+      include: { supplier: true, lineItems: true }
     });
 
     const supplierPurchaseMap = new Map<string, { name: string, total: number, count: number }>();
     let totalPurchaseValue = 0;
+    let totalItemsPurchased = 0;
+    const purchasedProductsMap = new Map<string, number>();
 
     activePurchases.forEach(p => {
       const amount = Number(p.totalAmount);
@@ -226,6 +228,14 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
       const entry = supplierPurchaseMap.get(suppId)!;
       entry.total += amount;
       entry.count += 1;
+
+      (p as any).lineItems?.forEach((li: any) => {
+        const qty = Number(li.quantity);
+        totalItemsPurchased += qty;
+
+        const pName = li.productName || 'Unknown Product';
+        purchasedProductsMap.set(pName, (purchasedProductsMap.get(pName) || 0) + qty);
+      });
     });
 
     const uniquePurchasingSuppliersCount = supplierPurchaseMap.size;
@@ -242,6 +252,32 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5)
       .map(s => ({ name: s.name, amount: s.count.toString() }));
+
+    const numPurchases = activePurchases.length;
+    const avgPurchaseValue = numPurchases > 0 ? totalPurchaseValue / numPurchases : 0;
+    const avgItemsPerPurchase = numPurchases > 0 ? totalItemsPurchased / numPurchases : 0;
+
+    let highestPurchaseValue = 0;
+    let lowestPurchaseValue = 0;
+    if (numPurchases > 0) {
+      const amounts = activePurchases.map(p => Number(p.totalAmount));
+      highestPurchaseValue = Math.max(...amounts);
+      lowestPurchaseValue = Math.min(...amounts);
+    }
+
+    const mostPurchasedProducts = Array.from(purchasedProductsMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([product, quantity]) => ({ product, quantity: quantity.toString() }));
+
+    const largestPurchases = [...activePurchases]
+      .sort((a, b) => Number(b.totalAmount) - Number(a.totalAmount))
+      .slice(0, 5)
+      .map(p => ({
+        supplier: p.supplier?.name || 'Unknown Supplier',
+        date: new Date(p.createdAt).toLocaleDateString(),
+        amount: formatCurrency(Number(p.totalAmount))
+      }));
 
     (data as any).period = period;
     (data as any).sections = {
@@ -282,7 +318,18 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
         topSuppliersByPurchaseValue,
         topSuppliersByPurchaseCount
       },
-      purchases: { metrics: [] },
+      purchases: {
+        metrics: [
+          { label: "Total Purchase Value", value: formatCurrency(totalPurchaseValue) },
+          { label: "Number of Purchases", value: numPurchases.toString() },
+          { label: "Average Purchase Value", value: formatCurrency(avgPurchaseValue) },
+          { label: "Average Items Per Purchase", value: avgItemsPerPurchase.toFixed(1) },
+          { label: "Highest Purchase Value", value: formatCurrency(highestPurchaseValue) },
+          { label: "Lowest Purchase Value", value: formatCurrency(lowestPurchaseValue) }
+        ],
+        mostPurchasedProducts,
+        largestPurchases
+      },
       profitability: { metrics: [] },
       cashFlow: { metrics: [] },
     };
