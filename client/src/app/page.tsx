@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -8,11 +8,18 @@ import Box from '@mui/material/Box';
 import { useAuth } from '../hooks/useAuth';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { workspaceService } from '../services/workspace.service';
+import { LandingPage } from '../views/LandingPage';
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const { workspaceId, setWorkspaceId, clearWorkspaceId } = useWorkspace();
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: workspaces, isLoading: isWorkspacesLoading, isError } = useQuery({
     queryKey: ['workspaces'],
@@ -22,10 +29,8 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/login');
-      return;
-    }
+    if (!mounted) return;
+    if (!isAuthenticated) return;
 
     if (user?.role === 'EMPLOYEE') {
       if (user.workspaceId) {
@@ -76,6 +81,7 @@ export default function HomePage() {
     }
 
   }, [
+    mounted,
     isAuthenticated,
     user,
     workspaces,
@@ -86,6 +92,18 @@ export default function HomePage() {
     clearWorkspaceId,
     router,
   ]);
+
+  if (!mounted) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LandingPage />;
+  }
 
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
