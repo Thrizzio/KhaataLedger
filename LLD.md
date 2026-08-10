@@ -460,6 +460,18 @@ Each feature is developed on a separate Git branch, committed in small logical c
 
 ---
 
+## Client-Side Routing
+
+Next.js App Router provides client-side navigation between application pages such as Dashboard, Sales, Inventory, and Reports without requiring full page reloads.
+
+--
+
+## SQL JOINs
+
+The PostgreSQL schema uses relational associations between entities such as Sales, Customers, SaleLineItems, Products, Purchases, and Suppliers. Prisma resolves these relationships using relational queries equivalent to SQL JOIN operations, allowing related records to be retrieved together.
+
+---
+
 ## 14. Important Design Rules
 
 ### Workspace Isolation
