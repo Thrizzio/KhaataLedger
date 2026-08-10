@@ -7,6 +7,7 @@ import {
     updateCustomerSchema,
     customerQuerySchema,
 } from '../validators/customer.validator.js';
+import { recordAudit } from '../utils/audit.util.js';
 
 // ── Workspace access guard ────────────────────────────────────────────────────
 async function requireWorkspaceAccess(
@@ -98,15 +99,30 @@ export const createCustomer: RequestHandler = async (req, res, next) => {
 
         const { name, phoneNumber, email, address } = parsed.data;
 
-        const customer = await prisma.customer.create({
-            data: {
+        const customer = await prisma.$transaction(async (tx) => {
+            const newCustomer = await tx.customer.create({
+                data: {
+                    workspaceId,
+                    name,
+                    phoneNumber: phoneNumber ?? null,
+                    email: email ?? null,
+                    address: address ?? null,
+                    // outstandingBalance defaults to 0 — never set by clients
+                },
+            });
+
+            await recordAudit(tx, {
                 workspaceId,
-                name,
-                phoneNumber: phoneNumber ?? null,
-                email: email ?? null,
-                address: address ?? null,
-                // outstandingBalance defaults to 0 — never set by clients
-            },
+                action: 'CREATE',
+                userId: req.user!.id,
+                entityType: 'CUSTOMER',
+                entityId: newCustomer.id,
+                entityTitle: newCustomer.name,
+                previousValue: null,
+                newValue: newCustomer,
+            });
+
+            return newCustomer;
         });
 
         return res.status(201).json(createSuccessResponse('Customer created', customer));
@@ -134,14 +150,29 @@ export const updateCustomer: RequestHandler = async (req, res, next) => {
 
         const { name, phoneNumber, email, address } = parsed.data;
 
-        const customer = await prisma.customer.update({
-            where: { id },
-            data: {
-                ...(name !== undefined ? { name } : {}),
-                ...(phoneNumber !== undefined ? { phoneNumber } : {}),
-                ...(email !== undefined ? { email } : {}),
-                ...(address !== undefined ? { address } : {}),
-            },
+        const customer = await prisma.$transaction(async (tx) => {
+            const updatedCustomer = await tx.customer.update({
+                where: { id },
+                data: {
+                    ...(name !== undefined ? { name } : {}),
+                    ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+                    ...(email !== undefined ? { email } : {}),
+                    ...(address !== undefined ? { address } : {}),
+                },
+            });
+
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'UPDATE',
+                userId: req.user!.id,
+                entityType: 'CUSTOMER',
+                entityId: updatedCustomer.id,
+                entityTitle: updatedCustomer.name,
+                previousValue: existing,
+                newValue: updatedCustomer,
+            });
+
+            return updatedCustomer;
         });
 
         return res.status(200).json(createSuccessResponse('Customer updated', customer));
@@ -162,9 +193,24 @@ export const deleteCustomer: RequestHandler = async (req, res, next) => {
         });
         if (!existing) throw new ApiError(404, 'Customer not found');
 
-        const customer = await prisma.customer.update({
-            where: { id },
-            data: { deletedAt: new Date() },
+        const customer = await prisma.$transaction(async (tx) => {
+            const deletedCustomer = await tx.customer.update({
+                where: { id },
+                data: { deletedAt: new Date() },
+            });
+
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'DELETE',
+                userId: req.user!.id,
+                entityType: 'CUSTOMER',
+                entityId: existing.id,
+                entityTitle: existing.name,
+                previousValue: existing,
+                newValue: { ...existing, deletedAt: deletedCustomer.deletedAt },
+            });
+
+            return deletedCustomer;
         });
 
         return res.status(200).json(createSuccessResponse('Customer deleted', customer));

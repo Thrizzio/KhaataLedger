@@ -7,6 +7,7 @@ import {
     updateInventorySchema,
     queryInventorySchema,
 } from '../validators/inventory.validator.js';
+import { recordAudit } from '../utils/audit.util.js';
 
 // ── Workspace access guard ────────────────────────────────────────────────────
 async function requireWorkspaceAccess(
@@ -105,14 +106,29 @@ export const createInventoryItem: RequestHandler = async (req, res, next) => {
             if (existing) throw new ApiError(409, `SKU "${sku}" already exists in this workspace`);
         }
 
-        const item = await prisma.inventoryItem.create({
-            data: {
+        const item = await prisma.$transaction(async (tx) => {
+            const newItem = await tx.inventoryItem.create({
+                data: {
+                    workspaceId,
+                    name,
+                    sku: sku ?? null,
+                    unit: unit ?? null,
+                    defaultSellingPrice,
+                },
+            });
+
+            await recordAudit(tx, {
                 workspaceId,
-                name,
-                sku: sku ?? null,
-                unit: unit ?? null,
-                defaultSellingPrice,
-            },
+                action: 'CREATE',
+                userId: req.user!.id,
+                entityType: 'INVENTORY_ITEM',
+                entityId: newItem.id,
+                entityTitle: newItem.name,
+                previousValue: null,
+                newValue: newItem,
+            });
+
+            return newItem;
         });
 
         return res.status(201).json(createSuccessResponse('Inventory item created', item));
@@ -148,14 +164,29 @@ export const updateInventoryItem: RequestHandler = async (req, res, next) => {
             if (conflict) throw new ApiError(409, `SKU "${sku}" already exists in this workspace`);
         }
 
-        const item = await prisma.inventoryItem.update({
-            where: { id },
-            data: {
-                ...(name !== undefined ? { name } : {}),
-                ...(sku !== undefined ? { sku } : {}),
-                ...(unit !== undefined ? { unit } : {}),
-                ...(defaultSellingPrice !== undefined ? { defaultSellingPrice } : {}),
-            },
+        const item = await prisma.$transaction(async (tx) => {
+            const updatedItem = await tx.inventoryItem.update({
+                where: { id },
+                data: {
+                    ...(name !== undefined ? { name } : {}),
+                    ...(sku !== undefined ? { sku } : {}),
+                    ...(unit !== undefined ? { unit } : {}),
+                    ...(defaultSellingPrice !== undefined ? { defaultSellingPrice } : {}),
+                },
+            });
+
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'UPDATE',
+                userId: req.user!.id,
+                entityType: 'INVENTORY_ITEM',
+                entityId: updatedItem.id,
+                entityTitle: updatedItem.name,
+                previousValue: existing,
+                newValue: updatedItem,
+            });
+
+            return updatedItem;
         });
 
         return res.status(200).json(createSuccessResponse('Inventory item updated', item));
@@ -176,9 +207,24 @@ export const deleteInventoryItem: RequestHandler = async (req, res, next) => {
         });
         if (!existing) throw new ApiError(404, 'Inventory item not found');
 
-        const item = await prisma.inventoryItem.update({
-            where: { id },
-            data: { deletedAt: new Date() },
+        const item = await prisma.$transaction(async (tx) => {
+            const deletedItem = await tx.inventoryItem.update({
+                where: { id },
+                data: { deletedAt: new Date() },
+            });
+
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'DELETE',
+                userId: req.user!.id,
+                entityType: 'INVENTORY_ITEM',
+                entityId: existing.id,
+                entityTitle: existing.name,
+                previousValue: existing,
+                newValue: { ...existing, deletedAt: deletedItem.deletedAt },
+            });
+
+            return deletedItem;
         });
 
         return res.status(200).json(createSuccessResponse('Inventory item deleted', item));

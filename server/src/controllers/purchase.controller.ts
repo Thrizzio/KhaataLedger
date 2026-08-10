@@ -3,6 +3,7 @@ import { prisma } from '../config/prisma.js';
 import { ApiError } from '../utils/api-error.js';
 import { createSuccessResponse } from '../utils/api-response.js';
 import { createPurchaseSchema } from '../validators/purchase.validator.js';
+import { recordAudit } from '../utils/audit.util.js';
 
 // ── Workspace access guard (OWNER only) ───────────────────────────────────────
 async function requireOwnerAccess(
@@ -175,6 +176,18 @@ export const createPurchase: RequestHandler = async (req, res, next) => {
                     data: { outstandingBalance: { increment: totalAmount } },
                 });
             }
+
+            // e. Record audit log
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'CREATE',
+                userId: user.id,
+                entityType: 'PURCHASE',
+                entityId: newPurchase.id,
+                entityTitle: `Purchase from ${supplier.name}`,
+                previousValue: null,
+                newValue: newPurchase,
+            });
 
             return newPurchase;
 
