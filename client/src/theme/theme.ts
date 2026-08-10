@@ -86,7 +86,6 @@ export const appTheme = createTheme({
     // CssBaseline: import Inter from Google Fonts
     MuiCssBaseline: {
       styleOverrides: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { box-sizing: border-box; }
         body { scroll-behavior: smooth; }
       `,

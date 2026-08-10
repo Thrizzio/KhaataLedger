@@ -10,6 +10,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>KhaataLedger — Business Ledger</title>
         <meta name="description" content="Digital ledger for small business owners — track inventory, customers, suppliers, sales and purchases." />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
       <body>
         <AppProviders>{children}</AppProviders>
