@@ -7,6 +7,7 @@ import {
     updateSupplierSchema,
     supplierQuerySchema,
 } from '../validators/supplier.validator.js';
+import { recordAudit } from '../utils/audit.util.js';
 
 // ── Workspace access guard ────────────────────────────────────────────────────
 async function requireWorkspaceAccess(
@@ -98,15 +99,30 @@ export const createSupplier: RequestHandler = async (req, res, next) => {
 
         const { name, phoneNumber, email, address } = parsed.data;
 
-        const supplier = await prisma.supplier.create({
-            data: {
+        const supplier = await prisma.$transaction(async (tx) => {
+            const newSupplier = await tx.supplier.create({
+                data: {
+                    workspaceId,
+                    name,
+                    phoneNumber: phoneNumber ?? null,
+                    email: email ?? null,
+                    address: address ?? null,
+                    // outstandingBalance defaults to 0 — never set by clients
+                },
+            });
+
+            await recordAudit(tx, {
                 workspaceId,
-                name,
-                phoneNumber: phoneNumber ?? null,
-                email: email ?? null,
-                address: address ?? null,
-                // outstandingBalance defaults to 0 — never set by clients
-            },
+                action: 'CREATE',
+                userId: req.user!.id,
+                entityType: 'SUPPLIER',
+                entityId: newSupplier.id,
+                entityTitle: newSupplier.name,
+                previousValue: null,
+                newValue: newSupplier,
+            });
+
+            return newSupplier;
         });
 
         return res.status(201).json(createSuccessResponse('Supplier created', supplier));
@@ -134,14 +150,29 @@ export const updateSupplier: RequestHandler = async (req, res, next) => {
 
         const { name, phoneNumber, email, address } = parsed.data;
 
-        const supplier = await prisma.supplier.update({
-            where: { id },
-            data: {
-                ...(name !== undefined ? { name } : {}),
-                ...(phoneNumber !== undefined ? { phoneNumber } : {}),
-                ...(email !== undefined ? { email } : {}),
-                ...(address !== undefined ? { address } : {}),
-            },
+        const supplier = await prisma.$transaction(async (tx) => {
+            const updatedSupplier = await tx.supplier.update({
+                where: { id },
+                data: {
+                    ...(name !== undefined ? { name } : {}),
+                    ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+                    ...(email !== undefined ? { email } : {}),
+                    ...(address !== undefined ? { address } : {}),
+                },
+            });
+
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'UPDATE',
+                userId: req.user!.id,
+                entityType: 'SUPPLIER',
+                entityId: updatedSupplier.id,
+                entityTitle: updatedSupplier.name,
+                previousValue: existing,
+                newValue: updatedSupplier,
+            });
+
+            return updatedSupplier;
         });
 
         return res.status(200).json(createSuccessResponse('Supplier updated', supplier));
@@ -162,9 +193,24 @@ export const deleteSupplier: RequestHandler = async (req, res, next) => {
         });
         if (!existing) throw new ApiError(404, 'Supplier not found');
 
-        const supplier = await prisma.supplier.update({
-            where: { id },
-            data: { deletedAt: new Date() },
+        const supplier = await prisma.$transaction(async (tx) => {
+            const deletedSupplier = await tx.supplier.update({
+                where: { id },
+                data: { deletedAt: new Date() },
+            });
+
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'DELETE',
+                userId: req.user!.id,
+                entityType: 'SUPPLIER',
+                entityId: existing.id,
+                entityTitle: existing.name,
+                previousValue: existing,
+                newValue: { ...existing, deletedAt: deletedSupplier.deletedAt },
+            });
+
+            return deletedSupplier;
         });
 
         return res.status(200).json(createSuccessResponse('Supplier deleted', supplier));

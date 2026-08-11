@@ -49,29 +49,7 @@ const toSnapshot = (t: {
   updatedAt: t.updatedAt.toISOString(),
 });
 
-// Centralized audit creation. Called inside a Prisma transaction so the mutation
-// and its audit log either both succeed or both fail.
-const recordAudit = (
-  tx: Prisma.TransactionClient,
-  input: {
-    workspaceId: string;
-    action: "CREATE" | "UPDATE" | "DELETE";
-    transactionId: string;
-    userId: string;
-    previousValue: TransactionSnapshot | null;
-    newValue: TransactionSnapshot;
-  },
-) =>
-  tx.auditLog.create({
-    data: {
-      workspaceId: input.workspaceId,
-      action: input.action,
-      transactionId: input.transactionId,
-      userId: input.userId,
-      previousValue: input.previousValue ?? undefined,
-      newValue: input.newValue,
-    },
-  });
+import { recordAudit } from "../utils/audit.util.js";
 
 // ── GET /transactions?workspaceId=xxx ─────────────────────────────────────────
 export const getTransactions: RequestHandler = async (req, res) => {

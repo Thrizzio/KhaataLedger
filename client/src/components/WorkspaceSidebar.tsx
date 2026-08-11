@@ -41,6 +41,8 @@ interface WorkspaceSidebarProps {
 
 import { Permission } from '../types/auth';
 
+import HistoryIcon from '@mui/icons-material/History';
+
 const getNavItems = (workspaceId: string, role?: UserRole, hasPermission?: (p: Permission) => boolean) => {
     const base = `/workspaces/${workspaceId}`;
     const ownerItems = [
@@ -54,6 +56,7 @@ const getNavItems = (workspaceId: string, role?: UserRole, hasPermission?: (p: P
         { label: 'Payments', path: `${base}/payments`, icon: <PaymentsIcon sx={{ fontSize: 20 }} /> },
         { label: 'Employees', path: `${base}/employees`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> },
         { label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> },
+        { label: 'Audit Logs', path: `${base}/audit-logs`, icon: <HistoryIcon sx={{ fontSize: 20 }} /> },
     ];
 
     if (role === 'OWNER') return ownerItems;
@@ -69,6 +72,9 @@ const getNavItems = (workspaceId: string, role?: UserRole, hasPermission?: (p: P
     if (hasPermission?.(Permission.PAYMENTS_CUSTOMER_VIEW) || hasPermission?.(Permission.PAYMENTS_SUPPLIER_VIEW)) employeeItems.push({ label: 'Payments', path: `${base}/payments`, icon: <PaymentsIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.EMPLOYEES_VIEW)) employeeItems.push({ label: 'Employees', path: `${base}/employees`, icon: <PeopleIcon sx={{ fontSize: 20 }} /> });
     if (hasPermission?.(Permission.SETTINGS_VIEW)) employeeItems.push({ label: 'Settings', path: `${base}/settings`, icon: <SettingsIcon sx={{ fontSize: 20 }} /> });
+    
+    // Add Audit Logs for employees. (Backend just checks workspace membership)
+    employeeItems.push({ label: 'Audit Logs', path: `${base}/audit-logs`, icon: <HistoryIcon sx={{ fontSize: 20 }} /> });
 
     return employeeItems;
 };

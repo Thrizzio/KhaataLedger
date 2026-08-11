@@ -149,6 +149,10 @@ model AuditLog {
   khataId String?
   khata Khata? @relation(fields: [khataId], references: [id])
 
+  entityType String?
+  entityId   String?
+  entityTitle String?
+
   userId String
   user User @relation(fields: [userId], references: [id])
 
@@ -159,6 +163,7 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   @@index([khataId])
+  @@index([entityType, entityId])
 }
 
 model Khata {

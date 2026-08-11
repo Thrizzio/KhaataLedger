@@ -12,4 +12,9 @@ export const saleApi = {
         const response = await httpClient.post<ApiResponse<Sale>>(`/workspaces/${workspaceId}/sales`, payload);
         return response.data.data!;
     },
+
+    updateSale: async (workspaceId: string, saleId: string, payload: Omit<CreateSalePayload, 'customerId' | 'paymentType'>) => {
+        const response = await httpClient.put<ApiResponse<Sale>>(`/workspaces/${workspaceId}/sales/${saleId}`, payload);
+        return response.data.data!;
+    },
 };

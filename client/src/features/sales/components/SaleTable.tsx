@@ -3,11 +3,17 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
+import Tooltip from '@mui/material/Tooltip';
 
 import { DataTable, type ColumnDef } from '../../../shared/components/DataTable';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { useSales } from '../hooks/useSales';
 import type { Sale } from '../types';
+import { EditSaleModal } from './EditSaleModal';
+import { usePermission } from '../../../hooks/usePermission';
+import { Permission } from '../../../types/auth';
 
 interface SaleTableProps {
     workspaceId: string;
@@ -28,6 +34,11 @@ const formatDate = (dateString: string) => {
 export function SaleTable({ workspaceId, searchStr }: SaleTableProps) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    
+    const [editingSale, setEditingSale] = useState<Sale | null>(null);
+
+    const { hasPermission } = usePermission();
+    const canRecordSale = hasPermission(Permission.SALES_RECORD);
 
     const { data, isLoading, isError } = useSales(workspaceId, {
         page: page + 1,
@@ -78,6 +89,18 @@ export function SaleTable({ workspaceId, searchStr }: SaleTableProps) {
                     {formatCurrency(row.totalAmount)}
                 </Typography>
             )
+        },
+        {
+            id: 'actions',
+            label: 'Actions',
+            align: 'right',
+            render: (row) => canRecordSale ? (
+                <Tooltip title="Edit Sale">
+                    <IconButton size="small" onClick={() => setEditingSale(row)} color="primary">
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            ) : null
         }
     ];
 
@@ -92,22 +115,32 @@ export function SaleTable({ workspaceId, searchStr }: SaleTableProps) {
     }
 
     return (
-        <DataTable
-            columns={columns}
-            rows={data?.items || []}
-            isLoading={isLoading}
-            totalElements={data?.pagination.total || 0}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            onPageChange={setPage}
-            onRowsPerPageChange={setRowsPerPage}
-            emptyState={
-                <EmptyState
-                    icon={<ReceiptIcon />}
-                    title={searchStr ? "No matching sales found." : "No sales recorded."}
-                    description={searchStr ? "Adjust your search terms." : "Record your first inventory sale."}
+        <>
+            <DataTable
+                columns={columns}
+                rows={data?.items || []}
+                isLoading={isLoading}
+                totalElements={data?.pagination.total || 0}
+                page={page}
+                rowsPerPage={rowsPerPage}
+                onPageChange={setPage}
+                onRowsPerPageChange={setRowsPerPage}
+                emptyState={
+                    <EmptyState
+                        icon={<ReceiptIcon />}
+                        title={searchStr ? "No matching sales found." : "No sales recorded."}
+                        description={searchStr ? "Adjust your search terms." : "Record your first inventory sale."}
+                    />
+                }
+            />
+            {editingSale && (
+                <EditSaleModal
+                    open={Boolean(editingSale)}
+                    onClose={() => setEditingSale(null)}
+                    workspaceId={workspaceId}
+                    sale={editingSale}
                 />
-            }
-        />
+            )}
+        </>
     );
 }
