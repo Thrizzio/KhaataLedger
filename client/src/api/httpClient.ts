@@ -46,7 +46,7 @@ httpClient.interceptors.response.use(
     }
 
     // 403 — forbidden
-    if (status === 403) {
+    if (status === 403) { 
       showSnackbar({ message: serverMessage || 'You do not have permission to do that.', severity: 'error' });
       throw new ApiError(403, serverMessage || 'Forbidden.');
     }

@@ -1,4 +1,3 @@
-import { ReportsPage } from '../../../../features/reports/ReportsPage';
 
 interface Props {
     params: Promise<{

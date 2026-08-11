@@ -19,7 +19,7 @@ export async function generateBusinessSummary(reportData: any): Promise<AISummar
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Choose gemini-1.5-flash as the free standard model
+        // Choose gemini-2.5-flash as the free standard model
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
             generationConfig: {

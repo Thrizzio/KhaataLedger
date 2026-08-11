@@ -41,7 +41,7 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
       if (employee?.workspaceId !== workspaceId) {
         return res.status(403).json({ success: false, message: "You do not have access to this workspace" });
       }
-    }
+    } 
 
     const data = await getReports({ workspaceId, range, startDate, endDate });
 
