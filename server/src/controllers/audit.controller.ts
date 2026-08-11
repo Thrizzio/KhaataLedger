@@ -4,7 +4,7 @@ import { prisma } from "../config/prisma.js";
 // ── GET /audit?workspaceId=xxx ────────────────────────────────────────────────
 export const getAuditLogs: RequestHandler = async (req, res) => {
   try {
-    const { workspaceId } = req.query;
+    const { workspaceId, entityType, entityId } = req.query;
 
     if (!workspaceId || typeof workspaceId !== "string") {
       return res.status(400).json({ success: false, message: "workspaceId query parameter is required" });
@@ -29,8 +29,12 @@ export const getAuditLogs: RequestHandler = async (req, res) => {
       }
     }
 
+    const whereClause: any = { workspaceId };
+    if (entityType && typeof entityType === "string") whereClause.entityType = entityType;
+    if (entityId && typeof entityId === "string") whereClause.entityId = entityId;
+
     const logs = await prisma.auditLog.findMany({
-      where: { workspaceId },
+      where: whereClause,
       include: {
         user: { select: { id: true, name: true, email: true } },
         transaction: { select: { title: true } },

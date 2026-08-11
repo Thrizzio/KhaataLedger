@@ -2,7 +2,8 @@ import type { RequestHandler } from 'express';
 import { prisma } from '../config/prisma.js';
 import { ApiError } from '../utils/api-error.js';
 import { createSuccessResponse } from '../utils/api-response.js';
-import { createSaleSchema } from '../validators/sale.validator.js';
+import { createSaleSchema, updateSaleSchema } from '../validators/sale.validator.js';
+import { recordAudit } from '../utils/audit.util.js';
 
 // ── Workspace access guard (OWNER only) ───────────────────────────────────────
 async function requireOwnerAccess(
@@ -219,6 +220,18 @@ export const createSale: RequestHandler = async (req, res, next) => {
                 });
             }
 
+            // e. Record Audit
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'CREATE',
+                userId: user.id,
+                entityType: 'SALE',
+                entityId: newSale.id,
+                entityTitle: `Sale to ${customer?.name || 'Walk-in'}`,
+                previousValue: null,
+                newValue: newSale,
+            });
+
             return newSale;
         });
 
@@ -232,6 +245,183 @@ export const createSale: RequestHandler = async (req, res, next) => {
         });
 
         return res.status(201).json(createSuccessResponse('Sale created', result));
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ── PUT /workspaces/:workspaceId/sales/:id ────────────────────────────────────
+export const updateSale: RequestHandler = async (req, res, next) => {
+    try {
+        const workspaceId = req.params['workspaceId'] as string;
+        const saleId = req.params['id'] as string;
+        const user = req.user!;
+
+        await requireOwnerAccess(workspaceId, user);
+
+        const parsed = updateSaleSchema.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, 'Validation failed', parsed.error.flatten()));
+        }
+
+        const { saleDate, items } = parsed.data;
+
+        // Fetch existing sale
+        const existingSale = await prisma.sale.findUnique({
+            where: { id: saleId, workspaceId },
+            include: { lineItems: true, customer: true, khataEntries: true }
+        });
+
+        if (!existingSale) {
+            throw new ApiError(404, 'Sale not found');
+        }
+
+        // 2. Verify every inventory item belongs to workspace
+        const itemIds = items.map((i) => i.inventoryItemId);
+        const inventoryItems = await prisma.inventoryItem.findMany({
+            where: { id: { in: itemIds }, workspaceId, deletedAt: null },
+            select: { id: true, name: true, currentStock: true },
+        });
+
+        if (inventoryItems.length !== itemIds.length) {
+            const foundIds = new Set(inventoryItems.map((i) => i.id));
+            const missing = itemIds.filter((id) => !foundIds.has(id));
+            throw new ApiError(
+                404,
+                `Inventory items not found in this workspace: ${missing.join(', ')}`,
+            );
+        }
+
+        // Calculate total amount
+        const totalAmount = items.reduce(
+            (sum, item) => sum + item.quantity * item.sellingPrice,
+            0,
+        );
+
+        // Pre-check stock: currentStock + oldQuantity - newQuantity >= 0
+        const itemLookup = new Map(inventoryItems.map((i) => [i.id, i]));
+        const oldItemsMap = new Map(existingSale.lineItems.map(i => [i.inventoryItemId, i.quantity]));
+
+        for (const item of items) {
+            const inv = itemLookup.get(item.inventoryItemId)!;
+            const oldQty = oldItemsMap.get(item.inventoryItemId) || 0;
+            const available = inv.currentStock + oldQty;
+            
+            if (available < item.quantity) {
+                throw new ApiError(
+                    400,
+                    `Insufficient stock for "${inv.name}": available ${available}, requested ${item.quantity}`,
+                );
+            }
+        }
+
+        const updatedSale = await prisma.$transaction(async (tx) => {
+            // Revert old inventory stock
+            await Promise.all(
+                existingSale.lineItems.map(oldItem => 
+                    tx.inventoryItem.update({
+                        where: { id: oldItem.inventoryItemId },
+                        data: { currentStock: { increment: oldItem.quantity } }
+                    })
+                )
+            );
+
+            // Apply new inventory stock
+            await Promise.all(
+                items.map(newItem => 
+                    tx.inventoryItem.update({
+                        where: { id: newItem.inventoryItemId },
+                        data: { currentStock: { decrement: newItem.quantity } }
+                    })
+                )
+            );
+
+            // Revert old customer / khata entry if CREDIT
+            if (existingSale.paymentType === 'CREDIT' && existingSale.customerId) {
+                // decrease outstanding balance
+                await tx.customer.update({
+                    where: { id: existingSale.customerId },
+                    data: { outstandingBalance: { decrement: existingSale.totalAmount } }
+                });
+
+                // Update KhataEntry
+                const khataEntry = existingSale.khataEntries[0];
+                if (khataEntry) {
+                    await tx.khataEntry.update({
+                        where: { id: khataEntry.id },
+                        data: { amount: totalAmount, entryDate: saleDate }
+                    });
+                }
+
+                // Apply new outstanding balance
+                await tx.customer.update({
+                    where: { id: existingSale.customerId },
+                    data: { outstandingBalance: { increment: totalAmount } }
+                });
+            }
+
+            // Update Sale
+            const sale = await tx.sale.update({
+                where: { id: saleId },
+                data: {
+                    saleDate,
+                    totalAmount
+                }
+            });
+
+            // Delete old line items
+            await tx.saleLineItem.deleteMany({
+                where: { saleId }
+            });
+
+            // Create new line items
+            await tx.saleLineItem.createMany({
+                data: items.map((item) => ({
+                    saleId: sale.id,
+                    inventoryItemId: item.inventoryItemId,
+                    quantity: item.quantity,
+                    sellingPrice: item.sellingPrice,
+                    productName: itemLookup.get(item.inventoryItemId)!.name,
+                })),
+            });
+
+            const afterUpdate = await tx.sale.findUnique({
+                where: { id: saleId },
+                include: { lineItems: true }
+            });
+
+            await recordAudit(tx, {
+                workspaceId,
+                action: 'UPDATE',
+                userId: user.id,
+                entityType: 'SALE',
+                entityId: saleId,
+                entityTitle: `Sale to ${existingSale.customer?.name || 'Cash Customer'}`,
+                previousValue: {
+                    saleDate: existingSale.saleDate,
+                    totalAmount: existingSale.totalAmount,
+                    items: existingSale.lineItems
+                },
+                newValue: {
+                    saleDate: saleDate,
+                    totalAmount,
+                    items: afterUpdate?.lineItems
+                }
+            });
+
+            return afterUpdate;
+        });
+
+        // Fetch full result
+        const result = await prisma.sale.findUnique({
+            where: { id: saleId },
+            include: {
+                lineItems: true,
+                customer: { select: { id: true, name: true } },
+            },
+        });
+
+        return res.status(200).json(createSuccessResponse('Sale updated', result));
     } catch (error) {
         next(error);
     }

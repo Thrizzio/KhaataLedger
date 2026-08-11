@@ -16,6 +16,9 @@ export interface AuditLog {
   action: AuditAction;
   transactionId: string | null;
   khataId: string | null;
+  entityType: string | null;
+  entityId: string | null;
+  entityTitle: string | null;
   workspaceId: string;
   workspace?: AuditWorkspace | null;
   userId: string;
