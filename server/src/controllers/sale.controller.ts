@@ -167,7 +167,7 @@ export const createSale: RequestHandler = async (req, res, next) => {
                 })),
             });
 
-            // c. Decrease stock for each item atomically
+            // c. Decrease stock for each item atomically.
             await Promise.all(
                 items.map((item) =>
                     tx.inventoryItem.update({
@@ -213,14 +213,14 @@ export const createSale: RequestHandler = async (req, res, next) => {
                     },
                 });
 
-                // d4. Increase customer's outstanding balance
+                // d4. Increase customer's outstanding balance.
                 await tx.customer.update({
                     where: { id: customer.id },
                     data: { outstandingBalance: { increment: totalAmount } },
                 });
             }
 
-            // e. Record Audit
+            // e. Record Audit.
             await recordAudit(tx, {
                 workspaceId,
                 action: 'CREATE',
