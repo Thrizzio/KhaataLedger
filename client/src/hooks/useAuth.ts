@@ -10,7 +10,7 @@ export const useAuth = () => {
     });
     return unsubscribe;
   }, []);
-
+//Manually making a change for delpotn
   return {
     isAuthenticated: Boolean(authState.token),
     token: authState.token,
