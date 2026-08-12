@@ -20,6 +20,9 @@
     "noEmit": true,
     "jsx": "preserve",
     "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "types": [
       "node"
     ],
