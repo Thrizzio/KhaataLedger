@@ -1,5 +1,6 @@
 import type { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
+import { Prisma } from '@prisma/client';
 import { env } from '../config/env.js';
 import { ApiError } from '../utils/api-error.js';
 import type { ApiResponse } from '../utils/api-response.js';
@@ -42,6 +43,17 @@ export const errorHandler: ErrorRequestHandler = (
       error: error.flatten(),
     } satisfies ApiResponse);
     return;
+  }
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') {
+      const target = (error.meta?.target as string[])?.join(', ') || 'field';
+      response.status(409).json({
+        success: false,
+        message: `A record with that ${target} already exists.`,
+      } satisfies ApiResponse);
+      return;
+    }
   }
 
   response.status(500).json({

@@ -1,20 +1,20 @@
 import { z } from 'zod';
 
 export const createCustomerSchema = z.object({
-    name: z.string().min(1, 'Name is required').max(200, 'Name too long'),
-    phoneNumber: z.string().max(30, 'Phone too long').optional(),
-    email: z.string().email('Invalid email').max(200).optional(),
-    address: z.string().max(500, 'Address too long').optional(),
+    name: z.string().trim().min(1, 'Name is required').max(200, 'Name too long'),
+    phoneNumber: z.string().trim().max(30, 'Phone too long').optional(),
+    email: z.string().trim().email('Invalid email').max(200).optional(),
+    address: z.string().trim().max(500, 'Address too long').optional(),
 });
 
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
 
 export const updateCustomerSchema = z
     .object({
-        name: z.string().min(1, 'Name is required').max(200, 'Name too long').optional(),
-        phoneNumber: z.string().max(30, 'Phone too long').optional().nullable(),
-        email: z.string().email('Invalid email').max(200).optional().nullable(),
-        address: z.string().max(500, 'Address too long').optional().nullable(),
+        name: z.string().trim().min(1, 'Name is required').max(200, 'Name too long').optional(),
+        phoneNumber: z.string().trim().max(30, 'Phone too long').optional().nullable(),
+        email: z.string().trim().email('Invalid email').max(200).optional().nullable(),
+        address: z.string().trim().max(500, 'Address too long').optional().nullable(),
     })
     .refine((data) => Object.keys(data).length > 0, {
         message: 'At least one field must be provided',

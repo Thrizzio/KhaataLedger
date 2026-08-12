@@ -9,7 +9,7 @@ export const createPurchaseSchema = z.object({
             z.object({
                 inventoryItemId: z.string().uuid('inventoryItemId must be a valid UUID'),
                 quantity: z.number().int('Quantity must be an integer').min(1, 'Quantity must be at least 1'),
-                purchasePrice: z.number().positive('Purchase price must be positive'),
+                purchasePrice: z.number().min(0, 'Purchase price must be 0 or greater'),
             }),
         )
         .min(1, 'At least one item is required')

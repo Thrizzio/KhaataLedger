@@ -172,29 +172,33 @@ export const createEmployee: RequestHandler = async (request, response, next) =>
 
     const { name, email, password, permissions = ['DASHBOARD_VIEW', 'INVENTORY_VIEW', 'SALES_VIEW', 'SALES_RECORD', 'CUSTOMERS_VIEW'] } = request.body ?? {};
 
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      throw new ApiError(400, 'Employee name is required');
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    const trimmedEmail = typeof email === 'string' ? email.toLowerCase().trim() : '';
+    const trimmedPassword = typeof password === 'string' ? password.trim() : '';
+
+    if (trimmedName.length < 2) {
+      throw new ApiError(400, 'Employee name is required and must be at least 2 characters');
     }
-    if (!email || typeof email !== 'string' || email.trim() === '') {
-      throw new ApiError(400, 'Employee email is required');
+    if (trimmedEmail.length < 5 || !trimmedEmail.includes('@')) {
+      throw new ApiError(400, 'Valid employee email is required');
     }
-    if (!password || typeof password !== 'string' || password.trim() === '') {
-      throw new ApiError(400, 'Temporary password is required');
+    if (trimmedPassword.length < 8) {
+      throw new ApiError(400, 'Temporary password is required and must be at least 8 characters');
     }
 
     const existing = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: trimmedEmail },
     });
     if (existing) {
       throw new ApiError(409, 'A user with this email already exists');
     }
 
-    const passwordHash = await hashPassword(password);
+    const passwordHash = await hashPassword(trimmedPassword);
 
     const employee = await prisma.user.create({
       data: {
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
+        name: trimmedName,
+        email: trimmedEmail,
         passwordHash,
         role: 'EMPLOYEE',
         workspaceId,

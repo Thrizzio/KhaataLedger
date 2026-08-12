@@ -17,7 +17,7 @@ export const createSaleSchema = z
                         .number()
                         .int('Quantity must be an integer')
                         .min(1, 'Quantity must be at least 1'),
-                    sellingPrice: z.number().positive('Selling price must be positive'),
+                    sellingPrice: z.number().min(0, 'Selling price must be 0 or greater'),
                 }),
             )
             .min(1, 'At least one item is required')
@@ -52,7 +52,7 @@ export const updateSaleSchema = z.object({
                     .number()
                     .int('Quantity must be an integer')
                     .min(1, 'Quantity must be at least 1'),
-                sellingPrice: z.number().positive('Selling price must be positive'),
+                sellingPrice: z.number().min(0, 'Selling price must be 0 or greater'),
             }),
         )
         .min(1, 'At least one item is required')

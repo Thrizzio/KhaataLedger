@@ -258,6 +258,8 @@ model InventoryItem {
   saleLineItems       SaleLineItem[]     @relation("SaleLineItemInventory")
   purchaseLineItems   PurchaseLineItem[] @relation("PurchaseLineItemInventory")
 
+  @@unique([workspaceId, name])
+  @@unique([workspaceId, sku])
   @@index([workspaceId])
   @@index([workspaceId, sku])
   @@index([sku])
@@ -282,6 +284,8 @@ model Customer {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
+
+  @@unique([workspaceId, phoneNumber])
   @@index([workspaceId])
   @@index([deletedAt])
 }
@@ -302,6 +306,8 @@ model Supplier {
   updatedAt     DateTime @updatedAt
   deletedAt     DateTime?
 
+
+  @@unique([workspaceId, phoneNumber])
   @@index([workspaceId])
   @@index([deletedAt])
 }
