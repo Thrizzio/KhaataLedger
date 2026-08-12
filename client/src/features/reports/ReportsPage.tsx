@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Box, Typography, Grid, Skeleton, Alert } from '@mui/material';
 import { useReports } from './hooks/useReports';
