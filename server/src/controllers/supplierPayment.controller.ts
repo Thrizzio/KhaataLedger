@@ -124,10 +124,18 @@ export const createSupplierPayment: RequestHandler = async (req, res, next) => {
             });
 
             // b. Decrement supplier's outstanding balance atomically
-            await tx.supplier.update({
-                where: { id: supplierId },
+            const updatedCount = await tx.supplier.updateMany({
+                where: {
+                    id: supplierId,
+                    workspaceId,
+                    deletedAt: null,
+                    outstandingBalance: { gte: amount },
+                },
                 data: { outstandingBalance: { decrement: amount } },
             });
+            if (updatedCount.count !== 1) {
+                throw new ApiError(409, 'Supplier balance changed while recording the payment; please retry.');
+            }
 
             return newPayment;
         });

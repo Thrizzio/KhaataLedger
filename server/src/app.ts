@@ -9,22 +9,12 @@ import { env } from './config/env.js';
 
 export const app = express();
 
-app.use((request, response, next) => {
-  const startedAt = Date.now();
-
-  response.on('finish', () => {
-    console.log(`[REQUEST] ${request.method} ${request.originalUrl} -> ${response.statusCode} (${Date.now() - startedAt}ms)`);
-  });
-
-  next();
-});
-
 app.use(helmet());
 app.disable('x-powered-by');
 
 app.use(cors({ origin: env.FRONTEND_URL }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 app.get('/health', (_request, response) => {
   response.status(200).json(createSuccessResponse('Server is healthy'));

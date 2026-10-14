@@ -71,8 +71,7 @@ ${JSON.stringify(minimalData, null, 2)}
 
         const parsed = JSON.parse(text) as AISummaryResponse;
         return parsed;
-    } catch (error) {
-        console.error("AI Summary generation failed:", error);
+    } catch (_error) {
         return null;
     }
 }

@@ -9,13 +9,8 @@ export const requirePermission = (permission: string): RequestHandler => {
         throw new ApiError(401, 'Authentication required');
       }
 
-      // Owners bypass all permission checks
-      if (request.user.role === 'OWNER') {
-        return next();
-      }
-
-      // If they are an employee, we must verify their permissions
-      // We fetch from the database to ensure immediate effect
+      // Read the current role and permissions so a stale token cannot retain
+      // owner privileges after the account is changed or removed.
       const user = await prisma.user.findUnique({
         where: { id: request.user.id },
         select: { permissions: true, role: true }
@@ -25,7 +20,7 @@ export const requirePermission = (permission: string): RequestHandler => {
         throw new ApiError(401, 'User not found');
       }
 
-      // Double-check role in case it somehow changed
+      // Check the database role, not the role from the JWT.
       if (user.role === 'OWNER') {
         return next();
       }

@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import { prisma } from "../config/prisma.js";
 
 // ── GET /audit?workspaceId=xxx ────────────────────────────────────────────────
-export const getAuditLogs: RequestHandler = async (req, res) => {
+export const getAuditLogs: RequestHandler = async (req, res, next) => {
   try {
     const { workspaceId, entityType, entityId } = req.query;
 
@@ -46,13 +46,12 @@ export const getAuditLogs: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data: logs, message: "Audit logs fetched successfully" });
   } catch (error) {
-    console.error("getAuditLogs error:", error instanceof Error ? error.message : error);
-    return res.status(500).json({ success: false, message: "Failed to fetch audit logs" });
+    next(error);
   }
 };
 
 // ── GET /audit/:id ────────────────────────────────────────────────────────────
-export const getAuditLogById: RequestHandler = async (req, res) => {
+export const getAuditLogById: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -90,7 +89,6 @@ export const getAuditLogById: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data: log, message: "Audit log fetched successfully" });
   } catch (error) {
-    console.error("getAuditLogById error:", error instanceof Error ? error.message : error);
-    return res.status(500).json({ success: false, message: "Failed to fetch audit log" });
+    next(error);
   }
 };

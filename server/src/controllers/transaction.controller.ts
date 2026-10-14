@@ -52,7 +52,7 @@ const toSnapshot = (t: {
 import { recordAudit } from "../utils/audit.util.js";
 
 // ── GET /transactions?workspaceId=xxx ─────────────────────────────────────────
-export const getTransactions: RequestHandler = async (req, res) => {
+export const getTransactions: RequestHandler = async (req, res, next) => {
   try {
     const { workspaceId } = req.query;
 
@@ -82,12 +82,12 @@ export const getTransactions: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data: transactions });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Failed to fetch transactions" });
+    next(error);
   }
 };
 
 // ── PUT /transactions/:id ─────────────────────────────────────────────────────
-export const updateTransaction: RequestHandler = async (req, res) => {
+export const updateTransaction: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -118,7 +118,7 @@ export const updateTransaction: RequestHandler = async (req, res) => {
 
     const updated = await prisma.$transaction(async (tx) => {
       const after = await tx.transaction.update({
-        where: { id },
+        where: { id, version: before.version },
         data: {
           title,
           description: description ?? null,
@@ -144,13 +144,12 @@ export const updateTransaction: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data: updated });
   } catch (error) {
-    console.error("updateTransaction error:", error instanceof Error ? error.message : error);
-    return res.status(500).json({ success: false, message: "Failed to update transaction" });
+    next(error);
   }
 };
 
 // ── DELETE /transactions/:id (soft delete) ────────────────────────────────────
-export const deleteTransaction: RequestHandler = async (req, res) => {
+export const deleteTransaction: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -170,7 +169,7 @@ export const deleteTransaction: RequestHandler = async (req, res) => {
 
     const deleted = await prisma.$transaction(async (tx) => {
       const after = await tx.transaction.update({
-        where: { id },
+        where: { id, version: before.version },
         data: { deletedAt: new Date() },
         include: { createdBy: { select: { id: true, name: true, email: true } } },
       });
@@ -189,13 +188,12 @@ export const deleteTransaction: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data: deleted, message: "Transaction deleted successfully" });
   } catch (error) {
-    console.error("deleteTransaction error:", error instanceof Error ? error.message : error);
-    return res.status(500).json({ success: false, message: "Failed to delete transaction" });
+    next(error);
   }
 };
 
 // ── POST /transactions ────────────────────────────────────────────────────────
-export const addTransaction: RequestHandler = async (req, res) => {
+export const addTransaction: RequestHandler = async (req, res, next) => {
   try {
     const parsed = createTransactionSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -253,11 +251,6 @@ export const addTransaction: RequestHandler = async (req, res) => {
 
     return res.status(201).json({ success: true, data: transaction });
   } catch (error) {
-    console.error("addTransaction error:", error instanceof Error ? error.message : error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to add transaction",
-      error: error instanceof Error ? error.message : error,
-    });
+    next(error);
   }
 };

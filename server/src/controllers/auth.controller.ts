@@ -8,12 +8,7 @@ import { createSuccessResponse } from '../utils/api-response.js';
 
 export const register: RequestHandler = async (request, response, next) => {
   try {
-    console.log('[REGISTER] Request received');
     const parsedBody = registerSchema.parse(request.body);
-    console.log('[REGISTER] Parsed body:', {
-      name: parsedBody.name,
-      email: parsedBody.email.toLowerCase(),
-    });
 
     const existingUser = await prisma.user.findUnique({
       where: { email: parsedBody.email.toLowerCase() },
@@ -57,31 +52,31 @@ export const register: RequestHandler = async (request, response, next) => {
       })
     );
   } catch (error) {
-    console.error('[REGISTER] Failed:', error);
     next(error);
   }
 };
 
-async function handleFailedLogin(email: string, user: any, ip: string | undefined) {
-  await prisma.loginAuditLog.create({
-    data: { email, ipAddress: ip },
-  });
+async function handleFailedLogin(email: string, userId: string | undefined, ip: string | undefined) {
+  await prisma.$transaction(async (tx) => {
+    await tx.loginAuditLog.create({
+      data: { email, ipAddress: ip },
+    });
 
-  if (user) {
-    const newAttempts = user.failedLoginAttempts + 1;
-    if (newAttempts >= 5) {
-      const lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { failedLoginAttempts: newAttempts, lockedUntil },
-      });
-    } else {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { failedLoginAttempts: newAttempts },
+    if (!userId) return;
+
+    const updatedUser = await tx.user.update({
+      where: { id: userId },
+      data: { failedLoginAttempts: { increment: 1 } },
+      select: { failedLoginAttempts: true },
+    });
+
+    if (updatedUser.failedLoginAttempts >= 5) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { lockedUntil: new Date(Date.now() + 15 * 60 * 1000) },
       });
     }
-  }
+  });
 }
 
 export const loginOwner: RequestHandler = async (request, response, next) => {
@@ -92,7 +87,7 @@ export const loginOwner: RequestHandler = async (request, response, next) => {
       where: { email: parsedBody.email.toLowerCase() },
     });
     if (!user) {
-      await handleFailedLogin(parsedBody.email, null, request.ip);
+       await handleFailedLogin(parsedBody.email, undefined, request.ip);
       throw new ApiError(401, 'Invalid email or password');
     }
 
@@ -101,13 +96,13 @@ export const loginOwner: RequestHandler = async (request, response, next) => {
     }
 
     if (user.role !== 'OWNER') {
-      await handleFailedLogin(parsedBody.email, user, request.ip);
+       await handleFailedLogin(parsedBody.email, user.id, request.ip);
       throw new ApiError(401, 'Invalid email or password'); // Use 401 instead of 403 to not expose email existence
     }
 
     const isPasswordValid = await verifyPassword(parsedBody.password, user.passwordHash);
     if (!isPasswordValid) {
-      await handleFailedLogin(parsedBody.email, user, request.ip);
+       await handleFailedLogin(parsedBody.email, user.id, request.ip);
       throw new ApiError(401, 'Invalid email or password');
     }
 
@@ -147,7 +142,7 @@ export const loginEmployee: RequestHandler = async (request, response, next) => 
       where: { email: parsedBody.email.toLowerCase() },
     });
     if (!user) {
-      await handleFailedLogin(parsedBody.email, null, request.ip);
+       await handleFailedLogin(parsedBody.email, undefined, request.ip);
       throw new ApiError(401, 'Invalid email or password');
     }
 
@@ -156,13 +151,13 @@ export const loginEmployee: RequestHandler = async (request, response, next) => 
     }
 
     if (user.role !== 'EMPLOYEE') {
-      await handleFailedLogin(parsedBody.email, user, request.ip);
+       await handleFailedLogin(parsedBody.email, user.id, request.ip);
       throw new ApiError(401, 'Invalid email or password');
     }
 
     const isPasswordValid = await verifyPassword(parsedBody.password, user.passwordHash);
     if (!isPasswordValid) {
-      await handleFailedLogin(parsedBody.email, user, request.ip);
+       await handleFailedLogin(parsedBody.email, user.id, request.ip);
       throw new ApiError(401, 'Invalid email or password');
     }
 

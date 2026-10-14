@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getReports, REPORT_RANGES, type ReportRange } from "../services/report.service.js";
 import { generateBusinessSummary } from "../services/aiSummary.service.js";
 
-export const getReportsHandler: RequestHandler = async (req, res) => {
+export const getReportsHandler: RequestHandler = async (req, res, next) => {
   try {
     const { workspaceId } = req.params;
     if (!workspaceId) {
@@ -542,7 +542,6 @@ export const getReportsHandler: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data });
   } catch (error) {
-    console.error("getReports error:", error);
-    return res.status(500).json({ success: false, message: "Failed to generate reports" });
+    next(error);
   }
 };

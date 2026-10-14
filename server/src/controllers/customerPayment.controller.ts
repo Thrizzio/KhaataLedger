@@ -143,10 +143,18 @@ export const createCustomerPayment: RequestHandler = async (req, res, next) => {
             }
 
             // c. Decrement customer's outstanding balance atomically
-            await tx.customer.update({
-                where: { id: customerId },
+            const updatedCount = await tx.customer.updateMany({
+                where: {
+                    id: customerId,
+                    workspaceId,
+                    deletedAt: null,
+                    outstandingBalance: { gte: amount },
+                },
                 data: { outstandingBalance: { decrement: amount } },
             });
+            if (updatedCount.count !== 1) {
+                throw new ApiError(409, 'Customer balance changed while recording the payment; please retry.');
+            }
 
             return newPayment;
         });

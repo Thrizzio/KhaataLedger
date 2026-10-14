@@ -157,17 +157,18 @@ export const createPurchase: RequestHandler = async (req, res, next) => {
             });
 
             // c. Update stock and lastPurchasePrice for each item
-            await Promise.all(
-                items.map((item) =>
-                    tx.inventoryItem.update({
-                        where: { id: item.inventoryItemId },
-                        data: {
-                            currentStock: { increment: item.quantity },
-                            lastPurchasePrice: item.purchasePrice,
-                        },
-                    }),
-                ),
-            );
+            for (const item of items) {
+                const updatedCount = await tx.inventoryItem.updateMany({
+                    where: { id: item.inventoryItemId, workspaceId, deletedAt: null },
+                    data: {
+                        currentStock: { increment: item.quantity },
+                        lastPurchasePrice: item.purchasePrice,
+                    },
+                });
+                if (updatedCount.count !== 1) {
+                    throw new ApiError(409, 'Inventory changed while recording the purchase; please retry.');
+                }
+            }
 
             // d. Credit purchase → supplier is now owed totalAmount
             if (paymentType === 'CREDIT') {

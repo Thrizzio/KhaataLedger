@@ -35,7 +35,7 @@ const startServer = async () => {
   });
 
   server.once('error', (error) => {
-    console.error('[SERVER] Failed to start:', error);
+    console.error('[SERVER] Failed to start:', error instanceof Error ? error.name : 'UnknownError');
     process.exit(1);
   });
 
@@ -49,7 +49,7 @@ const startServer = async () => {
 
 if (isMainModule) {
   startServer().catch((error) => {
-    console.error(error instanceof Error ? error.message : error);
+    console.error('[SERVER] Startup failed:', error instanceof Error ? error.name : 'UnknownError');
     process.exit(1);
   });
 }

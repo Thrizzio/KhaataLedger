@@ -18,7 +18,7 @@ transactionsRouter.get("/", authenticate, getTransactions);
 transactionsRouter.post("/", authenticate, addTransaction);
 
 // Keep this as a placeholder for now
-transactionsRouter.get("/:id", placeholderController);
+transactionsRouter.get("/:id", authenticate, placeholderController);
 
 // Update a transaction (owners only)
 transactionsRouter.put(

@@ -89,7 +89,7 @@ const recordKhataAudit = (
   });
 
 // ── GET /khata?workspaceId=xxx ───────────────────────────────────────────────
-export const getKhatas: RequestHandler = async (req, res) => {
+export const getKhatas: RequestHandler = async (req, res, next) => {
   try {
     const { workspaceId } = req.query;
     if (!workspaceId || typeof workspaceId !== "string") {
@@ -119,13 +119,12 @@ export const getKhatas: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data });
   } catch (error) {
-    console.error("getKhatas error:", error);
-    return res.status(500).json({ success: false, message: "Failed to fetch Khatas" });
+    next(error);
   }
 };
 
 // ── POST /khata (owner only) ─────────────────────────────────────────────────
-export const createKhata: RequestHandler = async (req, res) => {
+export const createKhata: RequestHandler = async (req, res, next) => {
   try {
     const parsed = createKhataSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -167,13 +166,12 @@ export const createKhata: RequestHandler = async (req, res) => {
 
     return res.status(201).json({ success: true, data: khata });
   } catch (error) {
-    console.error("createKhata error:", error);
-    return res.status(500).json({ success: false, message: "Failed to create Khata" });
+    next(error);
   }
 };
 
 // ── GET /khata/:id ───────────────────────────────────────────────────────────
-export const getKhataDetails: RequestHandler = async (req, res) => {
+export const getKhataDetails: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -198,13 +196,12 @@ export const getKhataDetails: RequestHandler = async (req, res) => {
     const { entries, ...rest } = khata;
     return res.status(200).json({ success: true, data: { ...rest, pendingAmount } });
   } catch (error) {
-    console.error("getKhataDetails error:", error);
-    return res.status(500).json({ success: false, message: "Failed to fetch Khata details" });
+    next(error);
   }
 };
 
 // ── PUT /khata/:id (owner only) ──────────────────────────────────────────────
-export const updateKhata: RequestHandler = async (req, res) => {
+export const updateKhata: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -246,13 +243,12 @@ export const updateKhata: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data: updated });
   } catch (error) {
-    console.error("updateKhata error:", error);
-    return res.status(500).json({ success: false, message: "Failed to update Khata" });
+    next(error);
   }
 };
 
 // ── GET /khata/:id/entries ───────────────────────────────────────────────────
-export const getKhataEntries: RequestHandler = async (req, res) => {
+export const getKhataEntries: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -277,13 +273,12 @@ export const getKhataEntries: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, data: entries });
   } catch (error) {
-    console.error("getKhataEntries error:", error);
-    return res.status(500).json({ success: false, message: "Failed to fetch Khata entries" });
+    next(error);
   }
 };
 
 // ── POST /khata/:id/entries (owner only) ─────────────────────────────────────
-export const addKhataEntry: RequestHandler = async (req, res) => {
+export const addKhataEntry: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -334,13 +329,12 @@ export const addKhataEntry: RequestHandler = async (req, res) => {
 
     return res.status(201).json({ success: true, data: entry });
   } catch (error) {
-    console.error("addKhataEntry error:", error);
-    return res.status(500).json({ success: false, message: "Failed to add Khata entry" });
+    next(error);
   }
 };
 
 // ── DELETE /khata/:id (owner only, soft delete) ──────────────────────────────
-export const deleteKhata: RequestHandler = async (req, res) => {
+export const deleteKhata: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -374,7 +368,6 @@ export const deleteKhata: RequestHandler = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Khata deleted successfully" });
   } catch (error) {
-    console.error("deleteKhata error:", error);
-    return res.status(500).json({ success: false, message: "Failed to delete Khata" });
+    next(error);
   }
 };

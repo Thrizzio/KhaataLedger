@@ -167,15 +167,23 @@ export const createSale: RequestHandler = async (req, res, next) => {
                 })),
             });
 
-            // c. Decrease stock for each item atomically.
-            await Promise.all(
-                items.map((item) =>
-                    tx.inventoryItem.update({
-                        where: { id: item.inventoryItemId },
-                        data: { currentStock: { decrement: item.quantity } },
-                    }),
-                ),
-            );
+            // c. Decrease stock only if the row still has enough stock. The
+            // pre-check above is for a useful fast error; this conditional
+            // update is the concurrency-safe check.
+            for (const item of items) {
+                const updatedCount = await tx.inventoryItem.updateMany({
+                    where: {
+                        id: item.inventoryItemId,
+                        workspaceId,
+                        deletedAt: null,
+                        currentStock: { gte: item.quantity },
+                    },
+                    data: { currentStock: { decrement: item.quantity } },
+                });
+                if (updatedCount.count !== 1) {
+                    throw new ApiError(409, 'Stock changed while recording the sale; please retry.');
+                }
+            }
 
             // d. CREDIT-only: Khata ledger + customer balance
             if (paymentType === 'CREDIT' && customer) {
@@ -317,33 +325,34 @@ export const updateSale: RequestHandler = async (req, res, next) => {
 
         const updatedSale = await prisma.$transaction(async (tx) => {
             // Revert old inventory stock
-            await Promise.all(
-                existingSale.lineItems.map(oldItem => 
-                    tx.inventoryItem.update({
-                        where: { id: oldItem.inventoryItemId },
-                        data: { currentStock: { increment: oldItem.quantity } }
-                    })
-                )
-            );
+            for (const oldItem of existingSale.lineItems) {
+                const updatedCount = await tx.inventoryItem.updateMany({
+                    where: { id: oldItem.inventoryItemId, workspaceId, deletedAt: null },
+                    data: { currentStock: { increment: oldItem.quantity } },
+                });
+                if (updatedCount.count !== 1) {
+                    throw new ApiError(409, 'Inventory changed while updating the sale; please retry.');
+                }
+            }
 
             // Apply new inventory stock
-            await Promise.all(
-                items.map(newItem => 
-                    tx.inventoryItem.update({
-                        where: { id: newItem.inventoryItemId },
-                        data: { currentStock: { decrement: newItem.quantity } }
-                    })
-                )
-            );
+            for (const newItem of items) {
+                const updatedCount = await tx.inventoryItem.updateMany({
+                    where: {
+                        id: newItem.inventoryItemId,
+                        workspaceId,
+                        deletedAt: null,
+                        currentStock: { gte: newItem.quantity },
+                    },
+                    data: { currentStock: { decrement: newItem.quantity } },
+                });
+                if (updatedCount.count !== 1) {
+                    throw new ApiError(409, 'Stock changed while updating the sale; please retry.');
+                }
+            }
 
             // Revert old customer / khata entry if CREDIT
             if (existingSale.paymentType === 'CREDIT' && existingSale.customerId) {
-                // decrease outstanding balance
-                await tx.customer.update({
-                    where: { id: existingSale.customerId },
-                    data: { outstandingBalance: { decrement: existingSale.totalAmount } }
-                });
-
                 // Update KhataEntry
                 const khataEntry = existingSale.khataEntries[0];
                 if (khataEntry) {
@@ -353,11 +362,26 @@ export const updateSale: RequestHandler = async (req, res, next) => {
                     });
                 }
 
-                // Apply new outstanding balance
-                await tx.customer.update({
-                    where: { id: existingSale.customerId },
-                    data: { outstandingBalance: { increment: totalAmount } }
-                });
+                // Apply only the balance delta in one conditional update. This
+                // prevents a concurrent payment from observing the temporary
+                // two-step balance created by decrement-then-increment.
+                const balanceDelta = totalAmount - Number(existingSale.totalAmount);
+                if (balanceDelta !== 0) {
+                    const updatedCount = await tx.customer.updateMany({
+                        where: {
+                            id: existingSale.customerId,
+                            workspaceId,
+                            deletedAt: null,
+                            ...(balanceDelta < 0
+                                ? { outstandingBalance: { gte: Math.abs(balanceDelta) } }
+                                : {}),
+                        },
+                        data: { outstandingBalance: { increment: balanceDelta } },
+                    });
+                    if (updatedCount.count !== 1) {
+                        throw new ApiError(409, 'Customer balance changed while updating the sale; please retry.');
+                    }
+                }
             }
 
             // Update Sale

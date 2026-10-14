@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.middleware.js';
+import { authorizeRoles } from '../middleware/role.middleware.js';
 import { requirePermission } from '../middleware/permissions.middleware.js';
 import {
     createWorkspace,
@@ -25,7 +26,7 @@ import { getDashboard, getRecentActivity } from '../controllers/dashboard.contro
 export const workspacesRouter = Router();
 
 workspacesRouter.get('/', authenticate, getWorkspaces);
-workspacesRouter.post('/', authenticate, createWorkspace);
+workspacesRouter.post('/', authenticate, authorizeRoles('OWNER'), createWorkspace);
 workspacesRouter.get('/:workspaceId', authenticate, getWorkspaceById);
 workspacesRouter.put('/:workspaceId', authenticate, updateWorkspace);
 workspacesRouter.delete('/:workspaceId', authenticate, deleteWorkspace);
