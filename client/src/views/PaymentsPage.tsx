@@ -5,8 +5,6 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 import { PageShell } from './PageShell';
 import { PageHeader } from '../shared/components/PageHeader';
@@ -39,15 +37,14 @@ export const PaymentsPage = ({ workspaceId }: PaymentsPageProps) => {
         );
     }
 
-    // Force tab index if one is restricted
-    if (!canViewCustomer && tabIndex === 0) setTabIndex(1);
-    if (!canViewSupplier && tabIndex === 1) setTabIndex(0);
+    // Keep the selected mode valid without updating state during render.
+    const effectiveTabIndex = canViewCustomer ? (canViewSupplier ? tabIndex : 0) : 1;
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setTabIndex(newValue);
     };
 
-    const activeMode = tabIndex === 0 ? 'CUSTOMER' : 'SUPPLIER';
+    const activeMode = effectiveTabIndex === 0 ? 'CUSTOMER' : 'SUPPLIER';
     
     const canRecordPayment = activeMode === 'CUSTOMER' 
         ? hasPermission(Permission.PAYMENTS_CUSTOMER_RECORD)
@@ -67,16 +64,16 @@ export const PaymentsPage = ({ workspaceId }: PaymentsPageProps) => {
                 }
             />
 
-            <SectionCard>
+            <SectionCard title="Payment history">
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                    <Tabs value={tabIndex} onChange={handleTabChange} aria-label="payment tabs">
-                        {canViewCustomer && <Tab label="Customer Payments" />}
-                        {canViewSupplier && <Tab label="Supplier Payments" />}
+                    <Tabs value={effectiveTabIndex} onChange={handleTabChange} aria-label="payment tabs">
+                        {canViewCustomer && <Tab value={0} label="Customer Payments" />}
+                        {canViewSupplier && <Tab value={1} label="Supplier Payments" />}
                     </Tabs>
                 </Box>
 
-                {tabIndex === 0 && canViewCustomer && <CustomerPaymentTable workspaceId={workspaceId} />}
-                {tabIndex === 1 && canViewSupplier && <SupplierPaymentTable workspaceId={workspaceId} />}
+                {effectiveTabIndex === 0 && canViewCustomer && <CustomerPaymentTable workspaceId={workspaceId} />}
+                {effectiveTabIndex === 1 && canViewSupplier && <SupplierPaymentTable workspaceId={workspaceId} />}
             </SectionCard>
 
             <PaymentForm

@@ -47,44 +47,56 @@ export const SettingsModule: React.FC<SettingsModuleProps> = ({ workspaceId }) =
     return (
         <div className={styles.container}>
             <aside className={styles.sidebar}>
-                <nav className={styles.nav}>
+                <nav className={styles.nav} aria-label="Settings sections">
                     <button
+                        type="button"
                         className={`${styles.navItem} ${activeTab === 'profile' ? styles.navItemActive : ''}`}
+                        aria-current={activeTab === 'profile' ? 'page' : undefined}
                         onClick={() => setActiveTab('profile')}
                     >
                         <PersonIcon fontSize="small" />
                         Profile
                     </button>
                     <button
+                        type="button"
                         className={`${styles.navItem} ${activeTab === 'workspace' ? styles.navItemActive : ''}`}
+                        aria-current={activeTab === 'workspace' ? 'page' : undefined}
                         onClick={() => setActiveTab('workspace')}
                     >
                         <WorkIcon fontSize="small" />
                         Workspace
                     </button>
                     <button
+                        type="button"
                         className={`${styles.navItem} ${activeTab === 'security' ? styles.navItemActive : ''}`}
+                        aria-current={activeTab === 'security' ? 'page' : undefined}
                         onClick={() => setActiveTab('security')}
                     >
                         <SecurityIcon fontSize="small" />
                         Security
                     </button>
                     <button
+                        type="button"
                         className={`${styles.navItem} ${activeTab === 'notifications' ? styles.navItemActive : ''}`}
+                        aria-current={activeTab === 'notifications' ? 'page' : undefined}
                         onClick={() => setActiveTab('notifications')}
                     >
                         <NotificationsIcon fontSize="small" />
                         Notifications
                     </button>
                     <button
+                        type="button"
                         className={`${styles.navItem} ${activeTab === 'appearance' ? styles.navItemActive : ''}`}
+                        aria-current={activeTab === 'appearance' ? 'page' : undefined}
                         onClick={() => setActiveTab('appearance')}
                     >
                         <PaletteIcon fontSize="small" />
                         Appearance
                     </button>
                     <button
+                        type="button"
                         className={`${styles.navItem} ${styles.navItemDanger} ${activeTab === 'danger' ? styles.navItemDangerActive : ''}`}
+                        aria-current={activeTab === 'danger' ? 'page' : undefined}
                         onClick={() => setActiveTab('danger')}
                     >
                         <WarningIcon fontSize="small" />

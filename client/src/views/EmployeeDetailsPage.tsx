@@ -15,12 +15,15 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Avatar from '@mui/material/Avatar';
 import Chip from '@mui/material/Chip';
 import SaveIcon from '@mui/icons-material/Save';
+import Alert from '@mui/material/Alert';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { workspaceService } from '../services/workspace.service';
 import { useAuth } from '../hooks/useAuth';
 import { Permission } from '../types/auth';
 import type { Employee } from '../types/workspace';
+import { PageShell } from './PageShell';
+import { PageHeader } from '../shared/components/PageHeader';
 
 interface EmployeeDetailsPageProps {
     workspaceId: string;
@@ -38,7 +41,7 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
     const [localPermissions, setLocalPermissions] = useState<string[]>([]);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    const { data: employee, isLoading, isError } = useQuery<Employee>({
+    const { data: employee, isLoading, isError, refetch } = useQuery<Employee>({
         queryKey: ['employee', employeeId],
         queryFn: () => workspaceService.getEmployee(workspaceId, employeeId).then(r => {
             if (!r.data.data) throw new Error('Employee not found');
@@ -70,18 +73,32 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
 
     if (isLoading) {
         return (
-            <Box display="flex" justifyContent="center" py={6}>
-                <CircularProgress />
-            </Box>
+            <PageShell workspaceId={workspaceId}>
+                <Box display="flex" justifyContent="center" py={6}>
+                    <CircularProgress />
+                </Box>
+            </PageShell>
         );
     }
 
-    if (isError || !employee) {
+    if (isError) {
         return (
-            <Box py={4} textAlign="center">
-                <Typography color="error">Failed to load employee details.</Typography>
-                <Button onClick={() => router.back()} sx={{ mt: 2 }}>Go Back</Button>
-            </Box>
+            <PageShell workspaceId={workspaceId}>
+                <PageHeader title="Employee unavailable" subtitle="We couldn’t load this employee right now." />
+                <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>} sx={{ mb: 2 }}>
+                    Employee details could not be loaded.
+                </Alert>
+                <Button onClick={() => router.back()}>Go Back</Button>
+            </PageShell>
+        );
+    }
+
+    if (!employee) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <PageHeader title="Employee not found" subtitle="This employee may have been removed or the link may be incorrect." />
+                <Button onClick={() => router.back()}>Go Back</Button>
+            </PageShell>
         );
     }
 
@@ -101,14 +118,14 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
     };
 
     return (
-        <Stack spacing={4}>
+        <PageShell workspaceId={workspaceId}>
+            <PageHeader
+                title="Employee details"
+                subtitle="Review workspace access and update permissions when needed."
+                action={<Button startIcon={<ArrowBackIcon />} onClick={() => router.back()}>Back to Employees</Button>}
+            />
+            <Stack spacing={4}>
             {/* Header */}
-            <Stack direction="row" alignItems="center" spacing={2}>
-                <Button startIcon={<ArrowBackIcon />} onClick={() => router.back()}>
-                    Back to Employees
-                </Button>
-            </Stack>
-
             <Card sx={{ p: 4, borderRadius: 2 }}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'center' }}>
                     <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', fontSize: 32 }}>
@@ -181,7 +198,7 @@ export const EmployeeDetailsPage = ({ workspaceId, employeeId }: EmployeeDetails
                     ))}
                 </Box>
             </Box>
-        </Stack>
+            </Stack>
+        </PageShell>
     );
 };
-

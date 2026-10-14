@@ -3,6 +3,8 @@ import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import Skeleton from '@mui/material/Skeleton';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -20,16 +22,14 @@ const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
 export function ActivityTimeline({ workspaceId }: { workspaceId: string }) {
-    const { data: activities, isLoading, isError } = useActivity(workspaceId);
+    const { data: activities, isLoading, isError, refetch } = useActivity(workspaceId);
 
     if (isError) {
         return (
             <SectionCard title="Today's Activity">
-                <EmptyState
-                    icon={<HistoryIcon />}
-                    title="Could not load activity"
-                    description="There was a problem fetching the recent activity timeline."
-                />
+                <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                    Today&apos;s activity could not be loaded.
+                </Alert>
             </SectionCard>
         );
     }

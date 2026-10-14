@@ -13,6 +13,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 import { PageShell } from './PageShell';
 import { PageHeader } from '../shared/components/PageHeader';
@@ -28,7 +29,7 @@ const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
 export const SupplierDetailPage = ({ workspaceId, supplierId }: SupplierDetailPageProps) => {
-    const { data: supplier, isLoading, isError } = useSupplier(workspaceId, supplierId);
+    const { data: supplier, isLoading, isError, refetch } = useSupplier(workspaceId, supplierId);
 
     if (isLoading) {
         return (
@@ -40,10 +41,24 @@ export const SupplierDetailPage = ({ workspaceId, supplierId }: SupplierDetailPa
         );
     }
 
-    if (isError || !supplier) {
+    if (isError) {
         return (
             <PageShell workspaceId={workspaceId}>
-                <PageHeader title="Supplier Not Found" />
+                <PageHeader title="Supplier unavailable" subtitle="We couldn’t load this supplier right now." />
+                <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>} sx={{ mb: 2 }}>
+                    The supplier details and ledger could not be loaded.
+                </Alert>
+                <Button component={Link} href={`/workspaces/${workspaceId}/suppliers`} variant="outlined" startIcon={<ArrowBackIcon />}>
+                    Back to Suppliers
+                </Button>
+            </PageShell>
+        );
+    }
+
+    if (!supplier) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <PageHeader title="Supplier not found" subtitle="This supplier may have been removed or the link may be incorrect." />
                 <Button component={Link} href={`/workspaces/${workspaceId}/suppliers`} variant="outlined" startIcon={<ArrowBackIcon />}>
                     Back to Suppliers
                 </Button>

@@ -6,6 +6,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import Chip from '@mui/material/Chip';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 
 import { DataTable, type ColumnDef } from '../../../shared/components/DataTable';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -34,7 +36,7 @@ export function InventoryTable({ workspaceId, searchStr }: InventoryTableProps) 
     const [isEditDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteItem, setDeleteItem] = useState<InventoryItem | null>(null);
 
-    const { data, isLoading } = useInventory(workspaceId, {
+    const { data, isLoading, isError, refetch } = useInventory(workspaceId, {
         page: page + 1, // backend is 1-indexed, MUI is 0-indexed
         limit: rowsPerPage,
         search: searchStr || undefined,
@@ -76,12 +78,12 @@ export function InventoryTable({ workspaceId, searchStr }: InventoryTableProps) 
             id: 'actions', label: 'Actions', align: 'right', render: (row) => (
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
                     {hasPermission(Permission.INVENTORY_EDIT) && (
-                        <IconButton size="small" onClick={() => handleEdit(row)} color="primary">
+                        <IconButton size="small" onClick={() => handleEdit(row)} color="primary" aria-label={`Edit ${row.name}`}>
                             <EditIcon fontSize="small" />
                         </IconButton>
                     )}
                     {hasPermission(Permission.INVENTORY_DELETE) && (
-                        <IconButton size="small" onClick={() => setDeleteItem(row)} color="error">
+                        <IconButton size="small" onClick={() => setDeleteItem(row)} color="error" aria-label={`Delete ${row.name}`}>
                             <DeleteIcon fontSize="small" />
                         </IconButton>
                     )}
@@ -89,6 +91,14 @@ export function InventoryTable({ workspaceId, searchStr }: InventoryTableProps) 
             )
         },
     ];
+
+    if (isError) {
+        return (
+            <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                Inventory could not be loaded. Your existing items are unchanged.
+            </Alert>
+        );
+    }
 
     return (
         <>

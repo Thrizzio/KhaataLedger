@@ -6,6 +6,8 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 
 import { DataTable, type ColumnDef } from '../../../shared/components/DataTable';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -40,7 +42,7 @@ export function SaleTable({ workspaceId, searchStr }: SaleTableProps) {
     const { hasPermission } = usePermission();
     const canRecordSale = hasPermission(Permission.SALES_RECORD);
 
-    const { data, isLoading, isError } = useSales(workspaceId, {
+    const { data, isLoading, isError, refetch } = useSales(workspaceId, {
         page: page + 1,
         limit: rowsPerPage,
         search: searchStr || undefined,
@@ -96,7 +98,7 @@ export function SaleTable({ workspaceId, searchStr }: SaleTableProps) {
             align: 'right',
             render: (row) => canRecordSale ? (
                 <Tooltip title="Edit Sale">
-                    <IconButton size="small" onClick={() => setEditingSale(row)} color="primary">
+                    <IconButton size="small" onClick={() => setEditingSale(row)} color="primary" aria-label={`Edit sale from ${formatDate(row.saleDate)}`}>
                         <EditIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
@@ -106,11 +108,9 @@ export function SaleTable({ workspaceId, searchStr }: SaleTableProps) {
 
     if (isError) {
         return (
-            <EmptyState
-                icon={<ReceiptIcon />}
-                title="Backend Endpoint Missing"
-                description="The GET /sales endpoint does not exist on the current backend API version. The sale functionality is structurally complete but requires the backend controller integration to render historical lists."
-            />
+            <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                Sales could not be loaded. Your existing sales records are unchanged.
+            </Alert>
         )
     }
 

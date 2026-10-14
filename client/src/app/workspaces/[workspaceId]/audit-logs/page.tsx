@@ -21,6 +21,11 @@ import {
 import { format } from 'date-fns';
 import { auditService } from '../../../../services/audit.service';
 import type { AuditLog } from '../../../../types/audit';
+import { PageShell } from '../../../../views/PageShell';
+import { PageHeader } from '../../../../shared/components/PageHeader';
+import { SectionCard } from '../../../../shared/components/SectionCard';
+import { EmptyState } from '../../../../shared/components/EmptyState';
+import HistoryIcon from '@mui/icons-material/History';
 
 export default function AuditLogsPage() {
   const { workspaceId } = useParams() as { workspaceId: string };
@@ -36,6 +41,7 @@ export default function AuditLogsPage() {
   const fetchLogs = async (currentFilter: string) => {
     try {
       setLoading(true);
+      setError(null);
       const entityTypeMap: Record<string, string> = {
         'SALES': 'SALE',
         'INVENTORY': 'INVENTORY_ITEM',
@@ -95,10 +101,8 @@ export default function AuditLogsPage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
-        Audit Logs
-      </Typography>
+    <PageShell workspaceId={workspaceId}>
+      <PageHeader title="Audit logs" subtitle="Review changes made across this workspace." />
 
       <Box sx={{ mb: 3 }}>
         <ButtonGroup variant="outlined" aria-label="category filter buttons" sx={{ flexWrap: 'wrap' }}>
@@ -106,6 +110,7 @@ export default function AuditLogsPage() {
             <Button 
               key={cat} 
               variant={filter === cat ? 'contained' : 'outlined'}
+              aria-pressed={filter === cat}
               onClick={() => setFilter(cat)}
             >
               {cat.charAt(0) + cat.slice(1).toLowerCase()}
@@ -115,7 +120,9 @@ export default function AuditLogsPage() {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        <Alert severity="error" sx={{ mb: 2 }} action={<Button color="inherit" size="small" onClick={() => fetchLogs(filter)}>Retry</Button>}>
+          {error}
+        </Alert>
       )}
 
       {loading ? (
@@ -123,7 +130,15 @@ export default function AuditLogsPage() {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer component={Paper} elevation={2} sx={{ borderRadius: 2 }}>
+        <SectionCard title="Activity history">
+        {logs.length === 0 ? (
+          <EmptyState
+            icon={<HistoryIcon />}
+            title="No audit logs found"
+            description="There are no recorded changes for this category yet."
+          />
+        ) : (
+        <TableContainer component={Paper} elevation={0} sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'background.default' }}>
@@ -172,17 +187,12 @@ export default function AuditLogsPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {logs.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                    <Typography color="text.secondary">No audit logs found.</Typography>
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </TableContainer>
+        )}
+        </SectionCard>
       )}
-    </Box>
+    </PageShell>
   );
 }

@@ -7,6 +7,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 
 import { DataTable, type ColumnDef } from '../../../shared/components/DataTable';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -35,7 +37,7 @@ export function CustomerTable({ workspaceId, searchStr }: CustomerTableProps) {
     const [isEditDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
 
-    const { data, isLoading } = useCustomers(workspaceId, {
+    const { data, isLoading, isError, refetch } = useCustomers(workspaceId, {
         page: page + 1,
         limit: rowsPerPage,
         search: searchStr || undefined,
@@ -94,6 +96,14 @@ export function CustomerTable({ workspaceId, searchStr }: CustomerTableProps) {
             )
         },
     ];
+
+    if (isError) {
+        return (
+            <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                Customers could not be loaded. Your existing customer records are unchanged.
+            </Alert>
+        );
+    }
 
     return (
         <>

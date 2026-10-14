@@ -1,412 +1,227 @@
-import React from 'react';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
+import QueryStatsOutlinedIcon from '@mui/icons-material/QueryStatsOutlined';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import Link from '@mui/material/Link';
 import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
+import Divider from '@mui/material/Divider';
+import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import MoneyOffIcon from '@mui/icons-material/MoneyOff';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import Inventory2Icon from '@mui/icons-material/Inventory2';
-import GroupIcon from '@mui/icons-material/Group';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import QueryStatsIcon from '@mui/icons-material/QueryStats';
-import ShowChartIcon from '@mui/icons-material/ShowChart';
+const features = [
+    {
+        icon: <Inventory2OutlinedIcon />,
+        title: 'Inventory that stays current',
+        description: 'Keep stock, pricing, and low-stock attention in one dependable place.',
+    },
+    {
+        icon: <PeopleAltOutlinedIcon />,
+        title: 'Customer credit, clearly',
+        description: 'See customer balances and ledger history without searching through notebooks.',
+    },
+    {
+        icon: <PaymentsOutlinedIcon />,
+        title: 'Payments with context',
+        description: 'Record money in and out while keeping the related customer or supplier close by.',
+    },
+    {
+        icon: <QueryStatsOutlinedIcon />,
+        title: 'Reports for decisions',
+        description: 'Turn daily entries into a clearer view of how the business is moving.',
+    },
+];
 
-export const LandingPage = () => {
-    return (
+const previewNav = ['Dashboard', 'Inventory', 'Customers', 'Suppliers', 'Sales'];
+
+export const LandingPage = () => (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary' }}>
         <Box
+            component="header"
             sx={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                fontFamily: "'Inter', sans-serif",
-                bgcolor: '#f8f9ff',
+                position: 'sticky',
+                top: 0,
+                zIndex: 10,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'rgba(255,255,255,0.92)',
+                backdropFilter: 'blur(14px)',
             }}
         >
-            {/* Header */}
-            <Box
-                component="header"
-                sx={{
-                    borderBottom: '1px solid #e5e7eb',
-                    bgcolor: '#ffffff',
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 50,
-                    py: 2,
-                }}
-            >
-                <Container maxWidth="xl" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" fontWeight={700} color="#111827">
-                        Khaata Ledger
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 4, alignItems: 'center', '@media (max-width: 600px)': { display: 'none' } }}>
-                        <Link href="#" underline="none" color="#4b5563" fontWeight={500} sx={{ '&:hover': { color: '#0f766e' } }}>
+            <Container maxWidth="lg">
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ minHeight: 70 }}>
+                    <Stack direction="row" alignItems="center" spacing={1.25}>
+                        <Box sx={{ width: 34, height: 34, borderRadius: 2, bgcolor: 'primary.main', color: 'secondary.light', display: 'grid', placeItems: 'center' }}>
+                            <StorefrontOutlinedIcon sx={{ fontSize: 20 }} />
+                        </Box>
+                        <Typography fontWeight={800} letterSpacing="-0.02em">KhaataLedger</Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={{ xs: 1.5, sm: 3 }}>
+                        <Link href="#features" underline="none" color="text.secondary" fontSize={14} fontWeight={650} sx={{ display: { xs: 'none', sm: 'block' }, '&:hover': { color: 'secondary.main' } }}>
                             Features
                         </Link>
-                        <Link href="#" underline="none" color="#4b5563" fontWeight={500} sx={{ '&:hover': { color: '#0f766e' } }}>
+                        <Link href="#workflow" underline="none" color="text.secondary" fontSize={14} fontWeight={650} sx={{ display: { xs: 'none', sm: 'block' }, '&:hover': { color: 'secondary.main' } }}>
+                            How it works
+                        </Link>
+                        <Link href="#workflow" underline="none" color="text.secondary" fontSize={14} fontWeight={650} sx={{ display: { xs: 'none', md: 'block' }, '&:hover': { color: 'secondary.main' } }}>
                             Pricing
                         </Link>
-                        <Button
-                            href="/login"
-                            variant="contained"
-                            sx={{
-                                bgcolor: '#0f766e',
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                px: 3,
-                                '&:hover': { bgcolor: '#0d635c' },
-                            }}
-                        >
-                            Start Free
-                        </Button>
-                    </Box>
-                </Container>
-            </Box>
+                        <Button href="/login" variant="contained" color="secondary" size="small">Start free</Button>
+                    </Stack>
+                </Stack>
+            </Container>
+        </Box>
 
-            {/* Main Content */}
+        <Box component="main">
             <Box
-                component="main"
+                component="section"
                 sx={{
-                    flexGrow: 1,
-                    backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)',
-                    backgroundSize: '24px 24px',
+                    position: 'relative',
                     overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
+                    pt: { xs: 7, md: 11 },
+                    pb: { xs: 7, md: 10 },
+                    background: 'linear-gradient(135deg, #F4F7F8 0%, #EAF4F2 100%)',
+                    '&:before': { content: '""', position: 'absolute', width: 520, height: 520, borderRadius: '50%', bgcolor: 'rgba(15,138,131,0.08)', right: { xs: -260, md: -120 }, top: -180 },
                 }}
             >
-                {/* Hero Section */}
-                <Container maxWidth="xl" sx={{ pt: 12, pb: 8, flexGrow: 1 }}>
-                    <Grid container spacing={8} alignItems="center">
-                        {/* Left Column (Copy) */}
-                        <Grid item xs={12} lg={5} sx={{ zIndex: 10 }}>
-                            <Typography
-                                variant="h2"
-                                component="h1"
-                                fontWeight={800}
-                                color="#111827"
-                                sx={{
-                                    mb: 3,
-                                    fontSize: { xs: '2.5rem', md: '3rem', lg: '3.5rem' },
-                                    lineHeight: 1.1,
-                                    letterSpacing: '-0.04em',
-                                }}
-                            >
-                                Run your entire shop from one ledger.
+                <Container maxWidth="lg" sx={{ position: 'relative' }}>
+                    <Stack direction={{ xs: 'column', lg: 'row' }} spacing={{ xs: 6, lg: 8 }} alignItems="center">
+                        <Box sx={{ flex: '0 0 43%', maxWidth: { lg: 520 } }}>
+                            <Typography variant="overline" color="secondary.main" sx={{ display: 'block', mb: 2 }}>A calmer way to run your shop</Typography>
+                            <Typography component="h1" variant="h1" sx={{ fontSize: { xs: '2.45rem', sm: '3.25rem', md: '4rem' }, maxWidth: 600 }}>
+                                Your business, in one clear ledger.
                             </Typography>
-                            <Typography variant="body1" color="#4b5563" sx={{ mb: 5, fontSize: '1.125rem', lineHeight: 1.6 }}>
-                                Ditch the notebooks. Track inventory, manage customer credit, and record daily sales with a digital ledger built for India's pragmatic business owners.
+                            <Typography color="text.secondary" sx={{ mt: 2.5, fontSize: { xs: '1rem', md: '1.1rem' }, maxWidth: 500 }}>
+                                Replace scattered notebooks with a focused workspace for inventory, customers, suppliers, sales, and payments.
                             </Typography>
-
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 6 }}>
-                                <Button
-                                    href="/login"
-                                    variant="contained"
-                                    endIcon={<ArrowForwardIcon />}
-                                    sx={{
-                                        bgcolor: '#0f766e',
-                                        textTransform: 'none',
-                                        fontWeight: 600,
-                                        px: 4,
-                                        py: 1.5,
-                                        fontSize: '1rem',
-                                        boxShadow: '2px 2px 0px rgba(0,0,0,0.8)',
-                                        border: '1px solid transparent',
-                                        '&:hover': { bgcolor: '#0d635c', boxShadow: '2px 2px 0px rgba(0,0,0,1)' },
-                                    }}
-                                >
-                                    Start Free
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 4 }}>
+                                <Button href="/login" variant="contained" color="secondary" size="large" endIcon={<ArrowForwardRoundedIcon />}>
+                                    Start free
                                 </Button>
-                                <Button
-                                    href="/login"
-                                    variant="outlined"
-                                    sx={{
-                                        color: '#111827',
-                                        borderColor: '#d1d5db',
-                                        bgcolor: '#ffffff',
-                                        textTransform: 'none',
-                                        fontWeight: 600,
-                                        px: 4,
-                                        py: 1.5,
-                                        fontSize: '1rem',
-                                        '&:hover': { bgcolor: '#f3f4f6', borderColor: '#9ca3af' },
-                                    }}
-                                >
-                                    Book a Demo
+                                <Button href="/login" variant="outlined" color="primary" size="large">
+                                    Book a demo
                                 </Button>
                             </Stack>
+                            <Stack direction="row" flexWrap="wrap" gap={2.5} sx={{ mt: 4, pt: 2.5, borderTop: '1px solid', borderColor: 'rgba(16,35,63,0.12)' }}>
+                                {['Built for daily work', 'Permission-aware', 'GST-ready workflows'].map((item) => (
+                                    <Stack direction="row" spacing={0.75} alignItems="center" key={item}>
+                                        <CheckCircleRoundedIcon sx={{ color: 'secondary.main', fontSize: 18 }} />
+                                        <Typography variant="caption" fontWeight={650}>{item}</Typography>
+                                    </Stack>
+                                ))}
+                            </Stack>
+                        </Box>
 
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, pt: 4, borderTop: '1px solid #e5e7eb' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#4b5563', fontSize: '0.875rem', fontWeight: 500 }}>
-                                    <CheckCircleOutlineIcon sx={{ color: '#0f766e', fontSize: 20 }} />
-                                    GST Ready
+                        <Box sx={{ flex: 1, width: '100%', minWidth: 0 }} aria-label="Illustration of the KhaataLedger workspace">
+                            <Paper elevation={0} sx={{ p: { xs: 1, sm: 1.5 }, borderRadius: 3, bgcolor: 'primary.main', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 24px 70px rgba(11,31,58,0.20)' }}>
+                                <Box sx={{ height: 28, display: 'flex', alignItems: 'center', gap: 0.75, px: 1 }}>
+                                    {[0, 1, 2].map((dot) => <Box key={dot} sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.28)' }} />)}
+                                    <Box sx={{ ml: 2, height: 16, flex: 1, maxWidth: 250, borderRadius: 1, bgcolor: 'rgba(255,255,255,0.08)' }} />
                                 </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#4b5563', fontSize: '0.875rem', fontWeight: 500 }}>
-                                    <MoneyOffIcon sx={{ color: '#0f766e', fontSize: 20 }} />
-                                    No setup fees
-                                </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#4b5563', fontSize: '0.875rem', fontWeight: 500 }}>
-                                    <StorefrontIcon sx={{ color: '#0f766e', fontSize: 20 }} />
-                                    Used by local retailers
-                                </Box>
-                            </Box>
-                        </Grid>
-
-                        {/* Right Column (Mockup) */}
-                        <Grid item xs={12} lg={7} sx={{ position: 'relative' }}>
-                            <Box
-                                sx={{
-                                    position: 'absolute',
-                                    inset: -16,
-                                    background: 'linear-gradient(to top right, #d9e3f6, #e6eeff)',
-                                    borderRadius: 4,
-                                    opacity: 0.5,
-                                    transform: 'rotate(1deg)',
-                                }}
-                            />
-                            <Paper
-                                elevation={6}
-                                sx={{
-                                    position: 'relative',
-                                    width: '100%',
-                                    borderRadius: 3,
-                                    border: '1px solid #e5e7eb',
-                                    bgcolor: '#ffffff',
-                                    overflow: 'hidden',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                }}
-                            >
-                                {/* Mockup Browser Header */}
-                                <Box sx={{ height: 40, borderBottom: '1px solid #e5e7eb', bgcolor: '#f9fafb', display: 'flex', alignItems: 'center', px: 2, gap: 1.5 }}>
-                                    <Box sx={{ display: 'flex', gap: 1 }}>
-                                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#d1d5db' }} />
-                                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#d1d5db' }} />
-                                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#d1d5db' }} />
+                                <Box sx={{ display: 'flex', minHeight: { xs: 310, sm: 390 }, bgcolor: '#F4F7F8', borderRadius: 2, overflow: 'hidden' }}>
+                                    <Box sx={{ width: { xs: 112, sm: 175 }, bgcolor: '#102B4A', p: { xs: 1, sm: 1.5 }, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                                        <Stack direction="row" spacing={0.75} alignItems="center" sx={{ px: 0.5, py: 1, mb: 1 }}>
+                                            <Box sx={{ width: 22, height: 22, borderRadius: 1, bgcolor: 'secondary.main', display: 'grid', placeItems: 'center' }}><StorefrontOutlinedIcon sx={{ color: 'white', fontSize: 14 }} /></Box>
+                                            <Typography fontSize={{ xs: 10, sm: 12 }} fontWeight={750} color="white">Khaata</Typography>
+                                        </Stack>
+                                        {previewNav.map((item, index) => (
+                                            <Box key={item} sx={{ px: { xs: 0.75, sm: 1 }, py: { xs: 0.75, sm: 1 }, borderRadius: 1.25, bgcolor: index === 0 ? 'rgba(91,198,187,0.18)' : 'transparent', color: index === 0 ? 'secondary.light' : 'rgba(255,255,255,0.58)', fontSize: { xs: 10, sm: 12 }, fontWeight: 650 }}>
+                                                {item}
+                                            </Box>
+                                        ))}
                                     </Box>
-                                    <Box sx={{ mx: 'auto', width: '50%', height: 24, bgcolor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Typography fontSize={11} color="#6b7280" fontFamily="monospace">
-                                            app.khaataledger.in
-                                        </Typography>
-                                    </Box>
-                                </Box>
-
-                                {/* Dashboard Area */}
-                                <Box sx={{ display: 'flex', height: 500, bgcolor: '#f8f9ff' }}>
-                                    {/* Sidebar */}
-                                    <Box sx={{ width: 220, borderRight: '1px solid #e5e7eb', bgcolor: '#ffffff', display: 'flex', flexDirection: 'column', p: 2, gap: 1 }}>
-                                        <Typography variant="h6" fontWeight={800} color="#111827" sx={{ mb: 2 }}>
-                                            Khaata
-                                        </Typography>
-
-                                        <Box sx={{ px: 2, py: 1, bgcolor: '#eff4ff', borderRadius: 1, color: '#0f766e', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1.5, borderLeft: '3px solid #0f766e' }}>
-                                            <DashboardIcon fontSize="small" /> Dashboard
-                                        </Box>
-                                        <Box sx={{ px: 2, py: 1, color: '#4b5563', fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                            <Inventory2Icon fontSize="small" /> Inventory
-                                        </Box>
-                                        <Box sx={{ px: 2, py: 1, color: '#4b5563', fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                            <GroupIcon fontSize="small" /> Customers
-                                        </Box>
-                                        <Box sx={{ px: 2, py: 1, color: '#4b5563', fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                            <LocalShippingIcon fontSize="small" /> Suppliers
-                                        </Box>
-                                        <Box sx={{ px: 2, py: 1, color: '#4b5563', fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                            <ShoppingCartIcon fontSize="small" /> Purchases
-                                        </Box>
-                                        <Box sx={{ px: 2, py: 1, color: '#4b5563', fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                            <ReceiptLongIcon fontSize="small" /> Sales
-                                        </Box>
-                                    </Box>
-
-                                    {/* Main Content Area */}
-                                    <Box sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column', gap: 3, overflow: 'hidden' }}>
-                                        {/* Top Cards */}
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={3}>
-                                                <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-                                                    <Typography fontSize={11} fontWeight={600} color="#6b7280" textTransform="uppercase" letterSpacing={0.5}>Today's Sales</Typography>
-                                                    <Typography fontSize={20} fontWeight={700} color="#111827" fontFamily="monospace" mt={0.5}>₹14,250</Typography>
+                                    <Box sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 3 } }}>
+                                        <Typography fontSize={{ xs: 15, sm: 20 }} fontWeight={750}>Good morning</Typography>
+                                        <Typography fontSize={{ xs: 10, sm: 12 }} color="text.secondary" sx={{ mt: 0.5 }}>A useful view of the work that matters today.</Typography>
+                                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ mt: 2 }}>
+                                            {['Inventory', 'Customers', 'Payments'].map((label, index) => (
+                                                <Paper key={label} variant="outlined" sx={{ flex: 1, p: { xs: 1, sm: 1.5 }, borderRadius: 1.5 }}>
+                                                    <Typography variant="overline" fontSize={{ xs: 7, sm: 9 }} color="text.secondary">{label}</Typography>
+                                                    <Box sx={{ height: 6, mt: 1, width: `${58 + index * 13}%`, borderRadius: 3, bgcolor: index === 1 ? 'secondary.main' : 'primary.light', opacity: 0.75 }} />
                                                 </Paper>
-                                            </Grid>
-                                            <Grid item xs={3}>
-                                                <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-                                                    <Typography fontSize={11} fontWeight={600} color="#6b7280" textTransform="uppercase" letterSpacing={0.5}>Outstanding Credit</Typography>
-                                                    <Typography fontSize={20} fontWeight={700} color="#dc2626" fontFamily="monospace" mt={0.5}>₹42,100</Typography>
-                                                </Paper>
-                                            </Grid>
-                                            <Grid item xs={3}>
-                                                <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-                                                    <Typography fontSize={11} fontWeight={600} color="#6b7280" textTransform="uppercase" letterSpacing={0.5}>Supplier Pending</Typography>
-                                                    <Typography fontSize={20} fontWeight={700} color="#111827" fontFamily="monospace" mt={0.5}>₹18,500</Typography>
-                                                </Paper>
-                                            </Grid>
-                                            <Grid item xs={3}>
-                                                <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5, borderTop: '3px solid #0f766e' }}>
-                                                    <Typography fontSize={11} fontWeight={600} color="#6b7280" textTransform="uppercase" letterSpacing={0.5}>Low Stock</Typography>
-                                                    <Typography fontSize={20} fontWeight={700} color="#0f766e" fontFamily="monospace" mt={0.5}>12 Items</Typography>
-                                                </Paper>
-                                            </Grid>
-                                        </Grid>
-
-                                        {/* Chart Area */}
-                                        <Paper variant="outlined" sx={{ flexGrow: 1, borderRadius: 1.5, p: 2, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                                            <Typography fontSize={14} fontWeight={600} color="#111827" mb={2}>Weekly Sales Overview</Typography>
-                                            <Box sx={{ borderBottom: '1px solid #e5e7eb', flexGrow: 1 }} />
-
-                                            <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, px: 2, borderBottom: '1px solid #e5e7eb', opacity: 0.8 }}>
-                                                <Box sx={{ width: 32, height: 48, bgcolor: '#e5e7eb', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
-                                                <Box sx={{ width: 32, height: 80, bgcolor: '#e5e7eb', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
-                                                <Box sx={{ width: 32, height: 64, bgcolor: '#e5e7eb', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
-                                                <Box sx={{ width: 32, height: 110, bgcolor: '#69b1a7', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
-                                                <Box sx={{ width: 32, height: 90, bgcolor: '#e5e7eb', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
-                                                <Box sx={{ width: 32, height: 40, bgcolor: '#e5e7eb', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
-                                                <Box sx={{ width: 32, height: 56, bgcolor: '#e5e7eb', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
-                                            </Box>
-
-                                            <Box sx={{ position: 'absolute', top: 60, right: 60, display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                                                <ShowChartIcon sx={{ color: '#0f766e', fontSize: 18 }} />
-                                                <Typography fontSize={11} fontWeight={600} color="#0f766e" fontStyle="italic" letterSpacing={0.5}>Festival surge</Typography>
-                                            </Box>
-                                        </Paper>
-
-                                        {/* Activity List */}
-                                        <Paper variant="outlined" sx={{ borderRadius: 1.5, display: 'flex', flexDirection: 'column' }}>
-                                            <Box sx={{ p: 1.5, borderBottom: '1px solid #e5e7eb', bgcolor: '#f9fafb' }}>
-                                                <Typography fontSize={11} fontWeight={600} color="#111827" textTransform="uppercase" letterSpacing={0.5}>Recent Activity</Typography>
-                                            </Box>
-                                            <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e5e7eb', pb: 1, fontFamily: 'monospace', fontSize: 12, color: '#4b5563' }}>
-                                                    <Box width="20%">INV-001</Box>
-                                                    <Box width="50%">Ramesh Hardware</Box>
-                                                    <Box width="30%" textAlign="right" color="#111827">₹2,400</Box>
+                                            ))}
+                                        </Stack>
+                                        <Paper variant="outlined" sx={{ mt: 1.5, p: { xs: 1.25, sm: 2 }, borderRadius: 1.5 }}>
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                                                <Typography fontSize={{ xs: 11, sm: 13 }} fontWeight={700}>Your operating view</Typography>
+                                                <Typography fontSize={{ xs: 9, sm: 11 }} color="secondary.main" fontWeight={700}>Up to date</Typography>
+                                            </Stack>
+                                            {[['Stock movement', 76], ['Customer follow-ups', 52], ['Supplier payments', 64]].map(([label, width]) => (
+                                                <Box key={label} sx={{ mb: 1.25, '&:last-child': { mb: 0 } }}>
+                                                    <Typography fontSize={{ xs: 9, sm: 11 }} color="text.secondary">{label}</Typography>
+                                                    <Box sx={{ height: 7, borderRadius: 4, bgcolor: '#E5ECEF', mt: 0.5 }}><Box sx={{ width: `${width}%`, height: '100%', borderRadius: 4, bgcolor: 'secondary.main', opacity: 0.75 }} /></Box>
                                                 </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e5e7eb', pb: 1, fontFamily: 'monospace', fontSize: 12, color: '#4b5563' }}>
-                                                    <Box width="20%">REC-892</Box>
-                                                    <Box width="50%">Payment Received</Box>
-                                                    <Box width="30%" textAlign="right" color="#0f766e">+ ₹1,500</Box>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: 12, color: '#4b5563' }}>
-                                                    <Box width="20%">INV-002</Box>
-                                                    <Box width="50%">Suresh Enterprises</Box>
-                                                    <Box width="30%" textAlign="right" color="#111827">₹8,900</Box>
-                                                </Box>
-                                            </Box>
+                                            ))}
                                         </Paper>
                                     </Box>
                                 </Box>
                             </Paper>
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Stack>
                 </Container>
-
-                {/* Feature Grid Below Fold */}
-                <Box sx={{ bgcolor: '#ffffff', borderTop: '1px solid #e5e7eb', py: 8 }}>
-                    <Container maxWidth="xl">
-                        <Grid container spacing={4}>
-                            <Grid item xs={12} md={6} lg={3}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    <Box sx={{ width: 40, height: 40, borderRadius: 1.5, border: '1px solid #e5e7eb', bgcolor: '#f4f6fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Inventory2Icon sx={{ color: '#0f766e' }} />
-                                    </Box>
-                                    <Typography variant="h6" fontWeight={700} color="#111827" fontSize={18}>
-                                        Inventory
-                                    </Typography>
-                                    <Typography variant="body2" color="#4b5563" lineHeight={1.6}>
-                                        Know exactly what's in stock. Set low stock alerts and manage product variations.
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                            <Grid item xs={12} md={6} lg={3} sx={{ borderLeft: { lg: '1px solid #e5e7eb' }, pl: { lg: 4 } }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    <Box sx={{ width: 40, height: 40, borderRadius: 1.5, border: '1px solid #e5e7eb', bgcolor: '#f4f6fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <AccountBalanceWalletIcon sx={{ color: '#0f766e' }} />
-                                    </Box>
-                                    <Typography variant="h6" fontWeight={700} color="#111827" fontSize={18}>
-                                        Credit Tracking
-                                    </Typography>
-                                    <Typography variant="body2" color="#4b5563" lineHeight={1.6}>
-                                        See who owes money at a glance. Send gentle payment reminders via WhatsApp.
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                            <Grid item xs={12} md={6} lg={3} sx={{ borderLeft: { lg: '1px solid #e5e7eb' }, pl: { lg: 4 } }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    <Box sx={{ width: 40, height: 40, borderRadius: 1.5, border: '1px solid #e5e7eb', bgcolor: '#f4f6fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <LocalShippingIcon sx={{ color: '#0f766e' }} />
-                                    </Box>
-                                    <Typography variant="h6" fontWeight={700} color="#111827" fontSize={18}>
-                                        Supplier Payments
-                                    </Typography>
-                                    <Typography variant="body2" color="#4b5563" lineHeight={1.6}>
-                                        Track what you owe to distributors and manage purchase orders seamlessly.
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                            <Grid item xs={12} md={6} lg={3} sx={{ borderLeft: { lg: '1px solid #e5e7eb' }, pl: { lg: 4 } }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    <Box sx={{ width: 40, height: 40, borderRadius: 1.5, border: '1px solid #e5e7eb', bgcolor: '#f4f6fb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <QueryStatsIcon sx={{ color: '#0f766e' }} />
-                                    </Box>
-                                    <Typography variant="h6" fontWeight={700} color="#111827" fontSize={18}>
-                                        Reports
-                                    </Typography>
-                                    <Typography variant="body2" color="#4b5563" lineHeight={1.6}>
-                                        Understand your money sources. Generate instant daily P&L and GST-ready export files.
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                        </Grid>
-                    </Container>
-                </Box>
             </Box>
 
-            {/* Footer */}
-            <Box component="footer" sx={{ bgcolor: '#e6eeff', borderTop: '1px solid #d9e3f6', py: 6 }}>
-                <Container maxWidth="xl">
-                    <Grid container spacing={4}>
-                        <Grid item xs={12} md={6} lg={4}>
-                            <Typography variant="h6" fontWeight={700} color="#111827" mb={1}>
-                                Khaata Ledger
-                            </Typography>
-                            <Typography variant="body2" color="#4b5563">
-                                &copy; 2024 Khaata Ledger. Handcrafted for Bharat's Small Businesses.
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={6} md={3} lg={2}>
-                            <Typography fontSize={11} fontWeight={600} color="#111827" mb={2} textTransform="uppercase" letterSpacing={1}>Product</Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                <Link href="#" underline="hover" color="#4b5563" fontSize={14}>Product Tour</Link>
-                                <Link href="#" underline="hover" color="#4b5563" fontSize={14}>Ledger Safety</Link>
-                                <Link href="#" underline="hover" color="#4b5563" fontSize={14}>GST Compliance</Link>
+            <Box component="section" id="features" sx={{ py: { xs: 7, md: 10 }, bgcolor: 'background.paper' }}>
+                <Container maxWidth="lg">
+                    <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={3} sx={{ mb: 5 }}>
+                        <Box>
+                            <Typography variant="overline" color="secondary.main">One connected system</Typography>
+                            <Typography variant="h2" sx={{ mt: 1, maxWidth: 500 }}>The everyday details, without the daily clutter.</Typography>
+                        </Box>
+                        <Typography color="text.secondary" sx={{ maxWidth: 370, alignSelf: 'flex-end' }}>KhaataLedger keeps the practical rhythm of a ledger and gives it the clarity of a modern workspace.</Typography>
+                    </Stack>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, borderTop: '1px solid', borderColor: 'divider' }}>
+                        {features.map((feature) => (
+                            <Box key={feature.title} sx={{ pt: 3, pr: { sm: 3 }, pb: { xs: 3, sm: 0 }, borderBottom: { xs: '1px solid', sm: 'none' }, borderColor: 'divider' }}>
+                                <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: 'rgba(15,138,131,0.10)', color: 'secondary.main', display: 'grid', placeItems: 'center', mb: 2 }}>{feature.icon}</Box>
+                                <Typography fontWeight={750} sx={{ mb: 1 }}>{feature.title}</Typography>
+                                <Typography variant="body2" color="text.secondary">{feature.description}</Typography>
                             </Box>
-                        </Grid>
-                        <Grid item xs={6} md={3} lg={2}>
-                            <Typography fontSize={11} fontWeight={600} color="#111827" mb={2} textTransform="uppercase" letterSpacing={1}>Support</Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                <Link href="#" underline="hover" color="#4b5563" fontSize={14}>Merchant Support</Link>
-                            </Box>
-                        </Grid>
-                        <Grid item xs={6} md={3} lg={2}>
-                            <Typography fontSize={11} fontWeight={600} color="#111827" mb={2} textTransform="uppercase" letterSpacing={1}>Legal</Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                <Link href="#" underline="hover" color="#4b5563" fontSize={14}>Terms of Service</Link>
-                                <Link href="#" underline="hover" color="#4b5563" fontSize={14}>Privacy Policy</Link>
-                            </Box>
-                        </Grid>
-                    </Grid>
+                        ))}
+                    </Box>
+                </Container>
+            </Box>
+
+            <Box component="section" id="workflow" sx={{ py: { xs: 7, md: 9 }, bgcolor: 'primary.main', color: 'common.white' }}>
+                <Container maxWidth="md">
+                    <Stack alignItems="center" textAlign="center" spacing={2}>
+                        <Typography variant="overline" color="secondary.light">Made for momentum</Typography>
+                        <Typography variant="h2" color="common.white">Start with the work you already know.</Typography>
+                        <Typography color="rgba(255,255,255,0.70)" sx={{ maxWidth: 560 }}>Bring your team into a workspace that makes the next entry, follow-up, and decision easier to find.</Typography>
+                        <Button href="/login" variant="contained" color="secondary" size="large" endIcon={<ArrowForwardRoundedIcon />} sx={{ mt: 1 }}>Open KhaataLedger</Button>
+                    </Stack>
                 </Container>
             </Box>
         </Box>
-    );
-};
+
+        <Box component="footer" sx={{ bgcolor: '#061426', color: 'common.white', py: 3 }}>
+            <Container maxWidth="lg">
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: '2fr repeat(3, 1fr)' }, gap: 3 }}>
+                    <Box sx={{ gridColumn: { xs: '1 / -1', sm: 'auto' } }}>
+                        <Typography fontWeight={750}>KhaataLedger</Typography>
+                        <Typography variant="caption" color="rgba(255,255,255,0.58)" sx={{ display: 'block', mt: 1, maxWidth: 230 }}>A clear digital ledger for growing businesses.</Typography>
+                    </Box>
+                    {[
+                        ['Product', ['Product tour', 'Ledger safety', 'GST compliance']],
+                        ['Support', ['Merchant support']],
+                        ['Legal', ['Terms of service', 'Privacy policy']],
+                    ].map(([heading, links]) => (
+                        <Box key={heading as string}>
+                            <Typography variant="overline" color="rgba(255,255,255,0.58)">{heading}</Typography>
+                            <Stack spacing={0.5} sx={{ mt: 1 }}>
+                                {(links as string[]).map((label) => <Link key={label} href="#" underline="hover" color="rgba(255,255,255,0.72)" fontSize={12}>{label}</Link>)}
+                            </Stack>
+                        </Box>
+                    ))}
+                </Box>
+                <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.12)' }} />
+                <Typography variant="caption" color="rgba(255,255,255,0.48)">© 2024 Khaata Ledger. Handcrafted for Bharat's small businesses.</Typography>
+            </Container>
+        </Box>
+    </Box>
+);

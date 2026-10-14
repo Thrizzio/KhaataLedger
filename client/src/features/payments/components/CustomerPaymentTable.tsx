@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 
 import { DataTable, type ColumnDef } from '../../../shared/components/DataTable';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -25,7 +27,7 @@ export function CustomerPaymentTable({ workspaceId }: CustomerPaymentTableProps)
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const { data, isLoading } = useCustomerPayments(workspaceId, {
+    const { data, isLoading, isError, refetch } = useCustomerPayments(workspaceId, {
         page: page + 1,
         limit: rowsPerPage,
         sortBy: 'paymentDate',
@@ -66,6 +68,14 @@ export function CustomerPaymentTable({ workspaceId }: CustomerPaymentTableProps)
             render: (row) => row.createdBy?.name
         }
     ];
+
+    if (isError) {
+        return (
+            <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                Customer payments could not be loaded. Your existing payment records are unchanged.
+            </Alert>
+        );
+    }
 
     return (
         <DataTable

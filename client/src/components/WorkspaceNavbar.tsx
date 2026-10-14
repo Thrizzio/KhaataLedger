@@ -70,7 +70,7 @@ export const WorkspaceNavbar = ({
                 {/* Hamburger — mobile only */}
                 <IconButton
                     aria-label="Open navigation"
-                    color="primary"
+                    color="inherit"
                     edge="start"
                     onClick={onMenuClick}
                     sx={{ display: { md: 'none' }, mr: 0.5 }}
@@ -78,8 +78,12 @@ export const WorkspaceNavbar = ({
                     <MenuIcon />
                 </IconButton>
 
-                {/* Spacer pushes workspace selector to the right */}
-                <Box sx={{ flexGrow: 1 }} />
+                <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                    <Typography variant="overline" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, lineHeight: 1.2 }}>Workspace</Typography>
+                    <Typography fontWeight={750} fontSize={{ xs: 14, sm: 15 }} noWrap sx={{ maxWidth: { xs: 150, sm: 280 } }}>
+                        {workspaceName}
+                    </Typography>
+                </Box>
 
                 {/* ── Workspace Selector ─────────────────────── */}
                 {isOwner ? (
@@ -97,8 +101,8 @@ export const WorkspaceNavbar = ({
                                     : <KeyboardArrowDownIcon fontSize="small" />
                             }
                             color="inherit"
-                            sx={{
-                                textTransform: 'none',
+                             sx={{
+                                 textTransform: 'none',
                                 fontWeight: 600,
                                 fontSize: 14,
                                 borderRadius: 2,
@@ -106,8 +110,8 @@ export const WorkspaceNavbar = ({
                                 borderColor: 'divider',
                                 px: 1.5,
                                 py: 0.75,
-                                '&:hover': { bgcolor: 'action.hover' },
-                            }}
+                                 '&:hover': { bgcolor: 'rgba(15, 138, 131, 0.08)', borderColor: 'secondary.main' },
+                             }}
                         >
                             <Typography
                                 noWrap
@@ -164,10 +168,10 @@ export const WorkspaceNavbar = ({
                     </>
                 ) : (
                     // Employees just see their workspace name (no switcher)
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                        <StoreIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                        <Typography fontWeight={600} fontSize={14} noWrap>
-                            {workspaceName}
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ color: 'text.secondary' }}>
+                        <StoreIcon fontSize="small" />
+                        <Typography fontWeight={650} fontSize={13} noWrap color="text.primary">
+                            Team workspace
                         </Typography>
                     </Stack>
                 )}

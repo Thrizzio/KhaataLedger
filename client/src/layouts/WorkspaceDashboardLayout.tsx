@@ -10,7 +10,7 @@ import { workspaceService } from '../services/workspace.service';
 import { useAuth } from '../hooks/useAuth';
 import type { Workspace } from '../types/workspace';
 
-const drawerWidth = 260;
+const drawerWidth = 264;
 
 interface WorkspaceDashboardLayoutProps {
     children: ReactNode;
@@ -45,6 +45,7 @@ export const WorkspaceDashboardLayout = ({
             {isMounted ? (
                 <WorkspaceSidebar
                     workspaceId={workspaceId}
+                    workspaceName={workspace?.name}
                     mobileOpen={mobileOpen}
                     onClose={() => setMobileOpen(false)}
                     userRole={user?.role}
@@ -57,14 +58,15 @@ export const WorkspaceDashboardLayout = ({
             {/* Main column: navbar on top, then scrollable content below */}
             <Box
                 component="main"
-                sx={{
-                    flexGrow: 1,
+                    sx={{
+                        flexGrow: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     minWidth: 0,
                     // Offset for permanent sidebar on md+
-                    width: { md: `calc(100% - ${drawerWidth}px)` },
-                }}
+                        width: { md: `calc(100% - ${drawerWidth}px)` },
+                        backgroundColor: 'background.default',
+                    }}
             >
                 {/* AppBar is now INSIDE the main column → never overlapped by the sidebar */}
                 <WorkspaceNavbar
@@ -74,10 +76,10 @@ export const WorkspaceDashboardLayout = ({
                 />
 
                 <Box sx={{ flexGrow: 1 }}>
-                    <Container
-                        maxWidth={false}
-                        disableGutters
-                        sx={{ py: 4, px: { xs: 2, sm: 3, md: 4 } }}
+                        <Container
+                            maxWidth={false}
+                            disableGutters
+                            sx={{ py: { xs: 2.5, sm: 3.5, md: 4.5 }, px: { xs: 2, sm: 3, md: 4, lg: 5 }, maxWidth: 1600, width: '100%', mx: 'auto' }}
                     >
                         {children}
                     </Container>

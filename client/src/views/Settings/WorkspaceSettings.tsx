@@ -7,6 +7,10 @@ import { getAuthState } from '../../store/authStore';
 import { toast } from 'react-hot-toast';
 import type { Workspace } from '../../types/workspace';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import { getApiErrorDetails } from '../../api/apiError';
 
 interface Props {
     workspaceId: string;
@@ -21,7 +25,7 @@ export const WorkspaceSettings: React.FC<Props> = ({ workspaceId }) => {
     const user = getAuthState().user;
     const isOwner = user?.role === 'OWNER';
 
-    const { data: workspace, isLoading } = useQuery<Workspace>({
+    const { data: workspace, isLoading, isError, error, refetch } = useQuery<Workspace>({
         queryKey: ['workspace', workspaceId],
         queryFn: () => workspaceService.getWorkspaceById(workspaceId).then(res => res.data.data as Workspace),
     });
@@ -49,15 +53,22 @@ export const WorkspaceSettings: React.FC<Props> = ({ workspaceId }) => {
             } else {
                 toast.error(res.data.message || 'Failed to update workspace');
             }
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || 'Error updating workspace');
+        } catch (error: unknown) {
+            toast.error(getApiErrorDetails(error, 'Error updating workspace').message);
         } finally {
             setIsSaving(false);
         }
     };
 
-    if (isLoading) return <p>Loading workspace...</p>;
-    if (!workspace) return <p>Workspace not found</p>;
+    if (isLoading) return <CircularProgress aria-label="Loading workspace settings" />;
+    if (isError) {
+        return (
+            <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                {getApiErrorDetails(error, 'Workspace settings could not be loaded.').message}
+            </Alert>
+        );
+    }
+    if (!workspace) return <Alert severity="warning">Workspace not found.</Alert>;
 
     return (
         <div>

@@ -7,6 +7,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
 import Skeleton from '@mui/material/Skeleton';
+import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 
 export interface ColumnDef<T> {
@@ -21,6 +22,9 @@ interface DataTableProps<T> {
     columns: ColumnDef<T>[];
     rows: T[];
     isLoading: boolean;
+    /** Render a distinct failure state without requiring pages to replace the table. */
+    isError?: boolean;
+    errorState?: ReactNode;
     totalElements: number;
     page: number;
     rowsPerPage: number;
@@ -41,12 +45,14 @@ export function DataTable<T extends Record<string, any>>({
     onPageChange,
     onRowsPerPageChange,
     emptyState,
+    isError = false,
+    errorState,
     keyField = 'id' as keyof T,
 }: DataTableProps<T>) {
     return (
         <Box sx={{ width: '100%', overflow: 'hidden' }}>
-            <TableContainer>
-                <Table stickyHeader>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+                <Table stickyHeader sx={{ minWidth: 640 }} aria-busy={isLoading}>
                     <TableHead>
                         <TableRow>
                             {columns.map((col) => (
@@ -72,6 +78,12 @@ export function DataTable<T extends Record<string, any>>({
                                     ))}
                                 </TableRow>
                             ))
+                        ) : isError ? (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} align="center" sx={{ py: 6, borderBottom: 0 }}>
+                                    {errorState ?? <Typography color="error.main">This information could not be loaded.</Typography>}
+                                </TableCell>
+                            </TableRow>
                         ) : rows.length === 0 ? (
                             // Empty state
                             <TableRow>
@@ -98,7 +110,7 @@ export function DataTable<T extends Record<string, any>>({
                 </Table>
             </TableContainer>
 
-            {!isLoading && rows.length > 0 && (
+            {!isLoading && !isError && rows.length > 0 && (
                 <TablePagination
                     rowsPerPageOptions={[10, 25, 50]}
                     component="div"

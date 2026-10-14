@@ -13,6 +13,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 import { PageShell } from './PageShell';
 import { PageHeader } from '../shared/components/PageHeader';
@@ -28,7 +29,7 @@ const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
 export const CustomerDetailPage = ({ workspaceId, customerId }: CustomerDetailPageProps) => {
-    const { data: customer, isLoading, isError } = useCustomer(workspaceId, customerId);
+    const { data: customer, isLoading, isError, refetch } = useCustomer(workspaceId, customerId);
 
     if (isLoading) {
         return (
@@ -40,10 +41,24 @@ export const CustomerDetailPage = ({ workspaceId, customerId }: CustomerDetailPa
         );
     }
 
-    if (isError || !customer) {
+    if (isError) {
         return (
             <PageShell workspaceId={workspaceId}>
-                <PageHeader title="Customer Not Found" />
+                <PageHeader title="Customer unavailable" subtitle="We couldn’t load this customer right now." />
+                <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>} sx={{ mb: 2 }}>
+                    The customer details and ledger could not be loaded.
+                </Alert>
+                <Button component={Link} href={`/workspaces/${workspaceId}/customers`} variant="outlined" startIcon={<ArrowBackIcon />}>
+                    Back to Customers
+                </Button>
+            </PageShell>
+        );
+    }
+
+    if (!customer) {
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <PageHeader title="Customer not found" subtitle="This customer may have been removed or the link may be incorrect." />
                 <Button component={Link} href={`/workspaces/${workspaceId}/customers`} variant="outlined" startIcon={<ArrowBackIcon />}>
                     Back to Customers
                 </Button>

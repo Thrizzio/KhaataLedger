@@ -3,6 +3,8 @@ import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import Skeleton from '@mui/material/Skeleton';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
@@ -23,16 +25,14 @@ const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 export function SupplierLedger({ workspaceId, supplierId }: SupplierLedgerProps) {
-    const { data, isLoading, isError } = useSupplierLedger(workspaceId, supplierId);
+    const { data, isLoading, isError, refetch } = useSupplierLedger(workspaceId, supplierId);
 
     if (isError) {
         return (
             <SectionCard title="Ledger Timeline">
-                <EmptyState
-                    icon={<AccountBalanceWalletIcon />}
-                    title="Could not load ledger"
-                    description="There was a problem fetching the supplier's chronological timeline."
-                />
+                <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                    This supplier&apos;s ledger could not be loaded.
+                </Alert>
             </SectionCard>
         );
     }

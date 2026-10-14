@@ -1,9 +1,9 @@
 "use client";
 
-import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import { ReactNode } from "react";
+import { PageHeader } from "../shared/components/PageHeader";
 
 interface PageShellProps {
   title?: string;
@@ -14,34 +14,12 @@ interface PageShellProps {
 }
 
 export const PageShell = ({ title, description, children, workspaceId = '' }: PageShellProps) => {
-
   return (
-    <>
-      <Stack spacing={3}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          {title && (
-            <Typography variant="h4" fontWeight={700}>
-              {title}
-            </Typography>
-          )}
-
-        </Stack>
-
-        {description && (
-          <Paper sx={{ p: 3 }} variant="outlined">
-            <Typography color="text.secondary">
-              {description}
-            </Typography>
-          </Paper>
-        )}
-
+    <Box component="section" data-workspace-id={workspaceId || undefined}>
+      <Stack spacing={{ xs: 2.5, md: 3.5 }}>
+        {title && <PageHeader title={title} subtitle={description} />}
         {children}
       </Stack>
-
-    </>
+    </Box>
   );
 };

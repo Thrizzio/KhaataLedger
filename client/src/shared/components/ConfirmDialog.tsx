@@ -5,6 +5,9 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import CircularProgress from '@mui/material/CircularProgress';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 interface ConfirmDialogProps {
     open: boolean;
@@ -31,7 +34,12 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
     return (
         <Dialog open={open} onClose={isPending ? undefined : onCancel} maxWidth="xs" fullWidth>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                    <WarningAmberRoundedIcon color={isDanger ? 'error' : 'primary'} sx={{ fontSize: 22 }} aria-hidden="true" />
+                    <Typography component="span" fontWeight={750}>{title}</Typography>
+                </Stack>
+            </DialogTitle>
             <DialogContent>
                 <DialogContentText>{content}</DialogContentText>
             </DialogContent>

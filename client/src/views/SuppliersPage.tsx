@@ -48,10 +48,11 @@ export const SuppliersPage = ({ workspaceId }: SuppliersPageProps) => {
                 }
             />
 
-            <SectionCard>
+            <SectionCard title="Supplier directory">
                 <Box sx={{ mb: 3 }}>
                     <TextField
                         size="small"
+                        label="Search suppliers"
                         placeholder="Search name, phone, or email..."
                         value={searchStr}
                         onChange={(e) => setSearchStr(e.target.value)}

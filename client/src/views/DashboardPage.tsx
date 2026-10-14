@@ -4,6 +4,7 @@ import Grid from '@mui/material/Grid';
 import Skeleton from '@mui/material/Skeleton';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
@@ -38,12 +39,12 @@ function getGreeting(): string {
 }
 
 function DashboardMetricsGrid({ workspaceId }: { workspaceId: string }) {
-  const { data, isLoading, isError } = useDashboard(workspaceId);
+  const { data, isLoading, isError, refetch } = useDashboard(workspaceId);
 
   if (isError) {
     return (
-      <Alert severity="error" sx={{ mb: 4 }}>
-        Failed to load dashboard metrics. Please check your connection.
+      <Alert severity="error" sx={{ mb: 4 }} action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+        Dashboard metrics could not be loaded.
       </Alert>
     );
   }

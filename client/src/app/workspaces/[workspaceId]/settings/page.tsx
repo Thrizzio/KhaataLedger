@@ -11,7 +11,10 @@ export default async function SettingsRoute({ params }: Props) {
     const { workspaceId } = await params;
 
     return (
-        <PageShell title="Settings">
+        <PageShell
+            title="Settings"
+            description="Manage your profile, workspace access, notifications, appearance, and security."
+        >
             <SettingsModule workspaceId={workspaceId} />
         </PageShell>
     );

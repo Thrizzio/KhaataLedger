@@ -12,28 +12,29 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, icon, trend }: MetricCardProps) {
     return (
-        <Card sx={{ p: 3, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-            <Box>
-                <Typography variant="body2" color="text.secondary" fontWeight={500} gutterBottom>
+        <Card sx={{ p: { xs: 2, sm: 2.5 }, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', height: '100%', position: 'relative', overflow: 'hidden' }}>
+            <Box sx={{ minWidth: 0 }}>
+                <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                     {title}
                 </Typography>
-                <Typography variant="h4" color="text.primary" sx={{ mb: title ? 1 : 0 }}>
+                <Typography variant="h4" color="text.primary" sx={{ mb: title ? 0.75 : 0, fontSize: { xs: '1.4rem', sm: '1.6rem' }, overflowWrap: 'anywhere' }}>
                     {value}
                 </Typography>
                 {trend && <Box sx={{ mt: 1 }}>{trend}</Box>}
             </Box>
             <Box
                 sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: 'primary.light',
-                    color: 'primary.dark',
+                    p: 1.25,
+                    borderRadius: 2.5,
+                    bgcolor: 'rgba(15, 138, 131, 0.10)',
+                    color: 'secondary.main',
                     display: 'flex',
-                    opacity: 0.8,
+                    flexShrink: 0,
                 }}
             >
                 {icon}
             </Box>
+            <Box sx={{ position: 'absolute', left: 0, top: 0, width: 3, height: '100%', bgcolor: 'secondary.main' }} />
         </Card>
     );
 }

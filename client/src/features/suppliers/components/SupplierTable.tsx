@@ -7,6 +7,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 
 import { DataTable, type ColumnDef } from '../../../shared/components/DataTable';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -35,7 +37,7 @@ export function SupplierTable({ workspaceId, searchStr }: SupplierTableProps) {
     const [isEditDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteSupplier, setDeleteSupplier] = useState<Supplier | null>(null);
 
-    const { data, isLoading } = useSuppliers(workspaceId, {
+    const { data, isLoading, isError, refetch } = useSuppliers(workspaceId, {
         page: page + 1,
         limit: rowsPerPage,
         search: searchStr || undefined,
@@ -94,6 +96,14 @@ export function SupplierTable({ workspaceId, searchStr }: SupplierTableProps) {
             )
         },
     ];
+
+    if (isError) {
+        return (
+            <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                Suppliers could not be loaded. Your existing supplier records are unchanged.
+            </Alert>
+        );
+    }
 
     return (
         <>

@@ -50,10 +50,11 @@ export const InventoryPage = ({ workspaceId }: InventoryPageProps) => {
             />
 
             {/* ── Table & Filtration ──────────────────────────── */}
-            <SectionCard>
+            <SectionCard title="Stock catalogue">
                 <Box sx={{ mb: 3 }}>
                     <TextField
                         size="small"
+                        label="Search inventory"
                         placeholder="Search by name or SKU..."
                         value={searchStr}
                         onChange={(e) => setSearchStr(e.target.value)}

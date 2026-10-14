@@ -4,12 +4,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
-import DialogTitle from '@mui/material/DialogTitle';
-import Divider from '@mui/material/Divider';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -28,10 +24,14 @@ import type { CreateEmployeePayload, Employee } from '../types/workspace';
 
 import { useAuth } from '../hooks/useAuth';
 import { PageShell } from './PageShell';
+import { PageHeader } from '../shared/components/PageHeader';
+import { SectionCard } from '../shared/components/SectionCard';
+import { EmptyState } from '../shared/components/EmptyState';
 import { UnauthorizedView } from '../components/UnauthorizedView';
 import { Permission } from '../types/auth';
 import { usePermission } from '../hooks/usePermission';
 import { workspaceService } from '../services/workspace.service';
+import { getApiErrorDetails } from '../api/apiError';
 
 interface EmployeesPageProps {
     workspaceId: string;
@@ -43,7 +43,7 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
-    const { data: employees, isLoading, isError } = useQuery<Employee[]>({
+    const { data: employees, isLoading, isError, refetch } = useQuery<Employee[]>({
         queryKey: ['employees', workspaceId],
         queryFn: () =>
             workspaceService.getEmployees(workspaceId).then((r) => r.data.data ?? []),
@@ -52,7 +52,11 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
     const { hasPermission } = usePermission();
 
     if (!hasPermission(Permission.EMPLOYEES_VIEW)) {
-        return <UnauthorizedView />;
+        return (
+            <PageShell workspaceId={workspaceId}>
+                <UnauthorizedView />
+            </PageShell>
+        );
     }
 
 
@@ -67,8 +71,8 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
             queryClient.invalidateQueries({ queryKey: ['workspaces'] });
             setDialogOpen(false);
         },
-        onError: (error: any) => {
-            toast.error(error?.response?.data?.message || 'Failed to create employee.');
+        onError: (error: unknown) => {
+            toast.error(getApiErrorDetails(error, 'Failed to create employee.').message);
         },
     });
 
@@ -82,8 +86,8 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
             setDialogOpen(false);
             setEditingEmployee(null);
         },
-        onError: () => {
-            toast.error('Failed to update permissions.');
+        onError: (error: unknown) => {
+            toast.error(getApiErrorDetails(error, 'Failed to update permissions.').message);
         }
     });
 
@@ -107,53 +111,39 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
     };
 
     return (
-        <Stack spacing={3}>
-            {/* Header */}
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                    <Typography variant="h4" fontWeight={700}>
-                        Employees
-                    </Typography>
-                    <Typography color="text.secondary" variant="body2">
-                        Manage workspace employees. Employees cannot register themselves.
-                    </Typography>
-                </Box>
-                {user?.role === 'OWNER' && (
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setDialogOpen(true)}
-                    >
+        <PageShell workspaceId={workspaceId}>
+            <PageHeader
+                title="Employees"
+                subtitle="Manage workspace employees and their access. Employees cannot register themselves."
+                action={user?.role === 'OWNER' ? (
+                    <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
                         Add Employee
                     </Button>
-                )}
-            </Stack>
+                ) : undefined}
+            />
 
             {/* Table */}
-            <Paper variant="outlined" sx={{ borderRadius: 2 }}>
+            <SectionCard title="Workspace employees">
                 {isLoading ? (
                     <Box display="flex" justifyContent="center" py={6}>
                         <CircularProgress />
                     </Box>
                 ) : isError ? (
                     <Box py={4} textAlign="center">
-                        <Typography color="error">Failed to load employees.</Typography>
+                        <Typography color="error" gutterBottom>Employees could not be loaded.</Typography>
+                        <Button variant="outlined" onClick={() => refetch()}>Retry</Button>
                     </Box>
                 ) : !employees || employees.length === 0 ? (
-                    <Box py={8} textAlign="center">
-                        <PersonIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1 }} />
-                        <Typography color="text.secondary" gutterBottom>
-                            No employees yet.
-                        </Typography>
-                        <Button
-                            variant="outlined"
-                            startIcon={<AddIcon />}
-                            onClick={() => setDialogOpen(true)}
-                            sx={{ mt: 1 }}
-                        >
-                            Add First Employee
-                        </Button>
-                    </Box>
+                    <EmptyState
+                        icon={<PersonIcon />}
+                        title="No employees yet"
+                        description="Add an employee to share workspace access and assign permissions."
+                        action={user?.role === 'OWNER' ? (
+                            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+                                Add First Employee
+                            </Button>
+                        ) : undefined}
+                    />
                 ) : (
                     <TableContainer>
                         <Table>
@@ -196,7 +186,7 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
                         </Table>
                     </TableContainer>
                 )}
-            </Paper>
+            </SectionCard>
 
             <EmployeeDialog
                 open={dialogOpen}
@@ -205,6 +195,6 @@ export const EmployeesPage = ({ workspaceId }: EmployeesPageProps) => {
                 isPending={createMutation.isPending || updateMutation.isPending}
                 initialData={editingEmployee}
             />
-        </Stack>
+        </PageShell>
     );
 };

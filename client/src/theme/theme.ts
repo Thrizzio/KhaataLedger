@@ -1,59 +1,61 @@
-import { createTheme, alpha } from '@mui/material/styles';
+import { alpha, createTheme } from '@mui/material/styles';
 
 // ── Brand tokens ─────────────────────────────────────────────────────────────
-const PRIMARY = '#4F46E5';   // indigo-600
-const SECONDARY = '#7C3AED'; // violet-600
+// A quiet navy foundation keeps dense business screens legible while teal gives
+// actions and positive movement a distinct, restrained accent.
+const NAVY = '#0B1F3A';
+const TEAL = '#0F8A83';
 
 export const appTheme = createTheme({
   // ── Palette ───────────────────────────────────────────────────────────────
   palette: {
     mode: 'light',
     primary: {
-      main: PRIMARY,
-      light: '#818CF8',
-      dark: '#3730A3',
+      main: NAVY,
+      light: '#31577F',
+      dark: '#061426',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: SECONDARY,
-      light: '#A78BFA',
-      dark: '#5B21B6',
+      main: TEAL,
+      light: '#5BC6BB',
+      dark: '#0A615D',
       contrastText: '#ffffff',
     },
     success: {
-      main: '#16A34A',
-      light: '#4ADE80',
-      dark: '#15803D',
+      main: '#15803D',
+      light: '#4CAF7A',
+      dark: '#0B5C2B',
       contrastText: '#ffffff',
     },
     warning: {
-      main: '#D97706',
-      light: '#FCD34D',
-      dark: '#B45309',
+      main: '#B8660B',
+      light: '#E4A34B',
+      dark: '#824607',
       contrastText: '#ffffff',
     },
     error: {
-      main: '#DC2626',
-      light: '#F87171',
-      dark: '#B91C1C',
+      main: '#C2413A',
+      light: '#E57970',
+      dark: '#922F2A',
       contrastText: '#ffffff',
     },
     info: {
-      main: '#0284C7',
-      light: '#38BDF8',
-      dark: '#0369A1',
+      main: '#1769AA',
+      light: '#66A9D9',
+      dark: '#104A78',
       contrastText: '#ffffff',
     },
     background: {
-      default: '#F8FAFC',
+      default: '#F4F7F8',
       paper: '#FFFFFF',
     },
     text: {
-      primary: '#0F172A',
-      secondary: '#64748B',
-      disabled: '#94A3B8',
+      primary: '#10233F',
+      secondary: '#5B6B7E',
+      disabled: '#8A99A8',
     },
-    divider: '#E2E8F0',
+    divider: '#DDE5EA',
   },
 
   // ── Shape ─────────────────────────────────────────────────────────────────
@@ -68,16 +70,16 @@ export const appTheme = createTheme({
       'Segoe UI',
       'sans-serif',
     ].join(','),
-    h1: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em' },
-    h2: { fontSize: '1.5rem', fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.01em' },
-    h3: { fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.3 },
-    h4: { fontSize: '1.125rem', fontWeight: 600, lineHeight: 1.35 },
-    h5: { fontSize: '1rem', fontWeight: 600, lineHeight: 1.4 },
-    h6: { fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.4 },
+    h1: { fontSize: '2rem', fontWeight: 750, lineHeight: 1.18, letterSpacing: '-0.025em' },
+    h2: { fontSize: '1.5rem', fontWeight: 750, lineHeight: 1.24, letterSpacing: '-0.018em' },
+    h3: { fontSize: '1.25rem', fontWeight: 700, lineHeight: 1.3 },
+    h4: { fontSize: '1.125rem', fontWeight: 700, lineHeight: 1.35 },
+    h5: { fontSize: '1rem', fontWeight: 700, lineHeight: 1.4 },
+    h6: { fontSize: '0.875rem', fontWeight: 700, lineHeight: 1.4 },
     body1: { fontSize: '0.9375rem', lineHeight: 1.6 },
-    body2: { fontSize: '0.875rem', lineHeight: 1.57 },
-    caption: { fontSize: '0.75rem', lineHeight: 1.5, color: '#64748B' },
-    overline: { fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' },
+    body2: { fontSize: '0.875rem', lineHeight: 1.55 },
+    caption: { fontSize: '0.75rem', lineHeight: 1.5, color: '#5B6B7E' },
+    overline: { fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase' },
     button: { fontWeight: 600, textTransform: 'none' as const, letterSpacing: '0.01em' },
   },
 
@@ -85,16 +87,23 @@ export const appTheme = createTheme({
   components: {
     // CssBaseline: import Inter from Google Fonts
     MuiCssBaseline: {
-      styleOverrides: `
-        * { box-sizing: border-box; }
-        body { scroll-behavior: smooth; }
-      `,
+      styleOverrides: {
+        '*': { boxSizing: 'border-box' },
+        'html': { scrollBehavior: 'smooth' },
+        'body': { minWidth: 320, backgroundColor: '#F4F7F8' },
+        'button, a, input, textarea, select': {
+          '&:focus-visible': {
+            outline: `3px solid ${alpha(TEAL, 0.42)}`,
+            outlineOffset: 2,
+          },
+        },
+      },
     },
 
     MuiButton: {
       defaultProps: { disableElevation: true },
-      styleOverrides: {
-        root: { borderRadius: 8, paddingX: '1rem', fontWeight: 600, minHeight: 36 },
+       styleOverrides: {
+        root: { borderRadius: 8, paddingInline: '1rem', fontWeight: 700, minHeight: 38 },
         sizeLarge: { minHeight: 44, fontSize: '0.9375rem' },
         sizeSmall: { minHeight: 30, fontSize: '0.8125rem' },
         containedError: ({ theme }) => ({
@@ -108,16 +117,16 @@ export const appTheme = createTheme({
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          border: '1px solid #E2E8F0',
-          borderRadius: 12,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+          border: '1px solid #DDE5EA',
+          borderRadius: 14,
+          boxShadow: '0 1px 2px rgba(16,35,63,0.04), 0 8px 24px rgba(16,35,63,0.035)',
         },
       },
     },
 
     MuiCardContent: {
       styleOverrides: {
-        root: { padding: '20px 24px', '&:last-child': { paddingBottom: 20 } },
+        root: { padding: '20px 22px', '&:last-child': { paddingBottom: 20 } },
       },
     },
 
@@ -125,7 +134,7 @@ export const appTheme = createTheme({
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: { backgroundImage: 'none' },
-        outlined: { borderColor: '#E2E8F0' },
+        outlined: { borderColor: '#DDE5EA' },
       },
     },
 
@@ -137,15 +146,16 @@ export const appTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
-          '& fieldset': { borderColor: '#CBD5E1' },
-          '&:hover fieldset': { borderColor: '#94A3B8' },
+           '& fieldset': { borderColor: '#C8D4DC' },
+           '&:hover fieldset': { borderColor: '#8A99A8' },
+           '&.Mui-focused fieldset': { borderWidth: 2 },
         },
       },
     },
 
     MuiInputLabel: {
       styleOverrides: {
-        root: { fontSize: '0.875rem', fontWeight: 500 },
+         root: { fontSize: '0.875rem', fontWeight: 600 },
       },
     },
 
@@ -155,7 +165,7 @@ export const appTheme = createTheme({
 
     MuiChip: {
       styleOverrides: {
-        root: { borderRadius: 6, fontWeight: 500, fontSize: '0.8125rem' },
+         root: { borderRadius: 7, fontWeight: 700, fontSize: '0.8125rem' },
         colorSuccess: ({ theme }) => ({
           backgroundColor: alpha(theme.palette.success.main, 0.12),
           color: theme.palette.success.dark,
@@ -177,14 +187,14 @@ export const appTheme = createTheme({
 
     MuiTableHead: {
       styleOverrides: {
-        root: { backgroundColor: '#F8FAFC' },
+         root: { backgroundColor: '#F5F8F9' },
       },
     },
 
     MuiTableCell: {
       styleOverrides: {
-        head: { fontWeight: 600, fontSize: '0.8125rem', color: '#475569', borderBottom: '1px solid #E2E8F0', paddingY: 10 },
-        body: { fontSize: '0.875rem', color: '#0F172A', borderColor: '#F1F5F9' },
+         head: { fontWeight: 700, fontSize: '0.75rem', color: '#4A5C70', borderBottom: '1px solid #DDE5EA', padding: '11px 16px', textTransform: 'uppercase', letterSpacing: '0.045em' },
+         body: { fontSize: '0.875rem', color: '#10233F', borderColor: '#EDF2F4', padding: '13px 16px' },
       },
     },
 
@@ -192,33 +202,33 @@ export const appTheme = createTheme({
       styleOverrides: {
         root: {
           '&:last-child td': { border: 0 },
-          '&:hover': { backgroundColor: '#F8FAFC' },
+           '&:hover': { backgroundColor: '#F6FAF9' },
         },
       },
     },
 
     MuiDialogTitle: {
       styleOverrides: {
-        root: { fontSize: '1.0625rem', fontWeight: 600, padding: '20px 24px 12px' },
+         root: { fontSize: '1.0625rem', fontWeight: 750, padding: '22px 24px 12px' },
       },
     },
 
     MuiDialogContent: {
       styleOverrides: {
-        root: { padding: '8px 24px 20px' },
+         root: { padding: '8px 24px 20px' },
       },
     },
 
     MuiDialogActions: {
       styleOverrides: {
-        root: { padding: '12px 24px 20px', gap: 8 },
+         root: { padding: '12px 24px 20px', gap: 8 },
       },
     },
 
     MuiTooltip: {
       defaultProps: { arrow: true },
       styleOverrides: {
-        tooltip: { fontSize: '0.75rem', borderRadius: 6 },
+         tooltip: { fontSize: '0.75rem', borderRadius: 6, backgroundColor: NAVY },
       },
     },
 
@@ -236,7 +246,7 @@ export const appTheme = createTheme({
 
     MuiDivider: {
       styleOverrides: {
-        root: { borderColor: '#E2E8F0' },
+         root: { borderColor: '#DDE5EA' },
       },
     },
 
@@ -249,14 +259,14 @@ export const appTheme = createTheme({
 
     MuiListItemButton: {
       styleOverrides: {
-        root: { borderRadius: 8 },
+         root: { borderRadius: 8 },
       },
     },
 
     MuiAppBar: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        root: { borderBottom: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', color: '#0F172A' },
+         root: { borderBottom: '1px solid #DDE5EA', backgroundColor: '#FFFFFF', color: '#10233F' },
       },
     },
   },

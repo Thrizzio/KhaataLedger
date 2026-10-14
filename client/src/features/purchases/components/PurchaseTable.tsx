@@ -3,6 +3,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 
 import { DataTable, type ColumnDef } from '../../../shared/components/DataTable';
 import { EmptyState } from '../../../shared/components/EmptyState';
@@ -29,7 +31,7 @@ export function PurchaseTable({ workspaceId, searchStr }: PurchaseTableProps) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const { data, isLoading, isError } = usePurchases(workspaceId, {
+    const { data, isLoading, isError, refetch } = usePurchases(workspaceId, {
         page: page + 1,
         limit: rowsPerPage,
         search: searchStr || undefined,
@@ -80,6 +82,14 @@ export function PurchaseTable({ workspaceId, searchStr }: PurchaseTableProps) {
             )
         }
     ];
+
+    if (isError) {
+        return (
+            <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                Purchases could not be loaded. Your existing purchase records are unchanged.
+            </Alert>
+        );
+    }
 
     return (
         <DataTable

@@ -12,8 +12,9 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
     return (
         <Box
+            role="status"
             sx={{
-                py: 8,
+                py: { xs: 6, sm: 8 },
                 px: 3,
                 display: 'flex',
                 flexDirection: 'column',
@@ -21,7 +22,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
                 textAlign: 'center',
             }}
         >
-            <Box sx={{ color: 'text.disabled', mb: 2, '& > svg': { fontSize: 64 } }}>{icon}</Box>
+            <Box aria-hidden="true" sx={{ width: 56, height: 56, borderRadius: 3, bgcolor: 'rgba(15, 138, 131, 0.10)', color: 'secondary.main', mb: 2, display: 'grid', placeItems: 'center', '& > svg': { fontSize: 30 } }}>{icon}</Box>
             <Typography variant="h6" color="text.primary" gutterBottom>
                 {title}
             </Typography>

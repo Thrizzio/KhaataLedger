@@ -49,10 +49,11 @@ export const SalesPage = ({ workspaceId }: SalesPageProps) => {
                 }
             />
 
-            <SectionCard>
+            <SectionCard title="Sales history">
                 <Box sx={{ mb: 3 }}>
                     <TextField
                         size="small"
+                        label="Search sales"
                         placeholder="Search sales..."
                         value={searchStr}
                         onChange={(e) => setSearchStr(e.target.value)}

@@ -1,5 +1,6 @@
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
 import { useLowStock } from '../hooks/useLowStock';
 import { DataTable, type ColumnDef } from '../../../shared/components/DataTable';
 import { SectionCard } from '../../../shared/components/SectionCard';
@@ -22,16 +23,14 @@ const columns: ColumnDef<LowStockItem>[] = [
 ];
 
 export function LowStockTable({ workspaceId }: { workspaceId: string }) {
-    const { data = [], isLoading, isError } = useLowStock(workspaceId);
+    const { data = [], isLoading, isError, refetch } = useLowStock(workspaceId);
 
     if (isError) {
         return (
             <SectionCard title="Low Stock Items">
-                <EmptyState
-                    icon={<Inventory2Icon />}
-                    title="Could not load inventory"
-                    description="There was a problem fetching the low stock items."
-                />
+                <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                    Low stock items could not be loaded.
+                </Alert>
             </SectionCard>
         );
     }

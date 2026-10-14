@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Box, Typography, Grid, Skeleton, Alert } from '@mui/material';
+import { Box, Grid, Skeleton, Alert, Button } from '@mui/material';
 import { useReports } from './hooks/useReports';
 import { ReportPeriodSelector } from './components/ReportPeriodSelector';
 import { BusinessSummaryCard } from './components/BusinessSummaryCard';
@@ -16,6 +16,7 @@ import { InventoryReportCard } from './components/InventoryReportCard';
 import { EmptyState } from '../../shared/components/EmptyState';
 import type { ReportPeriod, SalesReportSection, CustomerReportSection, SupplierReportSection, PurchaseReportSection, CashFlowReportSection, ProfitabilityReportSection, InventoryReportSection } from './types';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import { PageHeader } from '../../shared/components/PageHeader';
 
 interface Props {
     workspaceId: string;
@@ -23,7 +24,7 @@ interface Props {
 
 export function ReportsPage({ workspaceId }: Props) {
     const [period, setPeriod] = useState<ReportPeriod>('today');
-    const { data, isLoading, error } = useReports(workspaceId, period);
+    const { data, isLoading, error, refetch } = useReports(workspaceId, period);
 
     const SECTIONS = [
         { id: 'sales', title: 'Sales' },
@@ -36,21 +37,14 @@ export function ReportsPage({ workspaceId }: Props) {
     ];
 
     return (
-        <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    Reports
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Business insights and performance metrics.
-                </Typography>
-            </Box>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1200, mx: 'auto' }}>
+            <PageHeader title="Reports" subtitle="Business insights and performance metrics." />
 
             <ReportPeriodSelector period={period} onChange={setPeriod} />
 
             {error ? (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                    Failed to load reports. Please try again.
+                <Alert severity="error" sx={{ mb: 3 }} action={<Button color="inherit" size="small" onClick={() => refetch()}>Retry</Button>}>
+                    Reports could not be loaded for this period.
                 </Alert>
             ) : isLoading ? (
                 <Box>
