@@ -12,6 +12,7 @@ import Stack from '@mui/material/Stack';
 import { supplierFormSchema, type SupplierFormValues } from '../validation';
 import { useSupplierMutations } from '../hooks/useSupplierMutations';
 import type { Supplier } from '../types';
+import { applyApiFieldErrors } from '../../../api/apiError';
 
 interface SupplierDialogProps {
     open: boolean;
@@ -25,7 +26,7 @@ export function SupplierDialog({ open, onClose, workspaceId, initialData, onSucc
     const isEditing = Boolean(initialData);
     const { createMutation, updateMutation } = useSupplierMutations(workspaceId);
 
-    const { control, handleSubmit, reset, formState: { errors } } = useForm<SupplierFormValues>({
+    const { control, handleSubmit, reset, setError, formState: { errors } } = useForm<SupplierFormValues>({
         resolver: zodResolver(supplierFormSchema),
         defaultValues: { name: '', phoneNumber: '', email: '', address: '' },
     });
@@ -49,12 +50,22 @@ export function SupplierDialog({ open, onClose, workspaceId, initialData, onSucc
         if (isEditing && initialData) {
             updateMutation.mutate(
                 { id: initialData.id, payload: data },
-                { onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as Supplier); onClose(); } }
+                {
+                    onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as Supplier); onClose(); },
+                    onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                        setError(field as keyof SupplierFormValues, { type: 'server', message }),
+                    ),
+                }
             );
         } else {
             createMutation.mutate(
                 data,
-                { onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as Supplier); onClose(); } }
+                {
+                    onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as Supplier); onClose(); },
+                    onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                        setError(field as keyof SupplierFormValues, { type: 'server', message }),
+                    ),
+                }
             );
         }
     };

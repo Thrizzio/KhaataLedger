@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { useUpdateSale } from '../hooks/useUpdateSale';
 import { useInventory } from '../../inventory/hooks/useInventory';
 import type { Sale } from '../types';
+import { applyApiFieldErrors } from '../../../api/apiError';
 
 interface EditSaleModalProps {
     open: boolean;
@@ -52,7 +53,7 @@ export function EditSaleModal({ open, onClose, workspaceId, sale }: EditSaleModa
     const mutation = useUpdateSale(workspaceId);
     const { data: inventoryData, isLoading: loadingInventory } = useInventory(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
 
-    const { control, handleSubmit, reset, formState: { errors } } = useForm<UpdateSaleFormValues>({
+    const { control, handleSubmit, reset, setError, formState: { errors } } = useForm<UpdateSaleFormValues>({
         resolver: zodResolver(updateSaleSchema),
         defaultValues: {
             saleDate: '',
@@ -99,7 +100,7 @@ export function EditSaleModal({ open, onClose, workspaceId, sale }: EditSaleModa
     const runningTotal = watchItems?.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.sellingPrice) || 0), 0) || 0;
 
     const onSubmit = (data: UpdateSaleFormValues) => {
-        if (!sale) return;
+        if (!sale || mutation.isPending) return;
         
         for (const item of data.items) {
             const avail = (stockMap[item.inventoryItemId] || 0) + (oldQtyMap[item.inventoryItemId] || 0);
@@ -116,7 +117,12 @@ export function EditSaleModal({ open, onClose, workspaceId, sale }: EditSaleModa
                     items: data.items
                 }
             },
-            { onSuccess: () => onClose() }
+            {
+                onSuccess: () => onClose(),
+                onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                    setError(field as never, { type: 'server', message }),
+                ),
+            }
         );
     };
 

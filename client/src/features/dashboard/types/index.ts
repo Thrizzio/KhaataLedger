@@ -8,6 +8,13 @@ export interface DashboardMetrics {
     lowStockCount: number;
 }
 
+export interface DashboardApiResponse {
+    today: { salesTotal: number; purchasesTotal: number };
+    customers: { totalReceivables: number };
+    suppliers: { totalPayables: number };
+    inventory: { inventoryValue: number; lowStockCount: number };
+}
+
 // DTO for GET /workspaces/:workspaceId/activity
 export interface ActivityItem {
     id: string;

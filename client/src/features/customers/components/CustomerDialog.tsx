@@ -12,6 +12,7 @@ import Stack from '@mui/material/Stack';
 import { customerFormSchema, type CustomerFormValues } from '../validation';
 import { useCustomerMutations } from '../hooks/useCustomerMutations';
 import type { Customer } from '../types';
+import { applyApiFieldErrors } from '../../../api/apiError';
 
 interface CustomerDialogProps {
     open: boolean;
@@ -24,7 +25,7 @@ export function CustomerDialog({ open, onClose, workspaceId, initialData }: Cust
     const isEditing = Boolean(initialData);
     const { createMutation, updateMutation } = useCustomerMutations(workspaceId);
 
-    const { control, handleSubmit, reset, formState: { errors } } = useForm<CustomerFormValues>({
+    const { control, handleSubmit, reset, setError, formState: { errors } } = useForm<CustomerFormValues>({
         resolver: zodResolver(customerFormSchema),
         defaultValues: { name: '', phoneNumber: '', email: '', address: '' },
     });
@@ -48,12 +49,22 @@ export function CustomerDialog({ open, onClose, workspaceId, initialData }: Cust
         if (isEditing && initialData) {
             updateMutation.mutate(
                 { id: initialData.id, payload: data },
-                { onSuccess: () => onClose() }
+                {
+                    onSuccess: () => onClose(),
+                    onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                        setError(field as keyof CustomerFormValues, { type: 'server', message }),
+                    ),
+                }
             );
         } else {
             createMutation.mutate(
                 data,
-                { onSuccess: () => onClose() }
+                {
+                    onSuccess: () => onClose(),
+                    onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                        setError(field as keyof CustomerFormValues, { type: 'server', message }),
+                    ),
+                }
             );
         }
     };

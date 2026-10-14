@@ -13,6 +13,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { inventoryFormSchema, type InventoryFormValues } from '../validation';
 import { useInventoryMutations } from '../hooks/useInventoryMutations';
 import type { InventoryItem } from '../types';
+import { applyApiFieldErrors } from '../../../api/apiError';
 
 interface InventoryDialogProps {
     open: boolean;
@@ -26,7 +27,7 @@ export function InventoryDialog({ open, onClose, workspaceId, initialData, onSuc
     const isEditing = Boolean(initialData);
     const { createMutation, updateMutation } = useInventoryMutations(workspaceId);
 
-    const { control, handleSubmit, reset, formState: { errors } } = useForm<InventoryFormValues>({
+    const { control, handleSubmit, reset, setError, formState: { errors } } = useForm<InventoryFormValues>({
         resolver: zodResolver(inventoryFormSchema),
         defaultValues: { name: '', sku: '', unit: '', defaultSellingPrice: 0 },
     });
@@ -50,12 +51,22 @@ export function InventoryDialog({ open, onClose, workspaceId, initialData, onSuc
         if (isEditing && initialData) {
             updateMutation.mutate(
                 { id: initialData.id, payload: data },
-                { onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as InventoryItem); onClose(); } }
+                {
+                    onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as InventoryItem); onClose(); },
+                    onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                        setError(field as keyof InventoryFormValues, { type: 'server', message }),
+                    ),
+                }
             );
         } else {
             createMutation.mutate(
                 data,
-                { onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as InventoryItem); onClose(); } }
+                {
+                    onSuccess: (res) => { if (onSuccess) onSuccess(res as unknown as InventoryItem); onClose(); },
+                    onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                        setError(field as keyof InventoryFormValues, { type: 'server', message }),
+                    ),
+                }
             );
         }
     };

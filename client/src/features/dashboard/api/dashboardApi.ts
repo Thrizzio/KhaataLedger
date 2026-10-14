@@ -1,10 +1,10 @@
 import { httpClient } from '../../../api/httpClient';
 import type { ApiResponse } from '../../../types/api';
-import type { DashboardMetrics, ActivityItem, LowStockItem } from '../types';
+import type { DashboardApiResponse, ActivityItem, LowStockItem } from '../types';
 
 export const dashboardApi = {
     getMetrics: (workspaceId: string) =>
-        httpClient.get<ApiResponse<DashboardMetrics>>(`/workspaces/${workspaceId}/dashboard`),
+        httpClient.get<ApiResponse<DashboardApiResponse>>(`/workspaces/${workspaceId}/dashboard`),
 
     getActivity: (workspaceId: string) =>
         httpClient.get<

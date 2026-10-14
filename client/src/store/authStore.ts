@@ -68,3 +68,12 @@ export const subscribeToAuth = (listener: () => void): (() => void) => {
     listeners.delete(listener);
   };
 };
+
+if (isClient) {
+  window.addEventListener('storage', (event) => {
+    if (event.key === null || event.key === 'ledger_access_token' || event.key === 'ledger_user') {
+      initAuthState();
+      listeners.forEach((listener) => listener());
+    }
+  });
+}

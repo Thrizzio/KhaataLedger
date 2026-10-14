@@ -23,6 +23,7 @@ import { useCustomers } from '../../customers/hooks/useCustomers';
 import { useInventory } from '../../inventory/hooks/useInventory';
 import { CustomerDialog } from '../../customers/components/CustomerDialog';
 import { InventoryDialog } from '../../inventory/components/InventoryDialog';
+import { applyApiFieldErrors } from '../../../api/apiError';
 
 interface SaleFormProps {
     open: boolean;
@@ -42,7 +43,7 @@ export function SaleForm({ open, onClose, workspaceId }: SaleFormProps) {
     const { data: customerData, isLoading: loadingCustomers } = useCustomers(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
     const { data: inventoryData, isLoading: loadingInventory } = useInventory(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
 
-    const { control, handleSubmit, reset, formState: { errors } } = useForm<SaleFormValues>({
+    const { control, handleSubmit, reset, setError, formState: { errors } } = useForm<SaleFormValues>({
         resolver: zodResolver(saleFormSchema),
         defaultValues: {
             customerId: '',
@@ -83,6 +84,7 @@ export function SaleForm({ open, onClose, workspaceId }: SaleFormProps) {
     }, [open, reset]);
 
     const onSubmit = (data: SaleFormValues) => {
+        if (mutation.isPending) return;
         // Custom guard guaranteeing quantities do not exceed stock 
         // (Backend will throw anyway, but blocking explicitly here optimizes UX)
         for (const item of data.items) {
@@ -98,7 +100,12 @@ export function SaleForm({ open, onClose, workspaceId }: SaleFormProps) {
                 customerId: data.customerId || undefined,
                 saleDate: new Date(data.saleDate).toISOString()
             },
-            { onSuccess: () => onClose() }
+            {
+                onSuccess: () => onClose(),
+                onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                    setError(field as never, { type: 'server', message }),
+                ),
+            }
         );
     };
 

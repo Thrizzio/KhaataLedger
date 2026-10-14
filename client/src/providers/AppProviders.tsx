@@ -7,7 +7,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { appTheme } from "../theme/theme";
 import { SnackbarProvider } from "./SnackbarProvider";
 import { showSnackbar } from "../lib/snackbar";
-import type { ApiError } from "../api/apiError";
+import { ApiError, getApiErrorDetails } from "../api/apiError";
 
 // ── QueryClient — created once at module level so it survives re-renders ───────
 const queryClient = new QueryClient({
@@ -24,10 +24,12 @@ const queryClient = new QueryClient({
             refetchOnWindowFocus: false,
         },
         mutations: {
-            // Global mutation error handler — features can override via onError
+            // The Axios interceptor presents API failures once. Keep this
+            // fallback for non-HTTP failures only so mutations do not produce
+            // duplicate toasts.
             onError: (error: unknown) => {
-                const msg =
-                    error instanceof Error ? error.message : "An unexpected error occurred.";
+                if (error instanceof ApiError) return;
+                const msg = getApiErrorDetails(error, "An unexpected error occurred.").message;
                 showSnackbar({ message: msg, severity: "error" });
             },
         },

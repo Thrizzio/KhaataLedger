@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../../../lib/queryKeys';
 import { dashboardApi } from '../api/dashboardApi';
+import { shouldRetryQuery } from '../../../hooks/queryReliability';
 
 export function useActivity(workspaceId?: string) {
     return useQuery({
@@ -25,5 +26,6 @@ export function useActivity(workspaceId?: string) {
             }) as import('../types').ActivityItem[];
         },
         enabled: Boolean(workspaceId),
+        retry: shouldRetryQuery,
     });
 }

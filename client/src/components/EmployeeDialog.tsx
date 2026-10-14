@@ -182,7 +182,7 @@ export const EmployeeDialog = ({ open, onClose, onSubmit, isPending, initialData
                                     label="Temporary Password"
                                     type="password"
                                     fullWidth
-                                    {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Min 6 characters' } })}
+                                     {...register('password', { required: 'Password is required', minLength: { value: 8, message: 'Min 8 characters' } })}
                                     error={Boolean(errors.password)}
                                     helperText={errors.password?.message || 'Employee will use this to log in.'}
                                     disabled={isPending}

@@ -26,6 +26,7 @@ import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
 import { useInventory } from '../../inventory/hooks/useInventory';
 import { SupplierDialog } from '../../suppliers/components/SupplierDialog';
 import { InventoryDialog } from '../../inventory/components/InventoryDialog';
+import { applyApiFieldErrors } from '../../../api/apiError';
 
 interface PurchaseFormProps {
     open: boolean;
@@ -46,7 +47,7 @@ export function PurchaseForm({ open, onClose, workspaceId }: PurchaseFormProps) 
     const { data: supplierData, isLoading: loadingSuppliers } = useSuppliers(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
     const { data: inventoryData, isLoading: loadingInventory } = useInventory(workspaceId, { page: 1, limit: 1000, sortBy: 'name', order: 'asc' });
 
-    const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<PurchaseFormValues>({
+    const { control, handleSubmit, reset, setValue, setError, formState: { errors } } = useForm<PurchaseFormValues>({
         resolver: zodResolver(purchaseFormSchema),
         defaultValues: {
             supplierId: '',
@@ -80,12 +81,18 @@ export function PurchaseForm({ open, onClose, workspaceId }: PurchaseFormProps) 
     }, [open, reset]);
 
     const onSubmit = (data: PurchaseFormValues) => {
+        if (mutation.isPending) return;
         mutation.mutate(
             {
                 ...data,
                 purchaseDate: new Date(data.purchaseDate).toISOString()
             },
-            { onSuccess: () => onClose() }
+            {
+                onSuccess: () => onClose(),
+                onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                    setError(field as never, { type: 'server', message }),
+                ),
+            }
         );
     };
 

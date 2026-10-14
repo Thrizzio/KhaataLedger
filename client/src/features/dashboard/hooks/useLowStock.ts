@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../../../lib/queryKeys';
 import { dashboardApi } from '../api/dashboardApi';
+import { shouldRetryQuery } from '../../../hooks/queryReliability';
 
 export function useLowStock(workspaceId?: string) {
     return useQuery({
@@ -18,5 +19,6 @@ export function useLowStock(workspaceId?: string) {
             })) as import('../types').LowStockItem[];
         },
         enabled: Boolean(workspaceId),
+        retry: shouldRetryQuery,
     });
 }

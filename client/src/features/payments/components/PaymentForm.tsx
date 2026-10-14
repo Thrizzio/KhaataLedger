@@ -16,6 +16,7 @@ import { customerPaymentSchema, supplierPaymentSchema, type CustomerPaymentFormV
 import { useCreateCustomerPayment, useCreateSupplierPayment } from '../hooks/usePaymentMutations';
 import { useCustomers } from '../../customers/hooks/useCustomers';
 import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
+import { applyApiFieldErrors } from '../../../api/apiError';
 
 interface PaymentFormProps {
     open: boolean;
@@ -40,7 +41,7 @@ export function PaymentForm({ open, onClose, workspaceId, type }: PaymentFormPro
 
     type GenericFormValues = { customerId?: string; supplierId?: string; amount: number; paymentDate: string; notes?: string; };
 
-    const { control, handleSubmit, reset, formState: { errors } } = useForm<GenericFormValues>({
+    const { control, handleSubmit, reset, setError, formState: { errors } } = useForm<GenericFormValues>({
         resolver: zodResolver(activeSchema),
         defaultValues: {
             customerId: '',
@@ -64,6 +65,7 @@ export function PaymentForm({ open, onClose, workspaceId, type }: PaymentFormPro
     }, [open, reset]);
 
     const onSubmit = (data: GenericFormValues) => {
+        if (mutation.isPending) return;
         mutation.mutate(
             {
                 ...(isCustomer ? { customerId: data.customerId! } : { supplierId: data.supplierId! }),
@@ -71,7 +73,12 @@ export function PaymentForm({ open, onClose, workspaceId, type }: PaymentFormPro
                 paymentDate: new Date(data.paymentDate).toISOString(),
                 notes: data.notes
             } as any,
-            { onSuccess: () => onClose() }
+            {
+                onSuccess: () => onClose(),
+                onError: (error) => applyApiFieldErrors(error, (field, message) =>
+                    setError(field as keyof GenericFormValues, { type: 'server', message }),
+                ),
+            }
         );
     };
 

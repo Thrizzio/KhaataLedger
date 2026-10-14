@@ -1,22 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '../../../lib/queryKeys';
 import { inventoryApi } from '../api/inventoryApi';
 import { showSnackbar } from '../../../lib/snackbar';
 import type { CreateInventoryPayload, UpdateInventoryPayload } from '../types';
 import { ApiError } from '../../../api/apiError';
+import { invalidateWorkspaceFinancialData } from '../../../hooks/queryReliability';
 
 export function useInventoryMutations(workspaceId: string) {
     const queryClient = useQueryClient();
 
-    const invalidateList = () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all(workspaceId) });
-    };
-
     const createMutation = useMutation({
         mutationFn: (payload: CreateInventoryPayload) => inventoryApi.createInventory(workspaceId, payload),
-        onSuccess: () => {
+        onSuccess: async () => {
             showSnackbar({ message: 'Inventory item added successfully', severity: 'success' });
-            invalidateList();
+            await invalidateWorkspaceFinancialData(queryClient, workspaceId);
         },
         onError: (error) => {
             if (error instanceof ApiError) return; // SnackBar global interceptor handles it
@@ -27,9 +23,9 @@ export function useInventoryMutations(workspaceId: string) {
     const updateMutation = useMutation({
         mutationFn: ({ id, payload }: { id: string; payload: UpdateInventoryPayload }) =>
             inventoryApi.updateInventory(workspaceId, id, payload),
-        onSuccess: () => {
+        onSuccess: async () => {
             showSnackbar({ message: 'Inventory item updated successfully', severity: 'success' });
-            invalidateList();
+            await invalidateWorkspaceFinancialData(queryClient, workspaceId);
         },
         onError: (error) => {
             if (error instanceof ApiError) return;
@@ -39,9 +35,9 @@ export function useInventoryMutations(workspaceId: string) {
 
     const deleteMutation = useMutation({
         mutationFn: (id: string) => inventoryApi.deleteInventory(workspaceId, id),
-        onSuccess: () => {
+        onSuccess: async () => {
             showSnackbar({ message: 'Item removed successfully', severity: 'success' });
-            invalidateList();
+            await invalidateWorkspaceFinancialData(queryClient, workspaceId);
         },
         onError: (error) => {
             if (error instanceof ApiError) return;

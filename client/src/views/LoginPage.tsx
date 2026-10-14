@@ -1,3 +1,5 @@
+'use client';
+
 import BadgeIcon from '@mui/icons-material/Badge';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Box from '@mui/material/Box';
@@ -8,8 +10,23 @@ import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import NextLink from '../components/NextLink';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../hooks/useAuth';
 
 export const LoginPage = () => {
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    if (user.role === 'EMPLOYEE' && user.workspaceId) {
+      router.replace(`/workspaces/${user.workspaceId}/dashboard`);
+    } else if (user.role === 'OWNER') {
+      router.replace('/workspaces');
+    }
+  }, [isAuthenticated, router, user]);
+
   return (
     <Container maxWidth="sm" sx={{ alignItems: 'center', display: 'flex', minHeight: '100vh', justifyContent: 'center' }}>
       <Box textAlign="center" width="100%">

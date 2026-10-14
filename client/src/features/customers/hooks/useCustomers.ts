@@ -2,6 +2,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { queryKeys } from '../../../lib/queryKeys';
 import { customerApi } from '../api/customerApi';
 import type { CustomerListParams } from '../types';
+import { shouldRetryQuery } from '../../../hooks/queryReliability';
 
 export function useCustomers(workspaceId?: string, params?: CustomerListParams) {
     return useQuery({
@@ -9,5 +10,6 @@ export function useCustomers(workspaceId?: string, params?: CustomerListParams) 
         queryFn: () => customerApi.getCustomers(workspaceId!, params!),
         enabled: Boolean(workspaceId && params),
         placeholderData: keepPreviousData,
+        retry: shouldRetryQuery,
     });
 }

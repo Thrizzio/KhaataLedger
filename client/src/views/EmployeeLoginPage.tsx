@@ -10,19 +10,23 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { authService, type LoginPayload } from '../services/auth.service';
 import { setAuthData } from '../store/authStore';
 import NextLink from '../components/NextLink';
+import { loginSchema } from '../utils/authSchemas';
+import { applyApiFieldErrors, getApiErrorDetails } from '../api/apiError';
 
 export const EmployeeLoginPage = () => {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const submitInFlight = useRef(false);
 
   // If already authenticated as employee, redirect to their workspace
   useEffect(() => {
@@ -35,7 +39,8 @@ export const EmployeeLoginPage = () => {
     }
   }, [isAuthenticated, user, router]);
 
-  const { register, handleSubmit } = useForm<LoginPayload>({
+  const { register, handleSubmit, setError, formState: { errors } } = useForm<LoginPayload>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -43,6 +48,8 @@ export const EmployeeLoginPage = () => {
   });
 
   const onSubmit = async (values: LoginPayload) => {
+    if (submitInFlight.current) return;
+    submitInFlight.current = true;
     setIsLoading(true);
     try {
       const response = await authService.loginEmployee({
@@ -64,10 +71,14 @@ export const EmployeeLoginPage = () => {
       } else {
         toast.error(data.message || 'Failed to authenticate.');
       }
-    } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || 'Invalid email or password.';
-      toast.error(errorMsg);
+    } catch (error: unknown) {
+      const details = getApiErrorDetails(error, 'Invalid email or password.');
+      applyApiFieldErrors(error, (field, message) =>
+        setError(field as 'email' | 'password', { type: 'server', message }),
+      );
+      toast.error(details.message);
     } finally {
+      submitInFlight.current = false;
       setIsLoading(false);
     }
   };
@@ -98,14 +109,18 @@ export const EmployeeLoginPage = () => {
             fullWidth
             label="Email"
             type="email"
-            {...register('email', { required: true })}
+            error={Boolean(errors.email)}
+            helperText={errors.email?.message}
+            {...register('email')}
           />
           <TextField
             disabled={isLoading}
             fullWidth
             label="Password"
             type="password"
-            {...register('password', { required: true })}
+            error={Boolean(errors.password)}
+            helperText={errors.password?.message}
+            {...register('password')}
           />
           <Button
             disabled={isLoading}
