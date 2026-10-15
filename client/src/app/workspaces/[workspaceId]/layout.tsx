@@ -50,9 +50,9 @@ export default function WorkspaceLayout({
     // Owners may only view workspaces they own (server enforces; mirror here).
     if (user?.role === "OWNER") {
       if (isError) {
-        // If workspace is invalid/deleted/404, clear state and go to root to auto-recover
+        // If workspace is invalid/deleted/404, clear state and go to workspaces list to pick or create one
         clearWorkspaceId();
-        router.replace("/");
+        router.replace("/workspaces");
         return;
       } else if (isSuccess) {
         // Valid workspace found, sync to store

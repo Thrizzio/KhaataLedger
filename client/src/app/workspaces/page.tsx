@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { WorkspacesPage } from '../../views/WorkspacesPage';
@@ -8,10 +8,16 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 
 export default function WorkspacesRoute() {
+    const [mounted, setMounted] = useState(false);
     const { isAuthenticated, user } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
         if (!isAuthenticated) {
             router.replace('/login');
             return;
@@ -24,9 +30,9 @@ export default function WorkspacesRoute() {
                 router.replace('/login');
             }
         }
-    }, [isAuthenticated, user, router]);
+    }, [mounted, isAuthenticated, user, router]);
 
-    if (!isAuthenticated || user?.role === 'EMPLOYEE') {
+    if (!mounted || !isAuthenticated || user?.role === 'EMPLOYEE') {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
                 <CircularProgress />

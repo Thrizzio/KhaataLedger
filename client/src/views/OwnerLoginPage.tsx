@@ -22,6 +22,7 @@ import { setAuthData } from '../store/authStore';
 import NextLink from '../components/NextLink';
 import { loginSchema } from '../utils/authSchemas';
 import { applyApiFieldErrors, getApiErrorDetails } from '../api/apiError';
+import { sanitizeRedirectPath } from '../utils/apiUrl';
 
 export const OwnerLoginPage = () => {
   const { isAuthenticated } = useAuth();
@@ -32,13 +33,13 @@ export const OwnerLoginPage = () => {
 
   useEffect(() => {
     const urlSearchParams = new URLSearchParams(window.location.search);
-    const redirectFrom = urlSearchParams.get('from') ?? '/workspaces';
+    const redirectFrom = sanitizeRedirectPath(urlSearchParams.get('from'));
     setFrom(redirectFrom);
   }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(from);
+      router.replace(sanitizeRedirectPath(from));
     }
   }, [isAuthenticated, router, from]);
 
@@ -64,6 +65,7 @@ export const OwnerLoginPage = () => {
       if (data.success && data.data) {
         setAuthData(data.data.token, data.data.user);
         toast.success(data.message || 'Successfully signed in as Owner!');
+        router.replace(sanitizeRedirectPath(from));
       } else {
         toast.error(data.message || 'Failed to authenticate.');
       }
