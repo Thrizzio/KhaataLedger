@@ -1,8 +1,11 @@
 import axios, { isAxiosError } from 'axios';
 import { ApiError, getApiErrorDetails } from './apiError';
 import { setAuthData } from '../store/authStore';
+import { normalizeApiBaseUrl } from '../utils/apiUrl';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api';
+export { normalizeApiBaseUrl };
+
+const baseURL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
 
 export const httpClient = axios.create({
   baseURL,
@@ -10,8 +13,12 @@ export const httpClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ── Request: attach JWT ────────────────────────────────────────────────────────
+// ── Request: normalize path & attach JWT ───────────────────────────────────────
 httpClient.interceptors.request.use((config) => {
+  if (config.url) {
+    // If request URL starts with /api/ or api/, strip it so /api is not duplicated
+    config.url = config.url.replace(/^\/?api\//, '/');
+  }
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('ledger_access_token') : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -39,7 +46,7 @@ httpClient.interceptors.response.use(
     if (status === 401) {
       if (!isAuthenticationRequest) {
         setAuthData(null, null);
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
           window.location.replace('/login');
         }
       }
