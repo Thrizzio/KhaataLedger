@@ -24,10 +24,22 @@ coverage/
 *.tsbuildinfo
 
 CLAUDE.md
-CLAUDE.md
 
 server/src/prisma/dev.db
 server/src/prisma/dev.db-journal
 
 **/.next/
 client/.next/
+
+# Temporary testing artifacts, screenshots, and browser automation
+*.png
+*.jpg
+*.jpeg
+!client/src/assets/**
+screenshots/
+test-results/
+playwright-report/
+.playwright/
+blob-report/
+scratch/node_modules/
+
